@@ -11,5 +11,6 @@ extern const struct luaL_Reg *get_device_lib(void);
 extern const char *device_str1();
 extern const char *device_str2();
 extern const char *device_help_txt();
+extern const char *device_id();
 
 #endif //PICO_WEAVE_DEVICE_H

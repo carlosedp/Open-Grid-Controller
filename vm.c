@@ -193,12 +193,9 @@ static int l_get_time(lua_State *l) {
 	return 1;
 }
 
-// FIXME
-#define DEVICE_ID "grid one"
-
 static int l_device_id(lua_State *l)
 {
-	lua_pushstring(l, DEVICE_ID);
+	lua_pushstring(l, device_id());
 	return 1;
 }
 
