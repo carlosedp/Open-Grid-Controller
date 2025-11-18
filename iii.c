@@ -10,11 +10,6 @@
 #include "tusb.h"
 #include "vm.h"
 
-void iii_init() {
-	flash_init();
-	tud_init(BOARD_TUD_RHPORT);
-}
-
 void iii_loop(bool run_script) {
 	// must come after flash_init()
 	fs_init();
