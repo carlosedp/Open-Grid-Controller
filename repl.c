@@ -56,37 +56,37 @@ void repl_init() {
 bool handle_command(char cmd) {
 	switch (cmd) {
 		case REPL_CMD_CLEAN:
-			serial_tx_str("-- re-init with no script\r\n");
+			serial("-- re-init with no script\r\n");
 			vm_deinit();
 			vm_init(false);
 			break;
 
 		case REPL_CMD_INIT:
-			serial_tx_str("-- re-init\r\n");
+			serial("-- re-init\r\n");
 			vm_deinit();
 			vm_init(true);
 			break;
 
 		case REPL_CMD_BOOTLOAD:
-			serial_tx_str("-- launching bootloader...\r\n");
+			serial("-- launching bootloader...\r\n");
 			rom_reset_usb_boot(0,0);
 			break;
 
 		case REPL_CMD_RESET:
-			serial_tx_str("-- reset device...\r\n");
+			serial("-- reset device...\r\n");
 			watchdog_reboot(0, 0, 1000);
 			break;
 
 		case REPL_CMD_START_DATA:
 			in_rx_script = true;
 			script_rx_pos = 0;
-			serial_tx_str("-- receiving data\r\n");
+			serial("-- receiving data\r\n");
 			break;
 
 		case REPL_CMD_END_FILENAME:
 			script_buf[script_rx_pos] = '\0';
 			if (script_rx_pos < 1) {
-				serial_tx_str("-- no data received\r\n");
+				serial("-- no data received\r\n");
 			} else {
 				// need to strip the \r\n
 				script_buf[script_rx_pos] = '\0';
@@ -95,9 +95,7 @@ bool handle_command(char cmd) {
 					i--;
 					script_buf[i] = '\0';
 				}
-				serial_tx_str("-- set filename: ");
-				serial_tx_str(script_buf);
-				serial_tx_str("\r\n");
+				serial("-- set filename: %s\r\n",script_buf);
 				// test if filename is ok
 				const int flags = LFS_O_CREAT | LFS_O_WRONLY;
 				lfs_file_t file;
@@ -106,17 +104,17 @@ bool handle_command(char cmd) {
 					strcpy(filename,script_buf);
 				}
 				else {
-					serial_tx_str("-- bad filename!\r\n");
+					serial("-- bad filename!\r\n");
 				}
 			}
 			reset_script_rx();
 			break;
 
 		case REPL_CMD_END_WRITE:
-			serial_tx_str("-- write file\r\n");
+			serial("-- write file\r\n");
 			script_buf[script_rx_pos] = '\0';
 			if (script_rx_pos < 1) {
-				serial_tx_str("-- no data received\r\n");
+				serial("-- no data received\r\n");
 			} else {
 				// test compilation of received script, print any errors
 				if (vm_test_script(script_buf)) {
@@ -125,25 +123,21 @@ bool handle_command(char cmd) {
 						// +1 to write \0
 						fs_file_write(&file, script_buf, strlen(script_buf)+1);
 						fs_file_close(&file);
-						serial_tx_str("-- file written: ");
-						serial_tx_str(filename);
-						serial_tx_str("\r\n");
+						serial("-- file written: %s\r\n",filename);
 					}
 					else {
-						serial_tx_str("-- file write fail!\r\n");
+						serial("-- file write fail!\r\n");
 					}
 				}
 				else { 
-					serial_tx_str("-- compilation fail!\r\n");
+					serial("-- compilation fail!\r\n");
 				}
 			}
 			reset_script_rx();
 			break;
 
 		case REPL_CMD_GET_FILENAME:
-			serial_tx_str("-- filename: ");
-			serial_tx_str(filename);
-			serial_tx_str("\r\n");
+			serial("-- filename: %s\r\n",filename);
 			break;
 
 		case REPL_CMD_PRINT:
@@ -154,27 +148,21 @@ bool handle_command(char cmd) {
 					char *buf = malloc(sz+1);
 					buf[sz] = 0;
 					fs_file_read(&rfile, buf, sz);
-					#if 0
-					char s[512];
-					serial_tx_str("-- print file\r\n");
-					sprintf(s, "-- %s - %d\r\n",filename, sz);
-					serial_tx_str(s);
-					#endif
-					serial_tx_str(buf);
+					serial(buf);
 					free(buf);
 				}
 				else {
-					serial_tx_str("-- empty file\r\n");
+					serial("-- empty file\r\n");
 				}
 				fs_file_close(&rfile);
 			}
 			else {
-				serial_tx_str("-- no file\r\n");
+				serial("-- no file\r\n");
 			}
 			break;
 
 		default:
-			serial_tx_str("-- unknown command\r\n");
+			serial("-- unknown command\r\n");
 			return false;
 	}
 	return true;
@@ -190,7 +178,7 @@ void repl_handle_byte(uint8_t b) {
 				c -= 32;
 			}
 			if (!handle_command(c)) {
-				serial_tx_str("-- unknown command\r\n");
+				serial("-- unknown command\r\n");
 			}
 			line_buf[2] = 0;
 		} else {
@@ -202,7 +190,7 @@ void repl_handle_byte(uint8_t b) {
 					script_buf[script_rx_pos + line_buf_pos] = '\n';
 					script_rx_pos += line_buf_pos + 1;
 				} else {
-					serial_tx_str("-- script buffer full!\r\n");
+					serial("-- script buffer full!\r\n");
 					reset_script_rx();
 				}
 			} else {
@@ -225,7 +213,7 @@ void repl_handle_byte(uint8_t b) {
 	} else {
 		// good chance we're getting sent serialosc gibberish?
 		// so let's abandon it
-		//serial_tx_str("-- line buffer full!\r\n");
+		//serial("-- line buffer full!\r\n");
 		line_buf_pos = 0;
 	}
 }

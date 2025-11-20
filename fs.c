@@ -120,11 +120,7 @@ char** fs_get_file_list(uint32_t *num_files)
             const int res = lfs_dir_read(&lfs, &dir, &info);
             if (res != 1) {
                 if (res != 0) {
-                    serial_tx_str("dir read error: ");
-                    char buf[10];
-                    sprintf(buf, "%d", res);
-                    serial_tx_str(buf);
-                    serial_tx_str("\n");
+                    serial("dir read error: %d\r\n",res);
                 }
                 break;
             }

@@ -84,7 +84,7 @@ static void print_stack_pos(lua_State *l, int pos, const char* prefix, bool newl
 		lua_pushnil(l);
 		while (lua_next(l, pos) != 0) {
 			print_stack_pos(l, -2, "  (key) ", false);
-			serial_tx_str("\t\t");
+			serial("\t\t");
 			print_stack_pos(l, -1, "  (val) ", true);
 			lua_pop(l, 1);
 		}
@@ -98,7 +98,7 @@ static void print_stack_pos(lua_State *l, int pos, const char* prefix, bool newl
 	{
 		serial("%s(unknown type)", prefix);
 	}
-	if(newline) serial_tx_str("\r\n");
+	if(newline) serial("\r\n");
 }
 
 static int l_my_print(lua_State *l) {
@@ -112,7 +112,7 @@ static int l_my_print(lua_State *l) {
 int l_report(lua_State *L, int status) {
 	if (status != LUA_OK) {
 		const char *msg = lua_tostring(L, -1);
-		serial_tx_str(msg);
+		serial(msg);
 		lua_pop(L, 1);
 	}
 	return status;
@@ -147,8 +147,8 @@ int docall(lua_State *L, int narg, int nres) {
 
 static int l_help(lua_State *l) {
 	(void)l;
-	serial_tx_str(device_help_txt());
-	serial_tx_str(help_txt);
+	serial(device_help_txt());
+	serial(help_txt);
 	return 0;
 }
 
@@ -157,7 +157,7 @@ static int l_dostring(lua_State *l) {
 	int res = luaL_dostring(L, str);
 	if (res != LUA_OK) {
 		const char *err = lua_tostring(L, -1);
-		serial_tx((const uint8_t *) err, strlen(err));
+		serial("%s",(const uint8_t *) err);
 	}
 	return 0;
 }
@@ -229,7 +229,7 @@ static int l_fs_run_file(lua_State* l)
 	if (fs_file_open(&file, path, flags) == 0) {
 		const unsigned int sz = (unsigned int)fs_file_size(&file);
 		char *buf = malloc(sz+1);
-		if(buf==NULL) serial_tx_str("malloc fail!\r\n");
+		if(buf==NULL) serial("malloc fail!\r\n");
 		buf[sz] = 0;
 		fs_file_read(&file, buf, sz);
 		fs_file_close(&file);
@@ -240,7 +240,7 @@ static int l_fs_run_file(lua_State* l)
 		{
 			// TODO: handle errors...
 			const char *err = lua_tostring(L, -1);
-			serial_tx((const uint8_t *) err, strlen(err));
+			serial("%s\n",(const uint8_t *) err);
 		}
 		return lua_gettop(L) - top;
 	} else
@@ -345,8 +345,30 @@ static const struct luaL_Reg main_lib[] = {
 	{NULL, NULL}
 };
 
+void* my_alloc(void* ud, void* ptr, size_t osize, size_t nsize) {
+	(void) ud; (void) osize;
+	if (nsize == 0) {
+		free(ptr);
+		return NULL;
+	} else {
+		void* x = realloc(ptr, nsize);
+		if(x == NULL) {
+			serial("alloc fail!\r\n");
+			serial_task(); // send immediately
+			// TODO: actually do something
+			//vm_deinit();
+			//vm_init(true);
+		}
+		//else serial("@"); // is it working
+		return x;
+	}
+}
+
 void vm_init(bool run_script) {
 	L = luaL_newstate();
+	//L = lua_newstate(my_alloc, NULL, luaL_makeseed(NULL));
+	if(L == NULL) { serial("vm_init fail!\r\n"); return; }
+
 	luaL_openlibs(L);
 
 	lua_getglobal(L, "_G");
@@ -357,7 +379,7 @@ void vm_init(bool run_script) {
 	// test if lib.lua present, write it if not
 	lfs_file_t f;
 	if (fs_file_open(&f, "lib.lua", LFS_O_RDONLY) != 0) {
-		serial_tx_str("-- init: writing lib.lua\r\n");
+		serial("-- init: writing lib.lua\r\n");
 		//const unsigned int sz = (unsigned int)strlen(lua_init_code());
 		const unsigned int sz = (unsigned int)strlen((const char *)lib_lua_data);
 		char *buf = malloc(sz+1);
@@ -369,7 +391,7 @@ void vm_init(bool run_script) {
 			fs_file_write(&file, buf, sz);
 			fs_file_close(&file);
 		} else{
-			serial_tx_str("-- init: writing lib.lua failed!!\r\n");
+			serial("-- init: writing lib.lua failed!!\r\n");
 		}
 		free(buf);
 	} else { fs_file_close(&f); }
@@ -382,16 +404,15 @@ void vm_init(bool run_script) {
 			buf[sz] = '\0';
 			fs_file_read(&f, buf, sz);
 			fs_file_close(&f);
-			serial_tx_str("-- init: running lib\r\n");
+			serial("-- init: running lib\r\n");
 			int res = luaL_dostring(L, buf);
 			free(buf);
 			if (res != LUA_OK) {
-				serial_tx_str("-- init: lib errors!\r\n");
 				const char *err = lua_tostring(L, -1);
-				serial_tx((const uint8_t *) err, strlen(err));
+				serial("-- init: lib errors!\r\n%s\r\n",(const uint8_t *) err);
 			}
 		} else {
-			serial_tx_str("-- init: lib fail!\r\n");
+			serial("-- init: lib fail!\r\n");
 		}
 
 		// run init.lua if present
@@ -404,19 +425,19 @@ void vm_init(bool run_script) {
 			buf[sz] = '\0';
 			fs_file_read(&file, buf, sz);
 			fs_file_close(&file);
-			serial_tx_str("-- init: running script\r\n");
+			serial("-- init: running script\r\n");
 			int res = luaL_dostring(L, buf);
 			free(buf);
 			if (res != LUA_OK) {
 				// TODO: handle errors better/differently?
 				const char *err = lua_tostring(L, -1);
-				serial_tx((const uint8_t *) err, strlen(err));
+				serial("%s\r\n",(const uint8_t *) err);
 			}
 		} else {
-			serial_tx_str("-- init: no script\r\n");
+			serial("-- init: no script\r\n");
 		}
 	} else {
-		serial_tx_str("-- init: skip script\r\n");
+		serial("-- init: skip script\r\n");
 	}
 }
 
@@ -431,17 +452,16 @@ void vm_deinit() {
 bool vm_test_script(const char* buf) {
 	int res = luaL_loadstring(L, buf);
 	if (res != LUA_OK) {
-		serial_tx_str("-- lua error:\r\n");
+		serial("-- lua error:\r\n");
 		const char *err = lua_tostring(L, -1);
 		err = strchr(err+10,'"');
 		err += 3;
-		serial_tx((const uint8_t *)err, strlen(err));
-		serial_tx_str("\r\n");
+		serial("%s\r\n",(const uint8_t *)err);
 		// pop the error message
 		lua_pop(L, 1);
 		return false;
 	} else {
-		serial_tx_str("-- compiled ok\r\n");
+		serial("-- compiled ok\r\n");
 		// pop the compiled chunk
 		/// (FIXME: should we be saving it instead?)
 		lua_pop(L, 1);
@@ -452,9 +472,8 @@ bool vm_test_script(const char* buf) {
 bool vm_run_buffer(const char* buf) {
 	int res = luaL_dostring(L, buf);
 	if (res != LUA_OK) {
-		serial_tx_str("-- lua error:\r\n");
 		const char *err = lua_tostring(L, -1);
-		serial_tx((const uint8_t *)err, strlen(err));
+		serial("-- lua error:\r\n%s",(const uint8_t *)err);
 		// pop the error message
 		lua_pop(L, 1);
 		return false;
