@@ -57,30 +57,24 @@ static void print_stack_pos(lua_State *l, int pos, const char* prefix, bool newl
 		serial("%s", b ? "true" : "false");
 #endif
 	}
-	else if (lua_isuserdata(l, pos))
-	{
+	else if (lua_isuserdata(l, pos)) {
 		const void* p = lua_topointer(l, pos);
 		serial("%suserdata: 0x%p", prefix, p);
 	}
-	else if (lua_islightuserdata(l, pos))
-	{
+	else if (lua_islightuserdata(l, pos)) {
 		const void* p = lua_topointer(l, pos);
 		serial("%slightuserdata: 0x%p", prefix, p);
 	}
-	else if (lua_isfunction(l, pos))
-	{
+	else if (lua_isfunction(l, pos)) {
 		const void* p = lua_topointer(l, pos);
 		serial("%sfunction: 0x%p", prefix, p);
 	}
-	else if (lua_isnil(l, pos))
-	{
+	else if (lua_isnil(l, pos)) {
 		serial("%snil", prefix);
 	}
-	else if (lua_istable(l, pos))
-	{
+	else if (lua_istable(l, pos)) {
 		const void* p = lua_topointer(l, pos);
 		serial("%stable: 0x%p\r\n", prefix, p);
-
 		lua_pushnil(l);
 		while (lua_next(l, pos) != 0) {
 			print_stack_pos(l, -2, "  (key) ", false);
@@ -89,13 +83,11 @@ static void print_stack_pos(lua_State *l, int pos, const char* prefix, bool newl
 			lua_pop(l, 1);
 		}
 	}
-	else if (lua_isthread(l, pos))
-	{
+	else if (lua_isthread(l, pos)) {
 		const void* p = lua_topointer(l, pos);
 		serial("%sthread: 0x%p", prefix, p);
 	}
-	else
-	{
+	else {
 		serial("%s(unknown type)", prefix);
 	}
 	if(newline) serial("\r\n");
@@ -353,20 +345,16 @@ void* my_alloc(void* ud, void* ptr, size_t osize, size_t nsize) {
 	} else {
 		void* x = realloc(ptr, nsize);
 		if(x == NULL) {
-			serial("alloc fail!\r\n");
-			serial_task(); // send immediately
-			// TODO: actually do something
-			//vm_deinit();
-			//vm_init(true);
+			serial("-- out of memory!\r\n");
+			// TODO: actually do something else?
 		}
-		//else serial("@"); // is it working
 		return x;
 	}
 }
 
 void vm_init(bool run_script) {
-	L = luaL_newstate();
-	//L = lua_newstate(my_alloc, NULL, luaL_makeseed(NULL));
+	//L = luaL_newstate();
+	L = lua_newstate(my_alloc, NULL, luaL_makeseed(NULL));
 	if(L == NULL) { serial("vm_init fail!\r\n"); return; }
 
 	luaL_openlibs(L);
