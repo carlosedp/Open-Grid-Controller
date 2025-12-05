@@ -99,6 +99,8 @@ void fs_mount()
         lfs_format(&lfs, &cfg);
         lfs_mount(&lfs, &cfg);
     }
+
+		lfs_fs_gc(&lfs);
 }
 
 void fs_unmount()
