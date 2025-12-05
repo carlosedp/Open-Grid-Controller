@@ -20,4 +20,4 @@ extern void metro_task();
 // clears all metros
 extern void metro_cleanup();
 
-#endif //PICO_WEAVE_METRO_H
+#endif // PICO_WEAVE_METRO_H
