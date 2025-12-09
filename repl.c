@@ -13,13 +13,17 @@
 #define SCRIPT_BUFFER_SIZE 32767
 // #define SCRIPT_BUFFER_SIZE 16383
 //  extra byte for null terminator
-static char script_buf[SCRIPT_BUFFER_SIZE + 1];
+//static char script_buf[SCRIPT_BUFFER_SIZE + 1];
+static char *script_buf;
 static uint32_t script_rx_pos = 0;
 static char filename[256] = "init.lua";
 
 // FIXME: made the buffer huge for import/export flash via prints
 // could more sensibly do this at a lower level and save RAM
-#define LINE_BUFFER_SIZE 16383
+// FIXED?? this isn't necessary, linebuffer is for repl only, file stuff is managed with another buffer that is malloc'd. idk what a sensible linebuffer size is though, so 512 seems fine
+// FIXME: choose linebuffer size sensibly!
+//#define LINE_BUFFER_SIZE 16383
+#define LINE_BUFFER_SIZE 512
 static char line_buf[LINE_BUFFER_SIZE + 1];
 static uint32_t line_buf_pos = 0;
 
@@ -78,60 +82,75 @@ bool handle_command(char cmd) {
     break;
 
   case REPL_CMD_START_DATA:
-    in_rx_script = true;
-    script_rx_pos = 0;
-    serial("-- receiving data\r\n");
+    script_buf = malloc(SCRIPT_BUFFER_SIZE + 1);
+    if(script_buf == NULL) {
+      serial("-- memory allocation fail!\r\n");
+    } else {
+      in_rx_script = true;
+      script_rx_pos = 0;
+      serial("-- receiving data\r\n");
+    }
     break;
 
   case REPL_CMD_END_FILENAME:
-    script_buf[script_rx_pos] = '\0';
-    if (script_rx_pos < 1) {
-      serial("-- no data received\r\n");
-    } else {
-      // need to strip the \r\n
+    if(in_rx_script) {
       script_buf[script_rx_pos] = '\0';
-      uint8_t i = (uint8_t)script_rx_pos;
-      while (i > 0 &&
-             (script_buf[i - 1] == '\r' || script_buf[i - 1] == '\n')) {
-        i--;
-        script_buf[i] = '\0';
-      }
-      serial("-- set filename: %s\r\n", script_buf);
-      // test if filename is ok
-      const int flags = LFS_O_CREAT | LFS_O_WRONLY;
-      lfs_file_t file;
-      if (fs_file_open(&file, script_buf, flags) == 0) {
-        fs_file_close(&file);
-        strcpy(filename, script_buf);
+      if (script_rx_pos < 1) {
+        serial("-- no data received\r\n");
       } else {
-        serial("-- bad filename!\r\n");
+        // need to strip the \r\n
+        script_buf[script_rx_pos] = '\0';
+        uint8_t i = (uint8_t)script_rx_pos;
+        while (i > 0 &&
+               (script_buf[i - 1] == '\r' || script_buf[i - 1] == '\n')) {
+          i--;
+          script_buf[i] = '\0';
+        }
+        serial("-- set filename: %s\r\n", script_buf);
+        // test if filename is ok
+        const int flags = LFS_O_CREAT | LFS_O_WRONLY;
+        lfs_file_t file;
+        if (fs_file_open(&file, script_buf, flags) == 0) {
+          fs_file_close(&file);
+          strcpy(filename, script_buf);
+        } else {
+          serial("-- bad filename!\r\n");
+        }
       }
+      reset_script_rx();
+      free(script_buf);
+    } else {
+      serial("-- file name end without start");
     }
-    reset_script_rx();
     break;
 
   case REPL_CMD_END_WRITE:
-    serial("-- write file\r\n");
-    script_buf[script_rx_pos] = '\0';
-    if (script_rx_pos < 1) {
-      serial("-- no data received\r\n");
-    } else {
-      // test compilation of received script, print any errors
-      if (vm_test_script(script_buf)) {
-        lfs_file_t file;
-        if (fs_file_open(&file, filename, LFS_O_CREAT | LFS_O_WRONLY) == 0) {
-          // +1 to write \0
-          fs_file_write(&file, script_buf, strlen(script_buf) + 1);
-          fs_file_close(&file);
-          serial("-- file written: %s\r\n", filename);
-        } else {
-          serial("-- file write fail!\r\n");
-        }
+    if(in_rx_script) {
+      serial("-- write file\r\n");
+      script_buf[script_rx_pos] = '\0';
+      if (script_rx_pos < 1) {
+        serial("-- no data received\r\n");
       } else {
-        serial("-- compilation fail!\r\n");
+        // test compilation of received script, print any errors
+        if (vm_test_script(script_buf)) {
+          lfs_file_t file;
+          if (fs_file_open(&file, filename, LFS_O_CREAT | LFS_O_WRONLY) == 0) {
+            // +1 to write \0
+            fs_file_write(&file, script_buf, strlen(script_buf) + 1);
+            fs_file_close(&file);
+            serial("-- file written: %s\r\n", filename);
+          } else {
+            serial("-- file write fail!\r\n");
+          }
+        } else {
+          serial("-- compilation fail!\r\n");
+        }
       }
+      reset_script_rx();
+      free(script_buf);
+    } else {
+      serial("-- file write end without start");
     }
-    reset_script_rx();
     break;
 
   case REPL_CMD_GET_FILENAME:
