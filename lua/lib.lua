@@ -1,7 +1,11 @@
 print("-- lua lib")
 
-function first(name) fs_write_file("init.lua","fs_run_file('"..name.."')") end
+function first(name)
+  if name then fs_write_file("init.lua","fs_run_file('"..name.."')")
+  else fs_remove_file("init.lua") end
+end
 function ls() print(fs_list_files()) end
+function rm(name) fs_remove_file(name) end
 function cat(x) print(fs_read_file(x)) end
 function mem() print(collectgarbage("count")) end
 function gc() collectgarbage() mem() end
@@ -251,10 +255,10 @@ function wrap(n, min, max)
   return y + min
 end
 
-function linlin(slo, shi, dlo, dhi, f)
-  if f <= slo then return dlo
-  elseif f >= shi then return dhi
-  else return (f-slo) / (shi-slo) * (dhi-dlo) + dlo
+function linlin(n, slo, shi, dlo, dhi)
+  if n <= slo then return dlo
+  elseif n >= shi then return dhi
+  else return (n-slo) / (shi-slo) * (dhi-dlo) + dlo
   end
 end
 

@@ -408,6 +408,7 @@ void vm_init(bool run_script) {
 			int res = luaL_dostring(L, buf);
 			free(buf);
 			if (res != LUA_OK) {
+				serial_tx_str("-- init: script errors!\r\n");
 				// TODO: handle errors better/differently?
 				const char *err = lua_tostring(L, -1);
 				serial_tx((const uint8_t *) err, strlen(err));
