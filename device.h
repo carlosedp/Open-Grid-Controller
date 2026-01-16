@@ -13,4 +13,4 @@ extern const char *device_str2();
 extern const char *device_help_txt();
 extern const char *device_id();
 
-#endif //PICO_WEAVE_DEVICE_H
+#endif // PICO_WEAVE_DEVICE_H
