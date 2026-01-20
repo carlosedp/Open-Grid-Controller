@@ -112,6 +112,7 @@ bool handle_command(char cmd) {
         lfs_file_t file;
         if (fs_file_open(&file, script_buf, flags) == 0) {
           fs_file_close(&file);
+          if(fs_file_size(&file)==0) fs_remove(script_buf);
           strcpy(filename, script_buf);
         } else {
           serial("-- bad filename!\r\n");
