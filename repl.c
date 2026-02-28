@@ -223,7 +223,7 @@ void repl_handle_byte(uint8_t b) {
 
   // ECHO
   // non-line-ending characters
-  // printf("%c", b);
+  //serial("%c", b);
   if (line_buf_pos < LINE_BUFFER_SIZE) {
     line_buf[line_buf_pos++] = b;
   } else {

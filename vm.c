@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "pico/time.h"
+#include "hardware/watchdog.h"
 
 #include "lauxlib.h"
 #include "lua.h"
@@ -213,7 +214,7 @@ static int l_fs_run_file(lua_State *l) {
     buf[sz] = 0;
     fs_file_read(&file, buf, sz);
     fs_file_close(&file);
-    int top = lua_gettop(L);
+    //int top = lua_gettop(L);
     int res = luaL_dostring(L, buf);
     free(buf);
     if (res != LUA_OK) {
@@ -221,7 +222,8 @@ static int l_fs_run_file(lua_State *l) {
       const char *err = lua_tostring(L, -1);
       serial("%s\n", (const uint8_t *)err);
     }
-    return lua_gettop(L) - top;
+    //return lua_gettop(L) - top;
+    return 1;
   } else {
     // file not found
     lua_pushnil(l);
@@ -321,6 +323,7 @@ void *my_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
     void *x = realloc(ptr, nsize);
     if (x == NULL) {
       serial("-- out of memory!\r\n");
+      watchdog_reboot(0, 0, 1000);
       // TODO: actually do something else?
     }
     return x;
@@ -414,8 +417,8 @@ void vm_deinit() {
   if (L == NULL) {
     return;
   }
-  lua_close(L);
   metro_cleanup();
+  lua_close(L);
 }
 
 bool vm_test_script(const char *buf) {
