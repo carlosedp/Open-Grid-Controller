@@ -68,13 +68,14 @@ static void print_stack_pos(lua_State *l, int pos, const char *prefix,
   } else if (lua_istable(l, pos)) {
     const void *p = lua_topointer(l, pos);
     serial("%stable: 0x%p\r\n", prefix, p);
-    lua_pushnil(l);
+    // FIXME: nested tables fail with hard crash
+    /*lua_pushnil(l);
     while (lua_next(l, pos) != 0) {
       print_stack_pos(l, -2, "  (key) ", false);
       serial("\t\t");
       print_stack_pos(l, -1, "  (val) ", true);
       lua_pop(l, 1);
-    }
+    }*/
   } else if (lua_isthread(l, pos)) {
     const void *p = lua_topointer(l, pos);
     serial("%sthread: 0x%p", prefix, p);
