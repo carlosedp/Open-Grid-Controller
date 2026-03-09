@@ -290,20 +290,35 @@ function _quote(val, ...)
 end
 
 pset_name = "pset_"
+pset_slot = {}
 
 function pset_init(name)
 	pset_name = "pset_"..name.."_"
+  pset_slot = {}
+  for _,v in pairs(fs_list_files()) do
+    if v:sub(1,#pset_name) == pset_name then
+      local b = v:sub(1+#pset_name)
+      pset_slot[tonumber(b:sub(1,-5))] = true
+    end
+  end
 end
 
 function pset_write(n, data)
 	if n < 1 then return end
 	local d = "return " .. _quote(data)
 	fs_write_file(pset_name..n..".lua",d)
+  pset_slot[n] = true
 end
 
 function pset_read(n)
 	if n < 1 then return nil end
+  if not pset_slot[n] then return nil end
 	return fs_run_file(pset_name..n..".lua")
+end
+
+function pset_delete(n)
+  fs_remove_file(pset_name..n..".lua")
+  pset_slot[n] = nil
 end
 
 -- SLEW
