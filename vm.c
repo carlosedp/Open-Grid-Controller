@@ -463,7 +463,7 @@ void vm_handle_midi(uint8_t data1, uint8_t data2, uint8_t data3) {
   }
   lua_getglobal(L, "event_midi");
   if (lua_isnil(L, -1)) {
-    serial("event_midi: %d %d %d\r\n", data1, data2, data3);
+    //serial("event_midi: %d %d %d\r\n", data1, data2, data3);
     lua_pop(L, 1);
     return;
   }
