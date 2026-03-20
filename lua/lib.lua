@@ -4,7 +4,7 @@ function first(name)
   if name then fs_write_file("init.lua","fs_run_file('"..name.."')")
   else fs_remove_file("init.lua") end
 end
-function ls() print(fs_list_files()) end
+function ls() pt(fs_list_files()) end
 function rm(name) fs_remove_file(name) end
 function cat(x) print(fs_read_file(x)) end
 function mem() print(collectgarbage("count")) end
