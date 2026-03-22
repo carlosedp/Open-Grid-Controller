@@ -7,8 +7,10 @@ midi\n\
   midi_cc(cc, val, ch)\n\
 metro\n\
   m = metro.init(callback, time_sec, count_optional)\n\
-  m:start()\n\
+  m:start(time_optional, count_optional)\n\
   m:stop()\n\
+  m.time = 0.1\n\
+  metro.free(m)\n\
 slew\n\
   id = slew.new(callback, start_val, end_val, time_sec)\n\
   slew.to(id, end_val, time_optional)\n\
@@ -20,6 +22,7 @@ pset\n\
   pset_init(name)\n\
   pset_write(index, table)\n\
   table = pset_read(index)\n\
+  pset_delete(index)\n\
 utils\n\
   dostring(lua_command)\n\
   get_time()\n\
@@ -31,11 +34,12 @@ utils\n\
   wrap(n, min, max)\n\
 system\n\
   device_id()\n\
-  first(file)\n\
+  device_version()\n\
   ls()\n\
   cat(file)\n\
   rm(file)\n\
   mem()\n\
   gc()\n\
   require(file)\n\
+  first(file)\n\
 ";

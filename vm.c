@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "pico/time.h"
+#include "hardware/watchdog.h"
 
 #include "lauxlib.h"
 #include "lua.h"
@@ -67,13 +68,14 @@ static void print_stack_pos(lua_State *l, int pos, const char *prefix,
   } else if (lua_istable(l, pos)) {
     const void *p = lua_topointer(l, pos);
     serial("%stable: 0x%p\r\n", prefix, p);
-    lua_pushnil(l);
+    // FIXME: nested tables fail with hard crash
+    /*lua_pushnil(l);
     while (lua_next(l, pos) != 0) {
       print_stack_pos(l, -2, "  (key) ", false);
       serial("\t\t");
       print_stack_pos(l, -1, "  (val) ", true);
       lua_pop(l, 1);
-    }
+    }*/
   } else if (lua_isthread(l, pos)) {
     const void *p = lua_topointer(l, pos);
     serial("%sthread: 0x%p", prefix, p);
@@ -181,6 +183,11 @@ static int l_device_id(lua_State *l) {
   return 1;
 }
 
+static int l_device_version(lua_State *l) {
+  lua_pushstring(l, device_version());
+  return 1;
+}
+
 static int l_fs_read_file(lua_State *l) {
   const char *path = lua_tostring(l, 1);
   lfs_file_t file;
@@ -213,7 +220,7 @@ static int l_fs_run_file(lua_State *l) {
     buf[sz] = 0;
     fs_file_read(&file, buf, sz);
     fs_file_close(&file);
-    int top = lua_gettop(L);
+    //int top = lua_gettop(L);
     int res = luaL_dostring(L, buf);
     free(buf);
     if (res != LUA_OK) {
@@ -221,7 +228,8 @@ static int l_fs_run_file(lua_State *l) {
       const char *err = lua_tostring(L, -1);
       serial("%s\n", (const uint8_t *)err);
     }
-    return lua_gettop(L) - top;
+    //return lua_gettop(L) - top;
+    return 1;
   } else {
     // file not found
     lua_pushnil(l);
@@ -299,6 +307,7 @@ static const struct luaL_Reg main_lib[] = {{"help", l_help},
                                            {"metro_set", l_metro_set},
                                            {"get_time", l_get_time},
                                            {"device_id", l_device_id},
+                                           {"device_version", l_device_version},
 
                                            {"fs_read_file", l_fs_read_file},
                                            {"fs_run_file", l_fs_run_file},
@@ -321,6 +330,7 @@ void *my_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
     void *x = realloc(ptr, nsize);
     if (x == NULL) {
       serial("-- out of memory!\r\n");
+      watchdog_reboot(0, 0, 1000);
       // TODO: actually do something else?
     }
     return x;
@@ -414,8 +424,8 @@ void vm_deinit() {
   if (L == NULL) {
     return;
   }
-  lua_close(L);
   metro_cleanup();
+  lua_close(L);
 }
 
 bool vm_test_script(const char *buf) {
@@ -459,7 +469,7 @@ void vm_handle_midi(uint8_t data1, uint8_t data2, uint8_t data3) {
   }
   lua_getglobal(L, "event_midi");
   if (lua_isnil(L, -1)) {
-    serial("event_midi: %d %d %d\r\n", data1, data2, data3);
+    //serial("event_midi: %d %d %d\r\n", data1, data2, data3);
     lua_pop(L, 1);
     return;
   }
