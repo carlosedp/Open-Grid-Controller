@@ -34,6 +34,7 @@ utils\n\
   wrap(n, min, max)\n\
 system\n\
   device_id()\n\
+  device_version()\n\
   ls()\n\
   cat(file)\n\
   rm(file)\n\

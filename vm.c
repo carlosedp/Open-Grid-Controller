@@ -183,6 +183,11 @@ static int l_device_id(lua_State *l) {
   return 1;
 }
 
+static int l_device_version(lua_State *l) {
+  lua_pushstring(l, device_version());
+  return 1;
+}
+
 static int l_fs_read_file(lua_State *l) {
   const char *path = lua_tostring(l, 1);
   lfs_file_t file;
@@ -302,6 +307,7 @@ static const struct luaL_Reg main_lib[] = {{"help", l_help},
                                            {"metro_set", l_metro_set},
                                            {"get_time", l_get_time},
                                            {"device_id", l_device_id},
+                                           {"device_version", l_device_version},
 
                                            {"fs_read_file", l_fs_read_file},
                                            {"fs_run_file", l_fs_run_file},
