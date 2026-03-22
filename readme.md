@@ -11,12 +11,12 @@ This is a sub-repository shared by several devices:
 - [grid 2022](https://codeberg.org/tehn/iii-grid-2022)
 - [arc](https://codeberg.org/tehn/iii-arc)
 
-If you're looking to experiment with this on a Pico devboard, check out [blink](https://codeberg.org/tehn/iii-blink)
+If you're looking to experiment with this on a Pico devboard, check out [blink](https://codeberg.org/tehn/iii-blink).
 
 
 ## Discussion
 
-Please post to the [iii thread]() on the lines forum.
+Please post to the [iii thread](https://llllllll.co/t/iii/74311/) on the lines forum.
 
 
 ## Contributing
@@ -26,7 +26,7 @@ Fixes always welcome. Please consult us prior to submitting substantial feature 
 
 ## Credits
 
-iii is a [monome](https://monome.org) initiative. Designed and coded primary by [tehn](https://nnnnnnnn.co) and [Ezra Buchla](https://ezrabuchla.com)
+iii is a [monome](https://monome.org) initiative. Designed and coded primarily by [tehn](https://nnnnnnnn.co) and [Ezra Buchla](https://ezrabuchla.com).
 
 
 ## License
