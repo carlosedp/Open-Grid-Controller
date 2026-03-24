@@ -1,5 +1,10 @@
 # changelog
 
+## v1.1.1
+
+- NEW iii_vesion tracking, rewrite lib.lua if out of date
+
+
 ## v1.1.0
 
 This is a substantial update to the initial version released with the arc in early 2025.
@@ -31,7 +36,6 @@ less common, handled by diii for ease:
 ^^w end data: file write
 ^^p print current file
 ^^g print current filename
-
 
 ### lua
 
@@ -76,19 +80,16 @@ m:stop()
 metro.free(m)
 ```
 
-
 ### midi
 
 CHANGE: event_midi() was midi_rx()
 CHANGE: midi_out(msg) was midi_send(msg)
-
 
 ### grid
 
 CHANGE: event_grid(x,y,z) was grid(x,y,z)
 NEW: grid_intensity(z)
 NEW: all LED commands take optional last argument, _rel_ (boolean) to add/subtract relative to existing value rather than overwriting
-
 
 ### arc
 
@@ -99,11 +100,9 @@ NEW: arc_led_all(z)
 NEW: arc_intensity(z)
 NEW: all LED commands take optional last argument, _rel_ (boolean) to add/subtract relative to existing value rather than overwriting
 
-
 ### slew
 
 CHANGE: args are in seconds (float) instead of ms (int) with us precision
-
 
 ### pset
 
