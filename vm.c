@@ -10,6 +10,7 @@
 #include "device.h"
 #include "fs.h"
 #include "help.h"
+#include "iii.h"
 #include "metro.h"
 #include "midi.h"
 #include "serial.h"
@@ -352,9 +353,24 @@ void vm_init(bool run_script) {
   luaL_setfuncs(L, get_device_lib(), 0);
   lua_pop(L, 1);
 
+  bool write_lib = false;
+
   // test if lib.lua present, write it if not
   lfs_file_t f;
   if (fs_file_open(&f, "lib.lua", LFS_O_RDONLY) != 0) {
+    serial("-- lib.lua not found\r\n");
+    write_lib = true;
+  } else {
+    char buf[24];
+    fs_file_read(&f, buf, 24);
+    fs_file_close(&f);
+    if(strstr(buf,III_VERSION)==NULL) {
+      serial("-- lib.lua wrong version\r\n");
+      write_lib=true;
+    }
+  }
+
+  if (write_lib) {
     serial("-- init: writing lib.lua\r\n");
     // const unsigned int sz = (unsigned int)strlen(lua_init_code());
     const unsigned int sz = (unsigned int)strlen((const char *)lib_lua_data);
@@ -370,8 +386,6 @@ void vm_init(bool run_script) {
       serial("-- init: writing lib.lua failed!!\r\n");
     }
     free(buf);
-  } else {
-    fs_file_close(&f);
   }
 
   if (run_script) {
