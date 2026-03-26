@@ -10,6 +10,8 @@
 #include "tusb.h"
 #include "vm.h"
 
+static bool reset = false;
+
 void iii_loop(bool run_script) {
   // must come after flash_init()
   fs_init();
@@ -30,5 +32,14 @@ void iii_loop(bool run_script) {
     metro_task();
     serial_task();
     device_task();
+    if(reset) {
+      reset = false;
+      vm_deinit();
+      vm_init(true);
+    }
   }
+}
+
+void iii_reset() {
+  reset = true;
 }
