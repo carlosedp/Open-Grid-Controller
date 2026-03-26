@@ -10,7 +10,8 @@ metro\n\
   m:start(time_optional, count_optional)\n\
   m:stop()\n\
   m.time = 0.1\n\
-  metro.free(m)\n\
+  metro.free(m.id)\n\
+  metro.free_all()\n\
 slew\n\
   id = slew.new(callback, start_val, end_val, time_sec)\n\
   slew.to(id, end_val, time_optional)\n\
