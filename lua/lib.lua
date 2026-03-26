@@ -13,9 +13,17 @@ require = fs_run_file
 
 -- MIDI
 midi_out = function(data)
-  if data.type then
-    local d = msg_to_midi[data.type](data)
-    midi_tx(d[1],d[2],d[3])
+  local d = data
+  if data and data.type then
+    d = msg_to_midi[data.type](data)
+  end
+  if d then
+    midi_tx(d[1], d[2], d[3])
+    if #d > 3 then
+      for i=1, (#d // 3) - 1 do
+        midi_tx(d[3 * i + 1], d[3 * i + 2], d[3 * i + 3])
+      end
+    end
   end
 end
 
@@ -32,7 +40,9 @@ msg_to_midi = {
   continue = function(msg) return {0xfb} end,
   clock = function(msg) return {0xf8} end,
   song_position = function(msg) return {0xf2, msg.lsb, msg.msb} end,
-  song_select = function(msg) return {0xf3, msg.val} end
+  song_select = function(msg) return {0xf3, msg.val} end,
+  sysex = function(msg) return msg.raw end,
+  other = function(msg) return msg.raw end
 }
 
 function midi_to_msg(data)
