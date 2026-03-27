@@ -12,37 +12,38 @@ function gc() collectgarbage() mem() end
 require = fs_run_file
 
 -- MIDI
-midi_out = function(data)
-  local d = data
-  if data and data.type then
-    d = msg_to_midi[data.type](data)
+midi_out = function(msg)
+  if msg and msg.type then
+    msg_to_midi_tx[msg.type](msg)
+  else
+    midi_tx_many(msg)
   end
-  if d then
-    midi_tx(d[1], d[2], d[3])
-    if #d > 3 then
-      for i=1, (#d // 3) - 1 do
-        midi_tx(d[3 * i + 1], d[3 * i + 2], d[3 * i + 3])
-      end
+end
+
+midi_tx_many = function(d)
+  if #d > 0 then
+    for i=0, ((#d - 1)// 3) do
+      midi_tx(d[3 * i + 1], d[3 * i + 2], d[3 * i + 3])
     end
   end
 end
 
-msg_to_midi = {
-  note_on = function(msg) return {0x90 + (msg.ch or 1)-1, msg.note, msg.vel or 100} end,
-  note_off = function(msg) return {0x80 + (msg.ch or 1)-1, msg.note, msg.vel or 100} end,
-  cc = function(msg) return {0xb0 + (msg.ch or 1) - 1, msg.cc, msg.val} end,
-  pitchbend = function(msg) return {0xe0 + (msg.ch or 1) - 1, msg.val & 0x7f, (msg.val >> 7) & 0x7f} end,
-  key_pressure = function(msg) return {0xa0 + (msg.ch or 1) - 1, msg.note, msg.val} end,
-  channel_pressure = function(msg) return {0xd0 + (msg.ch or 1) - 1, msg.val} end,
-  program_change = function(msg) return {0xc0 + (msg.ch or 1) - 1, msg.val} end,
-  start = function(msg) return {0xfa} end,
-  stop = function(msg) return {0xfc} end,
-  continue = function(msg) return {0xfb} end,
-  clock = function(msg) return {0xf8} end,
-  song_position = function(msg) return {0xf2, msg.lsb, msg.msb} end,
-  song_select = function(msg) return {0xf3, msg.val} end,
-  sysex = function(msg) return msg.raw end,
-  other = function(msg) return msg.raw end
+msg_to_midi_tx = {
+  note_on = function(msg) midi_tx(0x90 + (msg.ch or 1)-1, msg.note, msg.vel or 100) end,
+  note_off = function(msg) midi_tx(0x80 + (msg.ch or 1)-1, msg.note, msg.vel or 100) end,
+  cc = function(msg) midi_tx(0xb0 + (msg.ch or 1) - 1, msg.cc, msg.val) end,
+  pitchbend = function(msg) midi_tx(0xe0 + (msg.ch or 1) - 1, msg.val & 0x7f, (msg.val >> 7) & 0x7f) end,
+  key_pressure = function(msg) midi_tx(0xa0 + (msg.ch or 1) - 1, msg.note, msg.val) end,
+  channel_pressure = function(msg) midi_tx(0xd0 + (msg.ch or 1) - 1, msg.val) end,
+  program_change = function(msg) midi_tx(0xc0 + (msg.ch or 1) - 1, msg.val) end,
+  start = function(msg) midi_tx(0xfa) end,
+  stop = function(msg) midi_tx(0xfc) end,
+  continue = function(msg) midi_tx(0xfb) end,
+  clock = function(msg) midi_tx(0xf8) end,
+  song_position = function(msg) midi_tx(0xf2, msg.lsb, msg.msb) end,
+  song_select = function(msg) midi_tx(0xf3, msg.val) end,
+  sysex = function(msg) midi_tx_many(msg.raw) end,
+  other = function(msg) midi_tx_many(msg.raw) end
 }
 
 function midi_to_msg(data)
