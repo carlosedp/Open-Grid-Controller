@@ -175,7 +175,7 @@ static int l_metro_set(lua_State *l) {
 
 static int l_get_time(lua_State *l) {
   uint64_t us = to_us_since_boot(get_absolute_time());
-  lua_pushnumber(l, (double)((double)us / 1000000.0));
+  lua_pushnumber(l, (lua_Number)((double)us / 1000000.0));
   return 1;
 }
 
@@ -278,7 +278,7 @@ static int l_fs_list_files(lua_State *l) {
   for (uint32_t i = 0; i < num_files; i++) {
     lua_pushstring(l, files[i]);
     free(files[i]);
-    lua_rawseti(l, -2, i + 1);
+    lua_rawseti(l, -2, (lua_Integer)(i + 1));
   }
   free(files);
   return 1;
@@ -288,14 +288,14 @@ int l_fs_file_size(lua_State *l) {
   const char *path = lua_tostring(l, 1);
   struct lfs_info st;
   if (fs_stat(path, &st) == LFS_ERR_OK) {
-    lua_pushinteger(l, st.size);
+    lua_pushinteger(l, (lua_Integer)st.size);
     return 1;
   }
   return 0;
 }
 
 int l_fs_free_space(lua_State *l) {
-  lua_pushinteger(l, fs_get_free_space());
+  lua_pushinteger(l, (lua_Integer)fs_get_free_space());
   return 1;
 }
 
