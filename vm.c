@@ -414,6 +414,8 @@ void vm_init(bool run_script) {
       serial("-- init: lib fail!\r\n");
     }
 
+    lua_gc(L, LUA_GCCOLLECT);
+
     // run init.lua if present
     const char *path = "init.lua";
     const int flags = LFS_O_RDONLY;
