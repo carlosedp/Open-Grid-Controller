@@ -44,9 +44,10 @@ docs/                   this file
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.1.0)
+### 1.3 Firmware status (`iii-open-grid`, og-0.2.0)
 
-Builds for both boards (≈ 318 KB flash, 29 KB static RAM). **Not yet run on hardware.**
+Builds for both boards (≈ 323 KB flash, 33 KB static RAM). og-0.1.0 was tested on a XIAO RP2040
+without keypads (M0 step 1); og-0.2.0 adds the items marked *(0.2)* and is not yet tested.
 
 - **Two modes**, stored in iii's flash status byte (same scheme as monome's grids):
 
@@ -64,7 +65,18 @@ Builds for both boards (≈ 318 KB flash, 29 KB static RAM). **Not yet run on ha
   - from Lua: `og_set_mode(0|1)`.
 - **Lua grid API** identical to monome's iii grids (`event_grid`, `grid_led`, `grid_led_all`,
   `grid_led_get`, `grid_intensity`, `grid_refresh`, `grid_size_x/y`), so existing iii grid
-  scripts run unchanged. `device_id()` returns `"grid"` for the same reason. Extras: `og_keypads()`.
+  scripts run unchanged. `device_id()` returns `"grid"` for the same reason.
+- **Open Grid Lua extras** (listed by `help()`):
+
+  | Call             | What it does                                                                |
+  | ---------------- | --------------------------------------------------------------------------- |
+  | `og_set_mode(m)` | 0 = iii, 1 = monome serial; saves and reboots                               |
+  | `og_keypads()`   | bitmask of keypad boards online                                             |
+  | `og_mem()`       | *(0.2)* C heap: prints KB, returns bytes `free, largest, used, peak, total` |
+  | `og_key(x,y,z)`  | *(0.2)* inject a key event through the same queue as real keys              |
+  | `og_led(r,g,b)`  | *(0.2)* status LED color 0–255; `og_led()` returns it to the mode color     |
+  | `og_mirror(on)`  | *(0.2)* stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii |
+
 - **Core split**: core1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty);
   core0 runs USB + Lua. Events cross through a multicore-safe queue. Core1 registers for flash
   lockout, so file writes from diii are safe.
@@ -191,11 +203,26 @@ Everything in §1.3. **Acceptance**, in order:
 - **Accept:** measured press-to-USB latency before/after; no ghost or missed presses in a 5-minute
   hammer test on all 128 keys.
 
-### M2 — Status feedback
+### M2 — Status feedback (implemented in og-0.2.0, hardware test pending)
 
-- WS2812 status LED via PIO (RP2040-Zero GPIO16; XIAO GPIO12 with power on GPIO11): color = mode,
-  blink on Lua error / out-of-memory.
-- Short boot splash on the grid in iii mode only (serial mode stays dark, like today).
+- WS2812 status LED via PIO (RP2040-Zero GPIO16; XIAO GPIO12 with power on GPIO11). The PIO
+  program header is pre-generated in `src/generated/`, so builds don't need `pioasm`.
+
+  | Color       | Meaning                                   |
+  | ----------- | ----------------------------------------- |
+  | green       | iii mode                                  |
+  | amber       | iii mode, clean boot (`init.lua` skipped) |
+  | blue        | monome serial mode                        |
+  | white flash | key press (real or `og_key`)              |
+  | red flash   | Lua error inside `event_grid`             |
+  | magenta     | BOOT held; mode switches at 2 s           |
+
+  Scripts can take the LED over with `og_led(r,g,b)`.
+- Short left-to-right sweep on the grid when iii starts (skipped without keypads; serial mode
+  stays dark, like today).
+- **Not covered:** errors in metro/MIDI callbacks and out-of-memory resets happen inside iii's
+  `vm.c`; flagging them needs a small iii hook (see M4 item 5).
+- **Accept:** colors match the table on the XIAO and the RP2040-Zero; the sweep shows with keypads.
 
 ### M3 — Open Grid script library (replaces the old C++ MIDI-mode milestones)
 
@@ -234,6 +261,8 @@ such as MIDI to C). RAM today: ~29 KB static (incl. iii's 16 KB serial TX + 4 KB
 
    The RP2040 has 264 KB of RAM; firmware buffers and stacks take ~40–50 KB, and a file upload
    from diii needs a further 32 KB, so kria leaves only a few tens of KB of headroom.
+   `og_mem()` (og-0.2.0) reports the real C-heap numbers (free, largest block, peak); record
+   them next to `mem()` for each script, and once more during a diii upload.
 2. Port, in order of payoff:
    - MIDI encode/decode (`msg_to_midi_tx`, `midi_to_msg`, note/cc helpers) → C functions;
    - `metro` bookkeeping (tables of metros) → C userdata;
@@ -244,29 +273,36 @@ such as MIDI to C). RAM today: ~29 KB static (incl. iii's 16 KB serial TX + 4 KB
 4. Keep the Lua-visible API identical so scripts don't change.
 5. **Upstream first**: these changes belong in iii itself. Propose them on the iii thread /
    codeberg before diverging; keep `third_party/iii` unmodified and carry any interim patch as an
-   explicit, documented patch file until it lands upstream.
+   explicit, documented patch file until it lands upstream. Other upstream candidates found so far:
+   - `serial()` in `serial.c` formats straight into the 16 KB TX buffer and adds the *untruncated*
+     length, so the buffer can overflow if the host stops reading (our code uses the
+     bounds-checked `serial_tx()` instead);
+   - a hook for Lua errors and out-of-memory (for the M2 status LED).
 
 - **Accept:** same scripts, measurably more free heap; no API changes.
 
 ### M5 — diii fork (PWA + Open Grid features)
 
-Fork [monome/web-diii](https://github.com/monome/web-diii) (GPL-3.0, static site) to our GitHub
-account and host it on GitHub Pages. Known issues to fix first:
+Fork of [monome/web-diii](https://github.com/monome/web-diii) (GPL-3.0, static site):
+[carlosedp/web-diii](https://github.com/carlosedp/web-diii), to be hosted on GitHub Pages. Work so
+far is committed locally, not pushed:
 
-- **PWA is broken when not hosted at the site root**: `diii.js` registers `/sw.js`, the service
-  worker caches absolute `/…` paths, and the manifest uses `start_url: "/"`. Use relative paths and
-  `scope: "./"`.
-- Cache is cache-first with a fixed name (`diii-v1`) → users never get updates. Version the cache
-  per release, use stale-while-revalidate, clean up old caches in `activate`.
-- Only an SVG icon → add 192/512 px PNG and maskable icons for install prompts on all platforms.
+- ✅ branch `pwa-fixes` (based on upstream `main`, kept separate so it can go upstream as a PR):
+  - relative service-worker and app-shell paths, so it installs from a sub-path; manifest
+    `id`/`scope`/`start_url` relative;
+  - versioned cache, stale-while-revalidate, old caches deleted on activate, so updates reach
+    installed copies;
+  - 192/512 px PNG and maskable icons rendered from `logo.svg`.
+- ✅ branch `virtual-grid` (on top of `pwa-fixes`): a **grid** button appears when the device has
+  `og_mirror`; the panel shows the LEDs live from `^^grid(...)` frames and sends presses with
+  `og_key`, multi-touch, blocked during uploads. Stock iii devices are unaffected.
 
-Open Grid additions:
+Next:
 
+- Test both branches against og-0.2.0; push; enable GitHub Pages.
+- Offer `pwa-fixes` upstream as a PR to monome/web-diii.
 - Accept our own VID:PID (M6) alongside `cafe:1101`.
-- **Virtual grid panel**: show the 16×8 LED state (polling `grid_led_get` or a compact dump call)
-  and inject presses with `event_grid` — lets people develop scripts without keypads.
 - Preset editor for `midi_controller.lua` (M3), script launcher management.
-- Offer the PWA fixes upstream as a PR to monome/web-diii.
 
 ### M6 — Identity
 

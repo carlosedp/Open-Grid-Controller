@@ -18,6 +18,7 @@
 static volatile uint8_t leds[OG_KEY_COUNT];
 static volatile uint8_t intensity = 15;
 static volatile bool dirty = true;
+static volatile bool changed = true;  // for og_grid_take_changed(), core 0 only
 static queue_t events;
 
 static void push_event(uint8_t x, uint8_t y, uint8_t z) {
@@ -83,9 +84,28 @@ void og_grid_led_all(uint8_t z) {
 void og_grid_set_intensity(uint8_t z) {
   intensity = z > 15 ? 15 : z;
   dirty = true;
+  changed = true;
 }
 
-void og_grid_refresh(void) { dirty = true; }
+void og_grid_refresh(void) {
+  dirty = true;
+  changed = true;
+}
+
+bool og_grid_take_changed(void) {
+  const bool was = changed;
+  changed = false;
+  return was;
+}
+
+void og_grid_snapshot(uint8_t *out) {
+  for (int i = 0; i < OG_KEY_COUNT; i++) out[i] = leds[i];
+}
+
+void og_grid_inject_key(uint8_t x, uint8_t y, uint8_t z) {
+  if (x >= OG_GRID_W || y >= OG_GRID_H) return;
+  push_event(x, y, z ? 1 : 0);
+}
 
 void og_grid_flush_now(void) {
   uint8_t frame[OG_KEY_COUNT];

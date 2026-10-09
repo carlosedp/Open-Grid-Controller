@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION "og-0.1.0"
+#define DEVICE_VERSION "og-0.2.0"
 
 #include <string.h>
 
@@ -25,11 +25,14 @@
 #include "device.h"
 #include "flash.h"
 #include "iii.h"
+#include "serial.h"
 #include "util.h"
 #include "vm.h"
 
 #include "grid.h"
+#include "heap_stats.h"
 #include "monome_serial.h"
+#include "status_led.h"
 
 #define MODE_III 0
 #define MODE_SERIAL 1
@@ -44,6 +47,9 @@
 
 #define BOOTSEL_POLL_MS 100
 #define BOOTSEL_HOLD_MS 2000
+
+// LED mirror for diii's virtual grid: at most one frame per this interval.
+#define MIRROR_INTERVAL_MS 33
 
 static uint8_t mode;
 
@@ -107,6 +113,7 @@ static void bootsel_task(void) {
   next_poll = make_timeout_time_ms(BOOTSEL_POLL_MS);
 
   held_ms = bootsel_pressed() ? held_ms + BOOTSEL_POLL_MS : 0;
+  if (held_ms > 0) og_status_flash(OG_COLOR_MODE_SWITCH, 2 * BOOTSEL_POLL_MS);
   if (held_ms >= BOOTSEL_HOLD_MS) {
     set_mode_and_reboot(mode == MODE_III ? MODE_SERIAL : MODE_III);
   }
@@ -120,8 +127,25 @@ void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *coding) {
   if (coding->bit_rate == 1200) rom_reset_usb_boot(0, 0);
 }
 
+// Quick left-to-right sweep on the grid when iii starts (skipped without keypads).
+static void boot_sweep(void) {
+  if (!og_keypad_connected_mask()) return;
+  for (int x = 0; x <= OG_GRID_W; x++) {
+    for (uint8_t y = 0; y < OG_GRID_H; y++) {
+      if (x < OG_GRID_W) og_grid_led((uint8_t)x, y, 10);
+      if (x > 0) og_grid_led((uint8_t)(x - 1), y, 2);
+      if (x > 1) og_grid_led((uint8_t)(x - 2), y, 0);
+    }
+    og_grid_refresh();
+    sleep_ms(15);
+  }
+  og_grid_led_all(0);
+  og_grid_refresh();
+}
+
 int main(void) {
   flash_init();
+  og_status_init();
   og_grid_init();
   og_keypad_wait_ready(KEYPAD_BOOT_WAIT_MS);
 
@@ -149,10 +173,16 @@ int main(void) {
     }
   }
 
+  og_status_set_base(mode == MODE_SERIAL ? OG_COLOR_SERIAL
+                     : run_script         ? OG_COLOR_III
+                                          : OG_COLOR_III_CLEAN);
+  og_status_task();
+
   tud_init(BOARD_TUD_RHPORT);
   og_grid_start();
 
   if (mode == MODE_III) {
+    boot_sweep();
     iii_loop(run_script);  // never returns; calls device_task()
   }
   while (true) {
@@ -176,18 +206,50 @@ static void vm_handle_grid_key(uint8_t x, uint8_t y, uint8_t z) {
   lua_pushinteger(L, x + 1);  // 1-based
   lua_pushinteger(L, y + 1);
   lua_pushinteger(L, z);
-  l_report(L, docall(L, 3, 0));
+  if (l_report(L, docall(L, 3, 0)) != LUA_OK) og_status_flash(OG_COLOR_ERROR, 300);
+}
+
+static bool mirror_on = false;
+
+// Send the LED frame as "^^grid(<128 hex levels>)", diii's event-line format.
+static void mirror_task(void) {
+  static absolute_time_t next;
+  if (!mirror_on) return;
+  if (!tud_cdc_connected()) {
+    mirror_on = false;  // diii went away; it re-enables on connect
+    return;
+  }
+  if (!time_reached(next) || !og_grid_take_changed()) return;
+  next = make_timeout_time_ms(MIRROR_INTERVAL_MS);
+
+  static const char hex[] = "0123456789abcdef";
+  uint8_t levels[OG_KEY_COUNT];
+  char line[sizeof("^^grid()\r\n") + OG_KEY_COUNT];
+  og_grid_snapshot(levels);
+  char *p = line;
+  memcpy(p, "^^grid(", 7);
+  p += 7;
+  for (int i = 0; i < OG_KEY_COUNT; i++) *p++ = hex[levels[i] & 0xF];
+  memcpy(p, ")\r\n", 3);
+  p += 3;
+  serial_tx((const uint8_t *)line, (uint32_t)(p - line));
 }
 
 void device_task() {
   bootsel_task();
+  og_heap_task();
+  og_status_task();
   if (mode == MODE_SERIAL) {
     monome_serial_task();
     return;
   }
   // One event per pass so USB and metros keep running under key bursts.
   og_key_event_t e;
-  if (og_grid_pop_event(&e)) vm_handle_grid_key(e.x, e.y, e.z);
+  if (og_grid_pop_event(&e)) {
+    if (e.z) og_status_flash(OG_COLOR_KEY, 30);
+    vm_handle_grid_key(e.x, e.y, e.z);
+  }
+  mirror_task();
 }
 
 const char *device_id() { return "grid"; }
@@ -267,6 +329,48 @@ static int l_og_keypads(lua_State *l) {
   return 1;
 }
 
+// Prints C heap stats (KB) and returns them in bytes: free, largest, used, peak, total.
+static int l_og_mem(lua_State *l) {
+  og_heap_stats_t h;
+  og_heap_stats(&h);
+  serial("heap KB: free %.1f, largest block %.1f, used %.1f, peak %.1f, total %.1f\r\n",
+         h.free / 1024.0, h.largest / 1024.0, h.used / 1024.0, h.peak / 1024.0, h.total / 1024.0);
+  lua_pushinteger(l, h.free);
+  lua_pushinteger(l, h.largest);
+  lua_pushinteger(l, h.used);
+  lua_pushinteger(l, h.peak);
+  lua_pushinteger(l, h.total);
+  return 5;
+}
+
+// og_mirror(true) streams LED frames as ^^grid(...) lines (used by diii's virtual grid).
+static int l_og_mirror(lua_State *l) {
+  mirror_on = lua_toboolean(l, 1);
+  if (mirror_on) og_grid_refresh();  // send a first frame right away
+  return 0;
+}
+
+// og_key(x, y, z): inject a key event as if it came from the grid (1-based).
+static int l_og_key(lua_State *l) {
+  const int x = (int)lua_tointeger(l, 1) - 1;
+  const int y = (int)lua_tointeger(l, 2) - 1;
+  if (x < 0 || y < 0) return 0;
+  og_grid_inject_key((uint8_t)x, (uint8_t)y, (uint8_t)(lua_tointeger(l, 3) ? 1 : 0));
+  return 0;
+}
+
+// og_led(r, g, b) sets the status LED (0-255 each); og_led() returns it to the mode color.
+static int l_og_led(lua_State *l) {
+  if (lua_gettop(l) == 0) {
+    og_status_clear_user();
+    return 0;
+  }
+  og_status_set_user(OG_RGB(clamp((int)lua_tointeger(l, 1), 0, 255),
+                            clamp((int)lua_tointeger(l, 2), 0, 255),
+                            clamp((int)lua_tointeger(l, 3), 0, 255)));
+  return 0;
+}
+
 static const struct luaL_Reg device_lib[] = {
     {"grid_led", l_grid_led},
     {"grid_led_get", l_grid_led_get},
@@ -277,6 +381,10 @@ static const struct luaL_Reg device_lib[] = {
     {"grid_size_y", l_grid_size_y},
     {"og_set_mode", l_og_set_mode},
     {"og_keypads", l_og_keypads},
+    {"og_mem", l_og_mem},
+    {"og_mirror", l_og_mirror},
+    {"og_key", l_og_key},
+    {"og_led", l_og_led},
     {NULL, NULL},
 };
 
@@ -294,6 +402,10 @@ static const char *device_help_str =
     "  grid_size_y()\n"
     "open grid\n"
     "  og_set_mode(m)  0 = iii, 1 = monome serial (reboots)\n"
-    "  og_keypads()    bitmask of keypad boards online\n";
+    "  og_keypads()    bitmask of keypad boards online\n"
+    "  og_mem()        C heap: free, largest block, used, peak, total\n"
+    "  og_key(x,y,z)   inject a key event, as if pressed on the grid\n"
+    "  og_led(r,g,b)   status LED color (0-255); og_led() = mode color\n"
+    "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n";
 
 const char *device_help_txt() { return device_help_str; }

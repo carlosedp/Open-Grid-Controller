@@ -36,3 +36,12 @@ void og_grid_refresh(void);
 void og_grid_flush_now(void);
 
 bool og_grid_pop_event(og_key_event_t *event);
+
+// Queue a key event as if it came from the keypads (virtual grid in diii).
+void og_grid_inject_key(uint8_t x, uint8_t y, uint8_t z);
+
+// True once after each grid_refresh()/intensity change; for the LED mirror.
+bool og_grid_take_changed(void);
+
+// Copy the raw framebuffer (levels 0-15, row-major, before intensity).
+void og_grid_snapshot(uint8_t *out);

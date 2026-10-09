@@ -70,7 +70,9 @@ add_executable(iii-open-grid
         src/grid.c
         src/keypad.c
         src/monome_serial.c
+        src/heap_stats.c
         src/newlib_locks.c
+        src/status_led.c
         src/usb_descriptors.c
         ${III_DIR}/flash.c
         ${III_DIR}/fs.c
@@ -107,6 +109,7 @@ target_link_libraries(iii-open-grid PRIVATE
         pico_multicore
         hardware_flash
         hardware_i2c
+        hardware_pio
         hardware_sync
         tinyusb_device
 )
@@ -114,5 +117,5 @@ target_link_libraries(iii-open-grid PRIVATE
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.1.0")
+pico_set_program_version(iii-open-grid "og-0.2.0")
 pico_add_extra_outputs(iii-open-grid)
