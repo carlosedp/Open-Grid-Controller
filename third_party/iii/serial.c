@@ -75,10 +75,19 @@ void serial_tx_str(const char *str) {
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
 int serial(const char *fmt, ...) {
   int l;
+  // vsnprintf needs room for its terminating zero; when full, drop output
+  const int space = SERIAL_TX_BUFSIZE - tx_w;
+  if (space <= 1)
+    return 0;
   va_list myargs;
   va_start(myargs, fmt);
-  l = vsnprintf(tx_buf + tx_w, SERIAL_TX_BUFSIZE - tx_w, fmt, myargs);
+  l = vsnprintf(tx_buf + tx_w, (size_t)space, fmt, myargs);
   va_end(myargs);
+  if (l < 0)
+    return 0;
+  // vsnprintf returns the untruncated length; only count what was written
+  if (l >= space)
+    l = space - 1;
   tx_w += (uint16_t)l;
   return 0;
 }
