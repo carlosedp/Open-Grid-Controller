@@ -68,10 +68,13 @@ Select the address jumpers as shown by the red circles in the image below:
 ├── enclosure/              # 3D enclosure STEP files
 │   ├── OpenGrid-Bot.step
 │   └── OpenGrid-Top.step
+├── diii/                   # diii web app (fork of monome/web-diii, git subtree)
 ├── docs/                   # Roadmap and design notes
 ├── iii-open-grid/          # iii (Lua) firmware, built from the root platformio.ini
 ├── pics/                   # README and assembly reference images
 ├── third_party/            # Vendored iii, Lua, littlefs and FREEPOET_Keypad sources
+├── tools/                  # Build helpers (dist.py)
+├── Makefile                # Build, flash and package everything (make help)
 ├── platformio.ini          # PlatformIO project for iii-open-grid
 └── sw/                     # Original Arduino firmware (PlatformIO project)
     ├── platformio.ini
@@ -96,14 +99,22 @@ pio run -t upload
 
 `iii-open-grid/` is a second firmware based on monome's [iii](https://monome.org/docs/iii/): Lua scripts run on the grid itself, it shows up as a USB MIDI device, and scripts are written and uploaded from the browser with [diii](https://monome.org/diii). It also keeps a monome serial mode for norns and serialosc. Hold the top-left key while plugging in (or hold BOOT for 2 seconds while running) to switch between the two modes.
 
-Open the repository root in VS Code with the PlatformIO extension, or use the CLI. PlatformIO installs the Pico SDK and toolchain on the first build:
+Everything is driven from the root `Makefile` (needs `make`, `python` and PlatformIO's `pio`). Run `make help` for the full list:
 
 ```bash
-pio run -e rp2040_zero -t upload    # Open Grid kit (RP2040-Zero)
-pio run -e xiao_rp2040 -t upload    # Seeed XIAO RP2040 (keypads on D4/D5)
+make upload                    # build and flash the XIAO RP2040 (default BOARD)
+make upload BOARD=rp2040_zero  # build and flash the Open Grid kit (RP2040-Zero)
+make diii                      # serve the diii web app at http://localhost:8000
+make dist                      # UF2s for all boards + the diii web app into dist/
 ```
 
-With a slow or no internet connection, use the `xiao_rp2040_offline` / `rp2040_zero_offline` environments instead. They reuse the Arduino-Pico toolchain that the `sw/` project installs and a pico-sdk 2.2.0 checkout in `.deps/pico-sdk-2.2.0`.
+You can also open the repository root in VS Code with the PlatformIO extension and use its Build/Upload buttons.
+
+The Makefile builds the `*_offline` PlatformIO environments by default. They reuse the Arduino-Pico toolchain that the `sw/` project installs and a pico-sdk 2.2.0 checkout with `lib/tinyusb` in `.deps/pico-sdk-2.2.0`. To let PlatformIO download pico-sdk and the official Arm toolchain instead (about 300 MB), use `make OFFLINE=`.
+
+### diii
+
+`diii/` is our fork of monome's [web-diii](https://github.com/monome/web-diii) (GPL-3.0), kept as a git subtree of [carlosedp/web-diii](https://github.com/carlosedp/web-diii). On top of upstream, it fixes installing diii as an app (PWA) from any path. It also adds a **grid** button for the Open Grid firmware: it shows the grid's LEDs live and lets you press keys from the browser, so scripts can be tried without keypads attached. `make diii-pull-upstream` merges monome's latest changes into `diii/`, and `make diii-push-fork` pushes `diii/` history to the fork, which is useful for pull requests to monome.
 
 The iii firmware is GPL-3.0 (inherited from iii). So far it has been tested on a Seeed XIAO RP2040 without keypads: diii, USB MIDI, and switching modes. It has not yet been tested with the keypad boards or on norns. See [docs/MULTIMODE-ROADMAP.md](docs/MULTIMODE-ROADMAP.md) for status and plans, and [third_party/README.md](third_party/README.md) for the vendored libraries.
 

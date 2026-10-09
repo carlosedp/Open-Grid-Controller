@@ -25,7 +25,12 @@ iii-open-grid/          iii firmware (Pico SDK + CMake)           ← new, GPL-3
   src/keypad.{h,c}      FREEPOET keypad I2C driver (C port of sw/src/keypad.cpp)
   src/monome_serial.c   monome serial protocol (norns / serialosc mode)
   src/usb_descriptors.c per-mode USB descriptors
+  src/status_led.{h,c}  WS2812 status LED (M2)
+  src/heap_stats.{h,c}  C heap statistics for og_mem()
   tools/pio_cmake.py    PlatformIO → CMake bridge
+diii/                   diii web app: fork of monome/web-diii as a git subtree (GPL-3.0)
+Makefile                firmware, upload, diii server, dist/ packaging (make help)
+tools/dist.py           collects UF2s and the diii site into dist/
 platformio.ini          PlatformIO project for iii-open-grid (installs the whole toolchain)
 third_party/            vendored iii, lua, littlefs, FREEPOET_Keypad (see third_party/README.md)
 sw/                     original Arduino firmware (monome serial only), unchanged
@@ -47,7 +52,7 @@ docs/                   this file
 ### 1.3 Firmware status (`iii-open-grid`, og-0.2.0)
 
 Builds for both boards (≈ 323 KB flash, 33 KB static RAM). og-0.1.0 was tested on a XIAO RP2040
-without keypads (M0 step 1); og-0.2.0 adds the items marked *(0.2)* and is not yet tested.
+without keypads (M0 step 1); og-0.2.0 adds the items marked _(0.2)_ and is not yet tested.
 
 - **Two modes**, stored in iii's flash status byte (same scheme as monome's grids):
 
@@ -58,6 +63,7 @@ without keypads (M0 step 1); og-0.2.0 adds the items marked *(0.2)* and is not y
 
   `cafe:1101` is required today: monome's hosted diii only lists ports with that ID. `0xCAFE` is
   TinyUSB's shared test VID; see M6 for getting our own.
+
 - **Switching modes**:
   - hold the top-left key while plugging in → toggles iii ↔ serial (monome's behavior); when
     switching to iii, keep holding ~1 s (row 1 fills up) to skip `init.lua` (clean boot);
@@ -72,10 +78,10 @@ without keypads (M0 step 1); og-0.2.0 adds the items marked *(0.2)* and is not y
   | ---------------- | --------------------------------------------------------------------------- |
   | `og_set_mode(m)` | 0 = iii, 1 = monome serial; saves and reboots                               |
   | `og_keypads()`   | bitmask of keypad boards online                                             |
-  | `og_mem()`       | *(0.2)* C heap: prints KB, returns bytes `free, largest, used, peak, total` |
-  | `og_key(x,y,z)`  | *(0.2)* inject a key event through the same queue as real keys              |
-  | `og_led(r,g,b)`  | *(0.2)* status LED color 0–255; `og_led()` returns it to the mode color     |
-  | `og_mirror(on)`  | *(0.2)* stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii |
+  | `og_mem()`       | _(0.2)_ C heap: prints KB, returns bytes `free, largest, used, peak, total` |
+  | `og_key(x,y,z)`  | _(0.2)_ inject a key event through the same queue as real keys              |
+  | `og_led(r,g,b)`  | _(0.2)_ status LED color 0–255; `og_led()` returns it to the mode color     |
+  | `og_mirror(on)`  | _(0.2)_ stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii |
 
 - **Core split**: core1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty);
   core0 runs USB + Lua. Events cross through a multicore-safe queue. Core1 registers for flash
@@ -218,6 +224,7 @@ Everything in §1.3. **Acceptance**, in order:
   | magenta     | BOOT held; mode switches at 2 s           |
 
   Scripts can take the LED over with `og_led(r,g,b)`.
+
 - Short left-to-right sweep on the grid when iii starts (skipped without keypads; serial mode
   stays dark, like today).
 - **Not covered:** errors in metro/MIDI callbacks and out-of-memory resets happen inside iii's
@@ -263,6 +270,7 @@ such as MIDI to C). RAM today: ~29 KB static (incl. iii's 16 KB serial TX + 4 KB
    from diii needs a further 32 KB, so kria leaves only a few tens of KB of headroom.
    `og_mem()` (og-0.2.0) reports the real C-heap numbers (free, largest block, peak); record
    them next to `mem()` for each script, and once more during a diii upload.
+
 2. Port, in order of payoff:
    - MIDI encode/decode (`msg_to_midi_tx`, `midi_to_msg`, note/cc helpers) → C functions;
    - `metro` bookkeeping (tables of metros) → C userdata;
@@ -274,7 +282,7 @@ such as MIDI to C). RAM today: ~29 KB static (incl. iii's 16 KB serial TX + 4 KB
 5. **Upstream first**: these changes belong in iii itself. Propose them on the iii thread /
    codeberg before diverging; keep `third_party/iii` unmodified and carry any interim patch as an
    explicit, documented patch file until it lands upstream. Other upstream candidates found so far:
-   - `serial()` in `serial.c` formats straight into the 16 KB TX buffer and adds the *untruncated*
+   - `serial()` in `serial.c` formats straight into the 16 KB TX buffer and adds the _untruncated_
      length, so the buffer can overflow if the host stops reading (our code uses the
      bounds-checked `serial_tx()` instead);
    - a hook for Lua errors and out-of-memory (for the M2 status LED).
@@ -284,8 +292,11 @@ such as MIDI to C). RAM today: ~29 KB static (incl. iii's 16 KB serial TX + 4 KB
 ### M5 — diii fork (PWA + Open Grid features)
 
 Fork of [monome/web-diii](https://github.com/monome/web-diii) (GPL-3.0, static site):
-[carlosedp/web-diii](https://github.com/carlosedp/web-diii), to be hosted on GitHub Pages. Work so
-far is committed locally, not pushed:
+[carlosedp/web-diii](https://github.com/carlosedp/web-diii), imported into this repo as a **git
+subtree at `diii/`** (history kept). `make diii` serves it locally, `make dist` packages it with a
+per-build cache name, `make diii-pull-upstream` merges monome's `main`, and `make diii-push-fork`
+pushes `diii/` to the fork for upstream PRs. Hosting: GitHub Pages. Work so far (in the fork's
+local branches, not pushed; `virtual-grid` is what `diii/` contains):
 
 - ✅ branch `pwa-fixes` (based on upstream `main`, kept separate so it can go upstream as a PR):
   - relative service-worker and app-shell paths, so it installs from a sub-path; manifest

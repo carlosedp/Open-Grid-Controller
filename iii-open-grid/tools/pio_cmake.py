@@ -71,9 +71,13 @@ def cmake_build(target, source, env):
     cmake = find_tool("tool-cmake", join("bin", "cmake"), "cmake")
     if not cmake:
         env.Exit("CMake not found; add tool-cmake to platform_packages")
+    gen_args = generator_args()
+    # The generator depends on the calling shell (Git Bash vs PowerShell), and
+    # CMake refuses to switch generators in an existing build directory.
+    binary_dir = join(cmake_dir, gen_args[1].replace(" ", "-").lower())
     run([
-        cmake, "-S", firmware_dir, "-B", cmake_dir,
-        *generator_args(),
+        cmake, "-S", firmware_dir, "-B", binary_dir,
+        *gen_args,
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
         "-DPICO_SDK_PATH=" + pico_sdk_path(),
         "-DPICO_TOOLCHAIN_PATH=" + package_dir("toolchain-gccarmnoneeabi"),
@@ -83,8 +87,8 @@ def cmake_build(target, source, env):
         "-DOG_BOARD=" + og_board,
         "-DOG_I2C_HZ=" + og_i2c_hz,
     ])
-    run([cmake, "--build", cmake_dir])
-    shutil.copyfile(join(cmake_dir, "iii-open-grid.elf"), str(target[0]))
+    run([cmake, "--build", binary_dir])
+    shutil.copyfile(join(binary_dir, "iii-open-grid.elf"), str(target[0]))
 
 
 def build_program(env):
