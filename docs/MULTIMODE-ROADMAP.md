@@ -201,8 +201,13 @@ Everything in §1.3. **Acceptance**, in order:
 
 Lua scripts in a new `scripts/` folder, each usable on its own and selectable from a launcher:
 
-- **`launcher.lua`** as `init.lua`: hold a key at boot (or a corner chord) to show stored scripts on
-  the grid and pick one; remembers the last choice.
+- ✅ **Launcher**: use [many-roads](https://github.com/boreal-ground/many-roads-grid) (tested at
+  `691af85`, listed in the README's recommended scripts). It lights one key per stored script, and
+  triple-clicking the top-left key returns to it. It has no license, so it is linked rather than
+  vendored; ask the authors to add one (MIT, like most iii scripts), then vendor it. Its restart
+  deliberately runs out of memory, and iii responds with a watchdog reboot. iii's `device_reset()`
+  (which re-runs `init.lua` without a hardware reboot) could be a gentler option to suggest
+  upstream.
 - **`midi_controller.lua`**: generic MIDI controller driven by a preset file (notes, CC momentary /
   toggle, faders as columns, page keys, MIDI-in LED feedback). Preset = a small Lua/JSON table in
   flash, written by diii or a web editor (M5).

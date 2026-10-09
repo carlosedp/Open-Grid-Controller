@@ -103,7 +103,19 @@ pio run -e rp2040_zero -t upload    # Open Grid kit (RP2040-Zero)
 pio run -e xiao_rp2040 -t upload    # Seeed XIAO RP2040 (keypads on D4/D5)
 ```
 
-The iii firmware is GPL-3.0 (inherited from iii) and has not been tested on hardware yet. See [docs/MULTIMODE-ROADMAP.md](docs/MULTIMODE-ROADMAP.md) for status and plans, and [third_party/README.md](third_party/README.md) for the vendored libraries.
+With a slow or no internet connection, use the `xiao_rp2040_offline` / `rp2040_zero_offline` environments instead. They reuse the Arduino-Pico toolchain that the `sw/` project installs and a pico-sdk 2.2.0 checkout in `.deps/pico-sdk-2.2.0`.
+
+The iii firmware is GPL-3.0 (inherited from iii). So far it has been tested on a Seeed XIAO RP2040 without keypads: diii, USB MIDI, and switching modes. It has not yet been tested with the keypad boards or on norns. See [docs/MULTIMODE-ROADMAP.md](docs/MULTIMODE-ROADMAP.md) for status and plans, and [third_party/README.md](third_party/README.md) for the vendored libraries.
+
+### Recommended iii Scripts
+
+Scripts written for monome's iii grids run unchanged on the Open Grid. Upload them with [diii](https://monome.org/diii).
+
+| Script                                                         | What it does                                                                                                                                                                                                                                                                                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [many-roads](https://github.com/boreal-ground/many-roads-grid) | Script launcher. On startup it lights one key per script stored on the grid; press a key to run that script. Triple-click the top-left key to restart and return to the launcher. To install, upload `many-roads.lua` and `many-roads-data.lua` and set `many-roads.lua` as `first` in diii. Tested at commit `691af85`. |
+
+Scripts are listed by link only. Their authors hold the copyright, and we only copy a script into this repository when its license allows redistribution.
 
 ## Software Compatibility
 
