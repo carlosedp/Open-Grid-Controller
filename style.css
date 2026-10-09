@@ -403,6 +403,47 @@ body.is-resizing-explorer * {
     min-height: 0;
 }
 
+.grid-panel {
+    padding: 12px;
+    border-bottom: 1px solid var(--neutral-trim);
+    background-color: var(--bg-surface);
+}
+
+.grid-panel[hidden] {
+    display: none;
+}
+
+.grid-cells {
+    display: grid;
+    grid-template-columns: repeat(16, minmax(0, 1fr));
+    gap: 4px;
+    max-width: 640px;
+    margin: 0 auto;
+    touch-action: none;
+    user-select: none;
+}
+
+.grid-cells.offline {
+    opacity: 0.4;
+}
+
+.grid-cell {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    border: 1px solid var(--neutral-trim);
+    background-color: var(--bg-subdued);
+    cursor: pointer;
+}
+
+.grid-cell.pressed {
+    border-color: var(--accent-hover);
+}
+
+.repl-action-btn.active {
+    color: var(--interactive-selected);
+    border-color: var(--accent);
+}
+
 .repl-output-area {
     position: relative;
     flex: 1;
