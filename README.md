@@ -68,8 +68,12 @@ Select the address jumpers as shown by the red circles in the image below:
 ├── enclosure/              # 3D enclosure STEP files
 │   ├── OpenGrid-Bot.step
 │   └── OpenGrid-Top.step
+├── docs/                   # Roadmap and design notes
+├── iii-open-grid/          # iii (Lua) firmware, built from the root platformio.ini
 ├── pics/                   # README and assembly reference images
-└── sw/                     # PlatformIO firmware project
+├── third_party/            # Vendored iii, Lua, littlefs and FREEPOET_Keypad sources
+├── platformio.ini          # PlatformIO project for iii-open-grid
+└── sw/                     # Original Arduino firmware (PlatformIO project)
     ├── platformio.ini
     └── src/
 ```
@@ -87,6 +91,19 @@ The firmware is built with PlatformIO. The target board is Raspberry Pi Pico.
 cd sw
 pio run -t upload
 ```
+
+## iii Firmware (experimental)
+
+`iii-open-grid/` is a second firmware based on monome's [iii](https://monome.org/docs/iii/): Lua scripts run on the grid itself, it shows up as a USB MIDI device, and scripts are written and uploaded from the browser with [diii](https://monome.org/diii). It also keeps a monome serial mode for norns and serialosc. Hold the top-left key while plugging in (or hold BOOT for 2 seconds while running) to switch between the two modes.
+
+Open the repository root in VS Code with the PlatformIO extension, or use the CLI. PlatformIO installs the Pico SDK and toolchain on the first build:
+
+```bash
+pio run -e rp2040_zero -t upload    # Open Grid kit (RP2040-Zero)
+pio run -e xiao_rp2040 -t upload    # Seeed XIAO RP2040 (keypads on D4/D5)
+```
+
+The iii firmware is GPL-3.0 (inherited from iii) and has not been tested on hardware yet. See [docs/MULTIMODE-ROADMAP.md](docs/MULTIMODE-ROADMAP.md) for status and plans, and [third_party/README.md](third_party/README.md) for the vendored libraries.
 
 ## Software Compatibility
 
