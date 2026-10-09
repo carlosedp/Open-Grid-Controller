@@ -281,6 +281,7 @@ class diiiApp {
             restartBtn: document.getElementById('restartBtn'),
             bootloaderBtn: document.getElementById('bootloaderBtn'),
             reformatBtn: document.getElementById('reformatBtn'),
+            helpBtn: document.getElementById('helpBtn'),
             clearBtn: document.getElementById('clearBtn'),
             gridBtn: document.getElementById('gridBtn'),
             gridPanel: document.getElementById('gridPanel'),
@@ -310,6 +311,7 @@ class diiiApp {
         on(this.elements.restartBtn, 'click', () => this.restartDevice());
         on(this.elements.bootloaderBtn, 'click', () => this.bootloaderDevice());
         on(this.elements.reformatBtn, 'click', () => this.reformatFs());
+        on(this.elements.helpBtn, 'click', () => this.helpDevice());
         on(this.elements.clearBtn, 'click', () => this.clearOutput());
         on(this.elements.gridBtn, 'click', () => this.toggleGridPanel());
         on(this.elements.gridCells, 'pointerdown', (e) => this.handleGridPointerDown(e));
@@ -1831,6 +1833,25 @@ class diiiApp {
             this.outputLine(`Reformat error: ${error.message}`);
         }
     }
+
+        bootloaderDevice() {
+        if (!this.iiiDevice.isConnected) {
+            this.outputLine('Error: Not connected to usb device');
+            return;
+        }
+        this.outputLine('> ^^b');
+        this.iiiDevice.writeLine('^^b');
+        }
+
+        helpDevice() {
+        if (!this.iiiDevice.isConnected) {
+            this.outputLine('Error: Not connected to usb device');
+            return;
+        }
+        this.showHelp();
+        this.outputLine('> help()');
+        this.iiiDevice.writeLine('help()');
+        }
 
     // --- virtual grid ------------------------------------------------------
 

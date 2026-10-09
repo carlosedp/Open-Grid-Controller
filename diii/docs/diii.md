@@ -55,3 +55,4 @@ Above the repl input box are a few helpful buttons:
 - **reboot** restarts the device (it will reconnect automatically and run init.lua if it exists)
 - **bootloader** restarts the device into bootloader mode, which is only necessary for firmware updates
 - **reformat** clears all the files on the device. Note that lib.lua will be recreated automatically on reboot.
+- **help** print command help to console
