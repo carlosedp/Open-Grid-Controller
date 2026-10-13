@@ -40,6 +40,10 @@ To check a patch against upstream: `git -C <tehn/iii clone> apply --check <patch
 | --------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `e7107bf` | `serial()`: don't write past the TX buffer | fixes RAM corruption when >16 KB is printed in one Lua call                                                                                                                                             | not sent |
 | `3ee8dd2` | stream Lua files into the compiler         | no full source copy while loading: kria_iii (29 KB) now loads after og_bench's tests, was out of memory; fixups `9340efe` (stop at the NUL uploads end with), `f47cc2c` (no big buffers on the C stack) | not sent |
+| `b45e254` | stream uploads to flash, no 32 KB buffer   | heap high water after uploading 4 files: 168 KB (was 197 KB after one upload, of 221 KB); no 32 KB script limit                                                                                         | not sent |
+| `f8be883` | no reboot on a failed allocation           | Lua's emergency GC can recover; a real OOM is a script error, panics still reboot; measuring                                                                                                            | not sent |
+| `e537ece` | GC pause 120% instead of 200%              | collect before garbage can outgrow RAM; measuring (speed cost in og_bench)                                                                                                                              | not sent |
+| `289097f` | name the file in upload compile errors     | no NULL+3 crash on messages without a quote                                                                                                                                                             | not sent |
 
 `make iii-patches` exports every iii commit since the subtree was added. When a
 change lands upstream, mark it *merged* here; to leave it out of later
