@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION "og-0.2.8"
+#define DEVICE_VERSION_BASE "og-0.2.9"
 
 #include <string.h>
 
@@ -33,6 +33,13 @@
 #include "heap_stats.h"
 #include "monome_serial.h"
 #include "status_led.h"
+
+// Fast-clock builds say so, so benchmark output identifies itself.
+#if SYS_CLK_HZ == 200000000
+#define DEVICE_VERSION DEVICE_VERSION_BASE "-200mhz"
+#else
+#define DEVICE_VERSION DEVICE_VERSION_BASE
+#endif
 
 #define MODE_III 0
 #define MODE_SERIAL 1

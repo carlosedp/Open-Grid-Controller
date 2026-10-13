@@ -24,6 +24,7 @@ cmake_dir = join(build_dir, "cmake")
 
 og_board = env.GetProjectOption("custom_og_board")
 og_i2c_hz = env.GetProjectOption("custom_og_i2c_hz", "100000")
+og_fast_clock = env.GetProjectOption("custom_og_fast_clock", "no").lower() in ("1", "yes", "true", "on")
 # Optional: use a pico-sdk checkout instead of the framework-picosdk package.
 sdk_override = env.GetProjectOption("custom_pico_sdk_path", "")
 
@@ -86,6 +87,7 @@ def cmake_build(target, source, env):
         "-Dpicotool_FOUND=0",
         "-DOG_BOARD=" + og_board,
         "-DOG_I2C_HZ=" + og_i2c_hz,
+        "-DOG_FAST_CLOCK=" + ("ON" if og_fast_clock else "OFF"),
     ])
     run([cmake, "--build", binary_dir])
     shutil.copyfile(join(binary_dir, "iii-open-grid.elf"), str(target[0]))
