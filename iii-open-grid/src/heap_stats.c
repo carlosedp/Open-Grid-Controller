@@ -65,7 +65,11 @@ void og_heap_stats(og_heap_stats_t *out) {
   out->total = (uint32_t)(&__StackLimit - &end);
   out->used = sample_used();
   out->free = (uint32_t)mi.fordblks + never_claimed;
-  out->largest = probe_largest(out->free);
   out->peak = peak_used;
   out->high_water = heap_high_water ? (uint32_t)(heap_high_water - (uintptr_t)&end) : 0;
+  // The probe's trial allocations can grow the heap up to its limit; they
+  // are freed right away, so don't let them count towards the high water.
+  const uintptr_t high_water_before_probe = heap_high_water;
+  out->largest = probe_largest(out->free);
+  heap_high_water = high_water_before_probe;
 }
