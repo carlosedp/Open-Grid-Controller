@@ -158,6 +158,150 @@ static int l_midi_tx(lua_State *l) {
   return 0;
 }
 
+//--- midi helpers: these used to be lua functions in lib.lua; the api is the
+//--- same, but C is ~10x faster and allocates nothing beyond the result
+
+// `v or def` for an optional integer argument
+static lua_Integer opt_int(lua_State *l, int idx, lua_Integer def) {
+  return lua_toboolean(l, idx) ? lua_tointeger(l, idx) : def;
+}
+
+static void midi_tx_shortcut(lua_State *l, uint8_t status) {
+  // midi_tx((ch or 1)-1 + status, note or 66, vel or 100), and same for cc
+  midi_tx((uint8_t)(opt_int(l, 3, 1) - 1 + status), (uint8_t)opt_int(l, 1, 66),
+          (uint8_t)opt_int(l, 2, 100));
+}
+
+static int l_midi_note_on(lua_State *l) {
+  midi_tx_shortcut(l, 0x90);
+  return 0;
+}
+
+static int l_midi_note_off(lua_State *l) {
+  midi_tx_shortcut(l, 0x80);
+  return 0;
+}
+
+static int l_midi_cc(lua_State *l) {
+  midi_tx_shortcut(l, 0xb0);
+  return 0;
+}
+
+// midi_tx_many({b1, b2, b3, b1, b2, b3, ...}): one midi_tx per 3 bytes
+static int l_midi_tx_many(lua_State *l) {
+  const lua_Integer n = luaL_len(l, 1);
+  for (lua_Integer i = 0; n > 0 && i <= (n - 1) / 3; i++) {
+    uint8_t b[3];
+    for (int k = 0; k < 3; k++) {
+      lua_geti(l, 1, 3 * i + k + 1);
+      b[k] = (uint8_t)lua_tointeger(l, -1);
+      lua_pop(l, 1);
+    }
+    midi_tx(b[0], b[1], b[2]);
+  }
+  return 0;
+}
+
+// msg[key] = data[i], as is (nil leaves the field out)
+static void msg_copy(lua_State *l, int i, const char *key) {
+  lua_geti(l, 1, i);
+  lua_setfield(l, -2, key);
+}
+
+static void msg_int(lua_State *l, const char *key, lua_Integer v) {
+  lua_pushinteger(l, v);
+  lua_setfield(l, -2, key);
+}
+
+static lua_Integer data_int(lua_State *l, int i) {
+  lua_geti(l, 1, i);
+  const lua_Integer v = lua_tointeger(l, -1);
+  lua_pop(l, 1);
+  return v;
+}
+
+// midi_to_msg({b1, b2, b3}) -> {type = "note_on", note = .., vel = .., ch = ..}
+static int l_midi_to_msg(lua_State *l) {
+  luaL_checktype(l, 1, LUA_TTABLE);
+  const lua_Integer d1 = data_int(l, 1);
+  const lua_Integer ch = (d1 & 0x0f) + 1;
+  const char *type = NULL;
+  lua_createtable(l, 0, 4);
+
+  switch (d1 & 0xf0) {
+  case 0x90: {
+    msg_copy(l, 2, "note");
+    msg_copy(l, 3, "vel");
+    msg_int(l, "ch", ch);
+    // velocity zero means note off
+    type = data_int(l, 3) > 0 ? "note_on" : "note_off";
+    break;
+  }
+  case 0x80:
+    type = "note_off";
+    msg_copy(l, 2, "note");
+    msg_copy(l, 3, "vel");
+    msg_int(l, "ch", ch);
+    break;
+  case 0xb0:
+    type = "cc";
+    msg_copy(l, 2, "cc");
+    msg_copy(l, 3, "val");
+    msg_int(l, "ch", ch);
+    break;
+  case 0xe0:
+    type = "pitchbend";
+    msg_int(l, "val", data_int(l, 2) + (data_int(l, 3) << 7));
+    msg_int(l, "ch", ch);
+    break;
+  case 0xa0:
+    type = "key_pressure";
+    msg_copy(l, 2, "note");
+    msg_copy(l, 3, "val");
+    msg_int(l, "ch", ch);
+    break;
+  case 0xd0:
+    type = "channel_pressure";
+    msg_copy(l, 2, "val");
+    msg_int(l, "ch", ch);
+    break;
+  case 0xc0:
+    type = "program_change";
+    msg_copy(l, 2, "val");
+    msg_int(l, "ch", ch);
+    break;
+  default:
+    switch (d1) {
+    case 0xfa: type = "start"; break;
+    case 0xfc: type = "stop"; break;
+    case 0xfb: type = "continue"; break;
+    case 0xf8: type = "clock"; break;
+    case 0xf2:
+      type = "song_position";
+      msg_copy(l, 2, "lsb");
+      msg_copy(l, 3, "msb");
+      break;
+    case 0xf3:
+      type = "song_select";
+      msg_copy(l, 2, "val");
+      break;
+    case 0xfe: // active sensing: empty message
+      break;
+    default:
+      type = d1 == 0xf0 ? "sysex" : "other";
+      lua_pushvalue(l, 1);
+      lua_setfield(l, -2, "raw");
+      break;
+    }
+  }
+
+  if (type != NULL) {
+    lua_pushstring(l, type);
+    lua_setfield(l, -2, "type");
+  }
+  return 1;
+}
+
 static int l_metro_set(lua_State *l) {
   int nargs = lua_gettop(l);
   int index = (int)lua_tointeger(l, 1) - 1;
@@ -386,6 +530,11 @@ static const struct luaL_Reg main_lib[] = {{"help", l_help},
                                            {"print", l_my_print},
                                            {"dostring", l_dostring},
                                            {"midi_tx", l_midi_tx},
+                                           {"midi_tx_many", l_midi_tx_many},
+                                           {"midi_to_msg", l_midi_to_msg},
+                                           {"midi_note_on", l_midi_note_on},
+                                           {"midi_note_off", l_midi_note_off},
+                                           {"midi_cc", l_midi_cc},
                                            {"metro_set", l_metro_set},
                                            {"get_time", l_get_time},
                                            {"device_id", l_device_id},
