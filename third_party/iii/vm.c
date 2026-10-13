@@ -625,7 +625,8 @@ void vm_init(bool run_script) {
     strcpy(buf, (const char *)lib_lua_data);
     buf[sz] = 0;
     lfs_file_t file;
-    if (fs_file_open(&file, "lib.lua", LFS_O_CREAT | LFS_O_WRONLY) == 0) {
+    // TRUNC: if the new lib.lua is shorter, don't leave the old tail behind
+    if (fs_file_open(&file, "lib.lua", LFS_O_CREAT | LFS_O_WRONLY | LFS_O_TRUNC) == 0) {
       fs_file_write(&file, buf, sz);
       fs_file_close(&file);
     } else {
