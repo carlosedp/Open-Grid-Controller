@@ -17,6 +17,8 @@ extern char serial_print_buf[];
 
 extern void serial_task();
 extern void serial_tx(const uint8_t *data, uint32_t len);
+// queue output regardless of the host's DTR state, like serial()
+extern void serial_tx_send(const uint8_t *data, uint32_t len);
 extern void serial_tx_str(const char *str);
 extern int serial(const char *fmt, ...);
 

@@ -46,7 +46,10 @@ static void print_stack_pos(lua_State *l, int pos, const char *prefix,
 #if PRINT_TYPES
     serial("%sstring: %s", prefix, str);
 #else
-    serial("%s", str);
+    // straight into the output stream, without a printf copy, so printing
+    // a large string (cat() of a file) needs no extra memory. strlen():
+    // stop at a '\0' like "%s" did (uploaded files end with one)
+    serial_tx_send((const uint8_t *)str, (uint32_t)strlen(str));
 #endif
   } else if (lua_isboolean(l, pos)) {
     const int b = lua_toboolean(l, pos);
