@@ -35,8 +35,9 @@ void serial_task() {
     uint32_t count = tud_cdc_n_read(0, rx_buf, sizeof(rx_buf));
     rx_callback((uint8_t *)rx_buf, count);
   }
-  // outgoing
-  if (tx_w != tx_r) {
+  // outgoing; held back until a host has the port open, as anything written
+  // before that is thrown away by the usb stack
+  if (tx_w != tx_r && tud_cdc_n_connected(0)) {
     uint32_t available = tud_cdc_n_write_available(0);
     uint32_t ready = tx_w - tx_r;
     uint32_t count = (available < ready) ? available : ready;
@@ -98,11 +99,33 @@ static void serial_tx_drain() {
 }
 
 // free space in tx_buf, draining it first if it holds less than `want`
+// with no host connected, output is kept (and sent when one connects), so
+// prints from startup, e.g. a script's init messages, aren't lost; once the
+// buffer is full the oldest lines make room, so it holds the most recent
+// output
+static void serial_tx_discard_oldest(uint32_t want) {
+  uint32_t used = tx_w - tx_r;
+  uint32_t drop = want + 1u + used > SERIAL_TX_BUFSIZE ? want + 1u + used - SERIAL_TX_BUFSIZE : 0;
+  if (drop > used)
+    drop = used;
+  // drop whole lines, so output still starts at the beginning of one
+  if (drop > 0) {
+    while (drop < used && tx_buf[tx_r + drop - 1] != '\n')
+      drop++;
+  }
+  memmove(tx_buf, tx_buf + tx_r + drop, used - drop);
+  tx_w = (uint16_t)(used - drop);
+  tx_r = 0;
+}
+
 static uint32_t serial_tx_space(uint32_t want) {
   // tx_w stays below SERIAL_TX_BUFSIZE (one byte kept for vsnprintf's \0)
   uint32_t space = SERIAL_TX_BUFSIZE - 1u - tx_w;
   if (space < want) {
-    serial_tx_drain();
+    if (tud_cdc_n_connected(0))
+      serial_tx_drain();
+    else
+      serial_tx_discard_oldest(want);
     space = SERIAL_TX_BUFSIZE - 1u - tx_w;
   }
   return space;
