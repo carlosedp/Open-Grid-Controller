@@ -1,0 +1,51 @@
+# Publishes the diii web app (diii/) to GitHub Pages: https://diii.vfmod.com
+#
+# Runs only when diii/ or its build changes. tools/dist.py --diii-only copies
+# the app into dist/diii and gives the service worker a cache name per
+# commit, so installed copies (PWA) switch to each release.
+#
+# Repository settings: Pages -> Source: GitHub Actions; custom domain
+# diii.vfmod.com with Enforce HTTPS (Web Serial needs HTTPS).
+
+name: diii to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "diii/**"
+      - "tools/dist.py"
+      - ".github/workflows/diii-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build site
+        run: |
+          python3 tools/dist.py --diii-only
+          ls -R dist/diii
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/diii
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

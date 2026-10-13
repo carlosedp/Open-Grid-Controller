@@ -16,7 +16,8 @@ PORT    ?= 8000
 
 DIII_UPSTREAM ?= https://github.com/monome/web-diii
 DIII_FORK     ?= https://github.com/carlosedp/web-diii
-DIII_BRANCH   ?= main
+# branch of the fork to push diii/ to, for pull requests to monome/web-diii
+DIII_BRANCH   ?= open-grid
 
 # third_party/iii is a git subtree of tehn/iii; our changes are commits on top.
 III_UPSTREAM ?= https://codeberg.org/tehn/iii
@@ -42,7 +43,7 @@ help:
 	@echo   make clean           remove build outputs and dist/
 	@echo diii subtree, tracking $(DIII_FORK):
 	@echo   make diii-pull-upstream   merge monome/web-diii main into diii/
-	@echo   make diii-push-fork       push diii/ history to the fork, branch DIII_BRANCH
+	@echo   make diii-push-fork       push diii/ to the fork, branch DIII_BRANCH, for upstream PRs
 	@echo iii subtree, our changes on top of $(III_UPSTREAM):
 	@echo   make iii-changes          list our iii commits
 	@echo   make iii-patches          export them as patches for tehn/iii into dist/patches/iii

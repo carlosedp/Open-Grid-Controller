@@ -320,9 +320,10 @@ Fork of [monome/web-diii](https://github.com/monome/web-diii) (GPL-3.0, static s
 [carlosedp/web-diii](https://github.com/carlosedp/web-diii), imported into this repo as a **git
 subtree at `diii/`** (history kept). `make diii` serves it locally, `make dist` packages it with a
 per-build cache name, `make diii-pull-upstream` merges monome's `main`, and `make diii-push-fork`
-pushes `diii/` to the fork's `main`. Hosting: **https://diii.vfmod.com**, GitHub Pages deployed by
-`diii/.github/workflows/pages.yml` on every push to the fork's `main` (stamps the service-worker
-cache with the commit). Done so far, tested
+pushes `diii/` to a branch of the fork (`open-grid`) for upstream PRs. Hosting:
+**https://diii.vfmod.com**, published from this repository by `.github/workflows/diii-pages.yml`
+whenever `diii/` changes on `main` (built with `tools/dist.py --diii-only`, which stamps the
+service-worker cache with the commit). Done so far, tested
 against og-0.2.x/0.3.x on the XIAO; nothing pushed yet:
 
 - ✅ branch `pwa-fixes` (based on upstream `main`, kept separate so it can go upstream as a PR):
@@ -338,8 +339,8 @@ against og-0.2.x/0.3.x on the XIAO; nothing pushed yet:
 Next:
 
 - ✅ help button (prints `help()`).
-- Push the fork, set Pages to GitHub Actions + custom domain `diii.vfmod.com` (HTTPS), add the
-  DNS CNAME `diii` → `carlosedp.github.io`.
+- Publish: in carlosedp/Open-Grid-Controller set Pages → Source: GitHub Actions, custom domain
+  `diii.vfmod.com` (Enforce HTTPS); DNS CNAME `diii` → `carlosedp.github.io`.
 - Offer `pwa-fixes` upstream as a PR to monome/web-diii.
 - Accept our own VID:PID (M6) alongside `cafe:1101`.
 - Preset editor for `midi_controller.lua` (M3), script launcher management.

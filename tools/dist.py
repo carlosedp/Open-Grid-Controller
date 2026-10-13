@@ -6,6 +6,7 @@ dist/
   diii/                                          the web app, ready to host
 
 usage: dist.py [--env-suffix _offline] BOARD...
+       dist.py --diii-only
        dist.py --clean
 """
 
@@ -71,13 +72,16 @@ def main() -> None:
     parser.add_argument("boards", nargs="*")
     parser.add_argument("--env-suffix", default="")
     parser.add_argument("--clean", action="store_true")
+    parser.add_argument("--diii-only", action="store_true",
+                        help="only build dist/diii (the GitHub Pages workflow uses this)")
     args = parser.parse_args()
 
     if args.clean:
         shutil.rmtree(DIST, ignore_errors=True)
         return
     print("dist:")
-    copy_firmware(args.boards, args.env_suffix)
+    if not args.diii_only:
+        copy_firmware(args.boards, args.env_suffix)
     copy_diii()
 
 
