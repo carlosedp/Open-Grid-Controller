@@ -117,5 +117,5 @@ target_link_libraries(iii-open-grid PRIVATE
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.2.0")
+pico_set_program_version(iii-open-grid "og-0.2.1")
 pico_add_extra_outputs(iii-open-grid)

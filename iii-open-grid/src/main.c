@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION "og-0.2.0"
+#define DEVICE_VERSION "og-0.2.1"
 
 #include <string.h>
 
@@ -330,11 +330,15 @@ static int l_og_keypads(lua_State *l) {
 }
 
 // Prints C heap stats (KB) and returns them in bytes: free, largest, used, peak, total.
+// og_mem(true) only returns them.
 static int l_og_mem(lua_State *l) {
   og_heap_stats_t h;
   og_heap_stats(&h);
-  serial("heap KB: free %.1f, largest block %.1f, used %.1f, peak %.1f, total %.1f\r\n",
-         h.free / 1024.0, h.largest / 1024.0, h.used / 1024.0, h.peak / 1024.0, h.total / 1024.0);
+  if (!lua_toboolean(l, 1)) {
+    serial("heap KB: free %.1f, largest block %.1f, used %.1f, peak %.1f, total %.1f\r\n",
+           h.free / 1024.0, h.largest / 1024.0, h.used / 1024.0, h.peak / 1024.0,
+           h.total / 1024.0);
+  }
   lua_pushinteger(l, h.free);
   lua_pushinteger(l, h.largest);
   lua_pushinteger(l, h.used);
@@ -403,7 +407,7 @@ static const char *device_help_str =
     "open grid\n"
     "  og_set_mode(m)  0 = iii, 1 = monome serial (reboots)\n"
     "  og_keypads()    bitmask of keypad boards online\n"
-    "  og_mem()        C heap: free, largest block, used, peak, total\n"
+    "  og_mem(quiet)   C heap: free, largest block, used, peak, total\n"
     "  og_key(x,y,z)   inject a key event, as if pressed on the grid\n"
     "  og_led(r,g,b)   status LED color (0-255); og_led() = mode color\n"
     "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n";
