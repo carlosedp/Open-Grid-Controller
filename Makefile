@@ -18,10 +18,14 @@ DIII_UPSTREAM ?= https://github.com/monome/web-diii
 DIII_FORK     ?= https://github.com/carlosedp/web-diii
 DIII_BRANCH   ?= virtual-grid
 
+# third_party/iii is a git subtree of tehn/iii; our changes are commits on top.
+III_UPSTREAM ?= https://codeberg.org/tehn/iii
+III_BASE     := $(shell git log -1 --format=%H --grep="git-subtree-dir: third_party/iii")
+
 ENV := $(BOARD)$(OFFLINE)
 
 .PHONY: all help firmware firmware-all upload monitor diii dist clean \
-        diii-pull-upstream diii-push-fork
+        diii-pull-upstream diii-push-fork iii-changes iii-patches iii-pull-upstream
 
 all: firmware
 
@@ -39,6 +43,10 @@ help:
 	@echo diii subtree, tracking $(DIII_FORK):
 	@echo   make diii-pull-upstream   merge monome/web-diii main into diii/
 	@echo   make diii-push-fork       push diii/ history to the fork, branch DIII_BRANCH
+	@echo iii subtree, our changes on top of $(III_UPSTREAM):
+	@echo   make iii-changes          list our iii commits
+	@echo   make iii-patches          export them as patches for tehn/iii into dist/patches/iii
+	@echo   make iii-pull-upstream    merge the latest tehn/iii main into third_party/iii
 	@echo Options: BOARD=rp2040_zero  OFFLINE=  PORT=8080
 
 firmware:
@@ -68,3 +76,12 @@ diii-pull-upstream:
 
 diii-push-fork:
 	git subtree push --prefix=diii $(DIII_FORK) $(DIII_BRANCH)
+
+iii-changes:
+	git log --oneline $(III_BASE)..HEAD -- third_party/iii
+
+iii-patches:
+	git format-patch --relative=third_party/iii -o dist/patches/iii $(III_BASE)..HEAD -- third_party/iii
+
+iii-pull-upstream:
+	git subtree pull --prefix=third_party/iii $(III_UPSTREAM) main
