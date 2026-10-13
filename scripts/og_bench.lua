@@ -12,6 +12,14 @@
 -- Prints one line to paste into the M4 table in docs/MULTIMODE-ROADMAP.md.
 -- The redraw test draws on the grid; a running script repaints it after.
 -- Stop transport/sequencers first so the timings aren't disturbed.
+--
+-- Timings:
+--   loop         a Lua function call plus a little arithmetic
+--   midi_to_msg  one call, with the collector paused: the function itself
+--   alloc+gc     midi_to_msg in a long loop, including the garbage
+--                collection its tables cause: what a busy script pays
+--   gc           one full collection of everything currently loaded
+--   redraw       128 grid_led() calls plus grid_refresh()
 
 local function time_us(n, fn)
   local t0 = get_time()
@@ -29,14 +37,21 @@ function og_bench(script)
   local lua_kb = collectgarbage("count")
   local free, largest, _, _, total, high_water = og_mem(true)
 
-  -- plain interpreter speed: a function call plus a little arithmetic
   local loop_us = time_us(20000, function(i) local x = i * 3 // 7 end)
 
-  -- library code every MIDI script uses (allocates a table per call)
+  -- few enough calls that the garbage fits in RAM with the collector off
   local data = { 0x90, 60, 100 }
-  local midi_us = time_us(2000, function() midi_to_msg(data) end)
+  collectgarbage("stop")
+  local midi_us = time_us(200, function() midi_to_msg(data) end)
+  collectgarbage("restart")
+  collectgarbage("collect")
 
-  -- a full redraw, like most grid scripts do on every change
+  local churn_us = time_us(2000, function() midi_to_msg(data) end)
+
+  local t0 = get_time()
+  collectgarbage("collect")
+  local gc_ms = (get_time() - t0) * 1000
+
   local w, h = grid_size_x(), grid_size_y()
   local redraw_us = time_us(50, function(i)
     for y = 1, h do
@@ -47,8 +62,9 @@ function og_bench(script)
 
   print(string.format(
     "og_bench %s %s: lua %.1f KB | heap free %.1f KB, largest %.1f KB, "
-      .. "high water %.1f of %.1f KB | loop %.2f us, midi_to_msg %.1f us, redraw %.2f ms",
+      .. "high water %.1f of %.1f KB | loop %.2f us, midi_to_msg %.1f us, "
+      .. "alloc+gc %.1f us, gc %.2f ms, redraw %.2f ms",
     device_version(), script or "-", lua_kb, kb(free), kb(largest),
     kb(high_water or 0), kb(total),
-    loop_us, midi_us, redraw_us / 1000))
+    loop_us, midi_us, churn_us, gc_ms, redraw_us / 1000))
 end
