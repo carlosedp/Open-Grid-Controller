@@ -218,14 +218,30 @@ static int l_fs_read_file(lua_State *l) {
 #define FILE_READER_CHUNK 256
 typedef struct {
   lfs_file_t file;
+  bool done;
   char buf[FILE_READER_CHUNK];
 } file_reader_t;
 
+// files uploaded through the repl end with a '\0' (see REPL_CMD_END_WRITE);
+// stop there, as luaL_dostring() on the whole file did
 static const char *file_reader(lua_State *l, void *ud, size_t *size) {
   (void)l;
   file_reader_t *r = (file_reader_t *)ud;
+  *size = 0;
+  if (r->done)
+    return NULL;
   const int32_t n = fs_file_read(&r->file, r->buf, FILE_READER_CHUNK);
-  *size = n > 0 ? (size_t)n : 0;
+  if (n <= 0) {
+    r->done = true;
+    return NULL;
+  }
+  const char *nul = memchr(r->buf, '\0', (size_t)n);
+  if (nul != NULL) {
+    r->done = true;
+    *size = (size_t)(nul - r->buf);
+  } else {
+    *size = (size_t)n;
+  }
   return r->buf;
 }
 
@@ -244,6 +260,7 @@ static int vm_dofile(lua_State *l, const char *path) {
     free(r);
     return VM_FILE_NOT_FOUND;
   }
+  r->done = false;
   char chunkname[LFS_NAME_MAX + 2];
   snprintf(chunkname, sizeof(chunkname), "@%s", path); // errors read "file.lua:12:"
   int res = lua_load(l, file_reader, r, chunkname, NULL);
