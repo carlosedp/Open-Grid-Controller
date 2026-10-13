@@ -64,7 +64,16 @@ void og_grid_init(void) {
   og_keypad_init();
 }
 
-void og_grid_start(void) { multicore_launch_core1(core1_entry); }
+// Core 0's stack (Lua, USB) sits at the top of SCRATCH_Y and grows down into
+// SCRATCH_X, where core 1's stack would normally be; deep Lua then silently
+// corrupts both. Core 1 gets its own stack in main RAM instead, and with
+// PICO_CORE1_STACK_SIZE=0 nothing is placed in SCRATCH_X, giving core 0 8 KB.
+#define CORE1_STACK_WORDS 512  // 2 KB; the scan/flush loop needs well under 1 KB
+static uint32_t core1_stack[CORE1_STACK_WORDS];
+
+void og_grid_start(void) {
+  multicore_launch_core1_with_stack(core1_entry, core1_stack, sizeof(core1_stack));
+}
 
 void og_grid_led(uint8_t x, uint8_t y, uint8_t z) {
   if (x >= OG_GRID_W || y >= OG_GRID_H) return;

@@ -97,6 +97,9 @@ target_compile_definitions(iii-open-grid PRIVATE
         ${OG_BOARD_DEFINE}
         OG_I2C_HZ=${OG_I2C_HZ}
         PICO_MALLOC_PANIC=0
+        # core 1 runs on its own stack in main RAM (grid.c), so core 0 gets
+        # both scratch banks, 8 KB, for Lua
+        PICO_CORE1_STACK_SIZE=0
         # crystal startup margin, as in monome's iii ports
         PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 )
@@ -120,5 +123,5 @@ target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=_sbrk")
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.2.3")
+pico_set_program_version(iii-open-grid "og-0.2.4")
 pico_add_extra_outputs(iii-open-grid)
