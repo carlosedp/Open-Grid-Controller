@@ -12,6 +12,8 @@ full collection. Before that, `midi_to_msg` meant what is now `alloc+gc`.
 
 | Build           | Clock   | Script | Lua   | Heap free / largest | High water   | loop    | midi_to_msg | alloc+gc | gc      | redraw  |
 | --------------- | ------- | ------ | ----- | ------------------- | ------------ | ------- | ----------- | -------- | ------- | ------- |
+| og-0.2.10       | 125 MHz | -      | 41.7  | 170.4 / 90.0        | 152.0 of 220 | 8.44 µs | 51.8 µs     | 58.0 µs  | 2.97 ms | 0.95 ms |
+| og-0.2.10       | 125 MHz | kria   | 110.7 | 96.0 / 58.4         | 204.0 of 220 | 8.45 µs | 51.1 µs     | 59.2 µs  | 2.45 ms | 0.97 ms |
 | og-0.2.9-200mhz | 200 MHz | -      | 41.7  | 170.8 / 90.6        | 152.3 of 220 | 3.83 µs | 49.3 µs     | 53.4 µs  | 2.00 ms | 0.66 ms |
 | og-0.2.9-200mhz | 200 MHz | kria   | 110.7 | 96.3 / 58.8         | 204.3 of 220 | 3.83 µs | 49.8 µs     | 54.1 µs  | 1.60 ms | 0.67 ms |
 | og-0.2.9        | 125 MHz | -      | 41.7  | 170.8 / 90.6        | 152.3 of 220 | 8.93 µs | 95.0 µs     | 100.6 µs | 3.24 ms | 1.03 ms |
@@ -34,6 +36,9 @@ og-0.2.1 + kria: out of memory while loading (fixed by the streaming loader in o
   (62.5 MHz at 125 MHz, 100 MHz at 200 MHz), the RP2040-Zero in the Open Grid kit at clk/4
   (31.25 / 50 MHz). Since code fetch dominates, expect the Zero to be noticeably slower than
   these XIAO numbers on the same build; measure on a Zero before drawing conclusions for the kit.
+- **Core 1 in RAM** (og-0.2.10 vs og-0.2.9, 125 MHz): midi_to_msg −45%, alloc+gc −42%, gc and
+  redraw −8%, loop −5%, for 268 bytes of RAM. Core 1's wait loop had been evicting core 0's
+  code from the shared XIP cache.
 - **Code fetch from flash dominates.** `midi_to_msg` costs ~95 µs at 125 MHz with the collector
   stopped (~12,000 cycles for a few Lua API calls), so the C port of the MIDI helpers (og-0.2.7)
   gained nothing measurable: the time goes to XIP cache misses, not to interpreting Lua.
