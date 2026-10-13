@@ -34,12 +34,18 @@
 #include "monome_serial.h"
 #include "status_led.h"
 
-// Fast-clock builds say so, so benchmark output identifies itself.
+// Optional builds say so, so benchmark output identifies itself.
 #if SYS_CLK_HZ == 200000000
-#define DEVICE_VERSION DEVICE_VERSION_BASE "-200mhz"
+#define DEVICE_VERSION_CLK "-200mhz"
 #else
-#define DEVICE_VERSION DEVICE_VERSION_BASE
+#define DEVICE_VERSION_CLK ""
 #endif
+#ifdef OG_LUA_VM_IN_RAM
+#define DEVICE_VERSION_VM "-vmram"
+#else
+#define DEVICE_VERSION_VM ""
+#endif
+#define DEVICE_VERSION DEVICE_VERSION_BASE DEVICE_VERSION_CLK DEVICE_VERSION_VM
 
 #define MODE_III 0
 #define MODE_SERIAL 1

@@ -20,6 +20,7 @@ else ()
 endif ()
 
 set(OG_I2C_HZ 100000 CACHE STRING "Keypad I2C clock in Hz")
+option(OG_LUA_VM_IN_RAM "Run the Lua interpreter loop (luaV_execute, ~11 KB) from RAM; costs that much heap" OFF)
 option(OG_FAST_CLOCK "Run at 200 MHz (officially supported on RP2040 since pico-sdk 2.1) instead of 125 MHz" OFF)
 
 #------------------------------------------------------------------------
@@ -56,6 +57,9 @@ add_custom_command(
 #--- third-party libraries
 
 add_subdirectory(${THIRD_PARTY}/lua ${CMAKE_CURRENT_BINARY_DIR}/lua)
+if (OG_LUA_VM_IN_RAM)
+    target_compile_options(lua PRIVATE -include ${CMAKE_CURRENT_LIST_DIR}/src/lua_vm_in_ram.h)
+endif ()
 
 add_library(lfs STATIC
         ${THIRD_PARTY}/littlefs/lfs.c
@@ -101,6 +105,7 @@ target_compile_definitions(iii-open-grid PRIVATE
         # divider comes from the board header: XIAO clk/2 (100 MHz at 200 MHz),
         # RP2040-Zero clk/4 (50 MHz)
         $<$<BOOL:${OG_FAST_CLOCK}>:PICO_USE_FASTEST_SUPPORTED_CLOCK=1>
+        $<$<BOOL:${OG_LUA_VM_IN_RAM}>:OG_LUA_VM_IN_RAM=1>
         PICO_MALLOC_PANIC=0
         # core 1 runs on its own stack in main RAM (grid.c), so core 0 gets
         # both scratch banks, 8 KB, for Lua
