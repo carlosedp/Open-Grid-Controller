@@ -403,6 +403,9 @@ static const struct luaL_Reg main_lib[] = {{"help", l_help},
 
                                            {NULL, NULL}};
 
+// collector pause, in percent of the heap left after the previous collection
+#define VM_GC_PAUSE 120
+
 // on failure just return NULL: lua then runs an emergency full collection
 // and retries, and only if that fails too raises a "not enough memory"
 // error, which reaches the script like any other error
@@ -433,6 +436,11 @@ void vm_init(bool run_script) {
     return;
   }
   lua_atpanic(L, vm_panic);
+
+  // lua's default pause (200%) waits until the heap has doubled since the
+  // last collection before starting another; with a large script loaded
+  // that is more than all of RAM. start the next cycle at 120% instead.
+  lua_gc(L, LUA_GCPARAM, LUA_GCPPAUSE, VM_GC_PAUSE);
 
   luaL_openlibs(L);
 
