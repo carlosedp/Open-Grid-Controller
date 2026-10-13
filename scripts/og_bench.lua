@@ -1,5 +1,8 @@
 -- og_bench: repeatable memory and speed numbers for comparing firmware
--- builds (roadmap M4). Needs Open Grid firmware og-0.2.1 or later.
+-- builds (roadmap M4). Needs Open Grid firmware og-0.2.2 or later.
+--
+-- "high water" is the most heap ever claimed since boot; when it reaches
+-- the total, something has run out of memory (often compiling a script).
 --
 -- Upload with diii (don't set it as `first`), then in the REPL:
 --   require("og_bench.lua")      -- defines og_bench()
@@ -24,7 +27,7 @@ function og_bench(script)
   collectgarbage("collect")
   collectgarbage("collect")
   local lua_kb = collectgarbage("count")
-  local free, largest, _, peak = og_mem(true)
+  local free, largest, _, _, total, high_water = og_mem(true)
 
   -- plain interpreter speed: a function call plus a little arithmetic
   local loop_us = time_us(20000, function(i) local x = i * 3 // 7 end)
@@ -43,8 +46,9 @@ function og_bench(script)
   end)
 
   print(string.format(
-    "og_bench %s %s: lua %.1f KB | heap free %.1f KB, largest %.1f KB, peak %.1f KB | "
-      .. "loop %.2f us, midi_to_msg %.1f us, redraw %.2f ms",
-    device_version(), script or "-", lua_kb, kb(free), kb(largest), kb(peak),
+    "og_bench %s %s: lua %.1f KB | heap free %.1f KB, largest %.1f KB, "
+      .. "high water %.1f of %.1f KB | loop %.2f us, midi_to_msg %.1f us, redraw %.2f ms",
+    device_version(), script or "-", lua_kb, kb(free), kb(largest),
+    kb(high_water or 0), kb(total),
     loop_us, midi_us, redraw_us / 1000))
 end

@@ -10,8 +10,22 @@
 extern char end;           // start of the heap (linker)
 extern char __StackLimit;  // the heap may grow up to here (see _sbrk in pico-sdk)
 extern void *_sbrk(int incr);
+extern void *__real__sbrk(int incr);
 
 static uint32_t peak_used = 0;
+static uintptr_t heap_high_water = 0;
+
+// Linked with --wrap=_sbrk: newlib grows the heap through _sbrk, so this sees
+// every growth, including spikes inside a single Lua call (e.g. compiling a
+// script) that the periodic sampling below misses.
+void *__wrap__sbrk(int incr) {
+  void *prev = __real__sbrk(incr);
+  if (prev != (void *)-1) {
+    const uintptr_t top = (uintptr_t)prev + (uintptr_t)incr;
+    if (top > heap_high_water) heap_high_water = top;
+  }
+  return prev;
+}
 
 static uint32_t sample_used(void) {
   const struct mallinfo mi = mallinfo();
@@ -53,4 +67,5 @@ void og_heap_stats(og_heap_stats_t *out) {
   out->free = (uint32_t)mi.fordblks + never_claimed;
   out->largest = probe_largest(out->free);
   out->peak = peak_used;
+  out->high_water = heap_high_water ? (uint32_t)(heap_high_water - (uintptr_t)&end) : 0;
 }

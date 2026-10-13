@@ -114,8 +114,11 @@ target_link_libraries(iii-open-grid PRIVATE
         tinyusb_device
 )
 
+# heap_stats.c tracks the heap high-water mark by wrapping newlib's _sbrk
+target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=_sbrk")
+
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.2.1")
+pico_set_program_version(iii-open-grid "og-0.2.2")
 pico_add_extra_outputs(iii-open-grid)

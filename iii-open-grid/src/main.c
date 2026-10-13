@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION "og-0.2.1"
+#define DEVICE_VERSION "og-0.2.2"
 
 #include <string.h>
 
@@ -329,22 +329,24 @@ static int l_og_keypads(lua_State *l) {
   return 1;
 }
 
-// Prints C heap stats (KB) and returns them in bytes: free, largest, used, peak, total.
-// og_mem(true) only returns them.
+// Prints C heap stats (KB) and returns them in bytes:
+// free, largest, used, peak, total, high_water. og_mem(true) only returns them.
 static int l_og_mem(lua_State *l) {
   og_heap_stats_t h;
   og_heap_stats(&h);
   if (!lua_toboolean(l, 1)) {
-    serial("heap KB: free %.1f, largest block %.1f, used %.1f, peak %.1f, total %.1f\r\n",
+    serial("heap KB: free %.1f, largest block %.1f, used %.1f, peak %.1f, "
+           "high water %.1f of %.1f\r\n",
            h.free / 1024.0, h.largest / 1024.0, h.used / 1024.0, h.peak / 1024.0,
-           h.total / 1024.0);
+           h.high_water / 1024.0, h.total / 1024.0);
   }
   lua_pushinteger(l, h.free);
   lua_pushinteger(l, h.largest);
   lua_pushinteger(l, h.used);
   lua_pushinteger(l, h.peak);
   lua_pushinteger(l, h.total);
-  return 5;
+  lua_pushinteger(l, h.high_water);
+  return 6;
 }
 
 // og_mirror(true) streams LED frames as ^^grid(...) lines (used by diii's virtual grid).
