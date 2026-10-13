@@ -101,7 +101,7 @@ static void upload_write_file() {
   if (!upload_spilled) {
     // small enough to have stayed in RAM
     upload_chunk[upload_len] = '\0';
-    if (!vm_test_script(upload_chunk)) {
+    if (!vm_test_buffer(upload_chunk, upload_len, filename)) {
       serial("-- compilation fail!\r\n");
       return;
     }

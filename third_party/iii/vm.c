@@ -529,13 +529,31 @@ void vm_deinit() {
   lua_close(L);
 }
 
+// like vm_test_file(), for source already in RAM
+bool vm_test_buffer(const char *buf, size_t len, const char *name) {
+  lua_pushfstring(L, "@%s", name); // errors read "file.lua:12:"
+  int res = luaL_loadbuffer(L, buf, len, lua_tostring(L, -1));
+  lua_remove(L, -2);
+  if (res != LUA_OK) {
+    serial("-- lua error:\r\n%s\r\n", lua_tostring(L, -1));
+    lua_pop(L, 1);
+    return false;
+  }
+  serial("-- compiled ok\r\n");
+  lua_pop(L, 1); // the compiled chunk
+  return true;
+}
+
 bool vm_test_script(const char *buf) {
   int res = luaL_loadstring(L, buf);
   if (res != LUA_OK) {
     serial("-- lua error:\r\n");
     const char *err = lua_tostring(L, -1);
-    err = strchr(err + 10, '"');
-    err += 3;
+    // skip the '[string "..."]:' prefix; other messages (e.g. out of memory)
+    // have none, so print those whole
+    const char *quote = (err && strlen(err) > 10) ? strchr(err + 10, '"') : NULL;
+    if (quote != NULL && strlen(quote) >= 3)
+      err = quote + 3;
     serial("%s\r\n", (const uint8_t *)err);
     // pop the error message
     lua_pop(L, 1);
