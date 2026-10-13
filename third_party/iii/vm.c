@@ -166,24 +166,24 @@ static lua_Integer opt_int(lua_State *l, int idx, lua_Integer def) {
   return lua_toboolean(l, idx) ? lua_tointeger(l, idx) : def;
 }
 
-static void midi_tx_shortcut(lua_State *l, uint8_t status) {
-  // midi_tx((ch or 1)-1 + status, note or 66, vel or 100), and same for cc
-  midi_tx((uint8_t)(opt_int(l, 3, 1) - 1 + status), (uint8_t)opt_int(l, 1, 66),
+// midi_tx((ch or 1)-1 + status, data1 or def1, data2 or 100)
+static void midi_tx_shortcut(lua_State *l, uint8_t status, lua_Integer def1) {
+  midi_tx((uint8_t)(opt_int(l, 3, 1) - 1 + status), (uint8_t)opt_int(l, 1, def1),
           (uint8_t)opt_int(l, 2, 100));
 }
 
-static int l_midi_note_on(lua_State *l) {
-  midi_tx_shortcut(l, 0x90);
+static int l_midi_note_on(lua_State *l) { // (note or 66, vel or 100, ch or 1)
+  midi_tx_shortcut(l, 0x90, 66);
   return 0;
 }
 
 static int l_midi_note_off(lua_State *l) {
-  midi_tx_shortcut(l, 0x80);
+  midi_tx_shortcut(l, 0x80, 66);
   return 0;
 }
 
-static int l_midi_cc(lua_State *l) {
-  midi_tx_shortcut(l, 0xb0);
+static int l_midi_cc(lua_State *l) { // (cc or 1, val or 100, ch or 1)
+  midi_tx_shortcut(l, 0xb0, 1);
   return 0;
 }
 
