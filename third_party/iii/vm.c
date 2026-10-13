@@ -606,8 +606,9 @@ void vm_init(bool run_script) {
     serial("-- lib.lua not found\r\n");
     write_lib = true;
   } else {
-    char buf[24];
-    fs_file_read(&f, buf, 24);
+    char buf[24 + 1]; // +1: strstr() needs a terminated string
+    const int32_t n = fs_file_read(&f, buf, 24);
+    buf[n > 0 ? n : 0] = '\0';
     fs_file_close(&f);
     if(strstr(buf,III_VERSION)==NULL) {
       serial("-- lib.lua wrong version\r\n");
