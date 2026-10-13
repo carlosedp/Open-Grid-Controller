@@ -36,10 +36,10 @@ are GPL-3.0 as a whole.
 
 To check a patch against upstream: `git -C <tehn/iii clone> apply --check <patch>`.
 
-| Commit    | Change                                     | Why / measured effect                                          | Upstream |
-| --------- | ------------------------------------------ | -------------------------------------------------------------- | -------- |
-| `e7107bf` | `serial()`: don't write past the TX buffer | fixes RAM corruption when >16 KB is printed in one Lua call    | not sent |
-| `3ee8dd2` | stream Lua files into the compiler         | loading needs no full source copy (−29 KB for kria); measuring | not sent |
+| Commit    | Change                                     | Why / measured effect                                                                                                                                                                                   | Upstream |
+| --------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `e7107bf` | `serial()`: don't write past the TX buffer | fixes RAM corruption when >16 KB is printed in one Lua call                                                                                                                                             | not sent |
+| `3ee8dd2` | stream Lua files into the compiler         | no full source copy while loading: kria_iii (29 KB) now loads after og_bench's tests, was out of memory; fixups `9340efe` (stop at the NUL uploads end with), `f47cc2c` (no big buffers on the C stack) | not sent |
 
 `make iii-patches` exports every iii commit since the subtree was added. When a
 change lands upstream, mark it *merged* here; to leave it out of later
