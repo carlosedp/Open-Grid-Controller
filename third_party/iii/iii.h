@@ -1,4 +1,4 @@
-#define III_VERSION "v1.1.2-og1"
+#define III_VERSION "v1.1.2-og2"
 
 #include "pico/stdlib.h"
 
