@@ -23,7 +23,7 @@ DIII_SKIP = {"docs", "README.md", "README-development.md", ".gitignore", ".githu
 
 def firmware_version() -> str:
     main_c = (ROOT / "iii-open-grid" / "src" / "main.c").read_text(encoding="utf-8")
-    match = re.search(r'#define DEVICE_VERSION "([^"]+)"', main_c)
+    match = re.search(r'#define DEVICE_VERSION_BASE "([^"]+)"', main_c)
     return match.group(1) if match else "unknown"
 
 
