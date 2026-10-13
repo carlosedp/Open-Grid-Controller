@@ -251,21 +251,27 @@ static const char *file_reader(lua_State *l, void *ud, size_t *size) {
 // its results (or an error message) on the stack. returns a lua status, or
 // VM_FILE_NOT_FOUND (nothing pushed) if the file can't be opened.
 static int vm_dofile(lua_State *l, const char *path) {
+  if (path == NULL)
+    return VM_FILE_NOT_FOUND;
+  // chunk name as a lua string rather than a buffer on the small C stack;
+  // "@" makes errors read "file.lua:12:"
+  lua_pushfstring(l, "@%s", path);
   file_reader_t *r = malloc(sizeof(file_reader_t));
   if (r == NULL) {
+    lua_pop(l, 1);
     lua_pushliteral(l, "not enough memory");
     return LUA_ERRMEM;
   }
-  if (path == NULL || fs_file_open(&r->file, path, LFS_O_RDONLY) != 0) {
+  if (fs_file_open(&r->file, path, LFS_O_RDONLY) != 0) {
     free(r);
+    lua_pop(l, 1);
     return VM_FILE_NOT_FOUND;
   }
   r->done = false;
-  char chunkname[LFS_NAME_MAX + 2];
-  snprintf(chunkname, sizeof(chunkname), "@%s", path); // errors read "file.lua:12:"
-  int res = lua_load(l, file_reader, r, chunkname, NULL);
+  int res = lua_load(l, file_reader, r, lua_tostring(l, -1), NULL);
   fs_file_close(&r->file);
   free(r);
+  lua_remove(l, -2); // the chunk name, under the function or error message
   if (res == LUA_OK)
     res = lua_pcall(l, 0, LUA_MULTRET, 0);
   return res;
@@ -441,7 +447,7 @@ void vm_init(bool run_script) {
 
   if (run_script) {
     // run lib.lua
-    struct lfs_info info;
+    static struct lfs_info info; // ~260 bytes: keep it off the small C stack
     int res = VM_FILE_NOT_FOUND;
     if (fs_stat("lib.lua", &info) == LFS_ERR_OK) {
       serial("-- init: running lib\r\n");
