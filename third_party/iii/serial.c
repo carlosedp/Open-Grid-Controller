@@ -22,6 +22,17 @@ static char rx_buf[SERIAL_RX_BUFSIZE];
 // set when the host stopped taking output; see serial_tx_drain()
 static bool tx_stalled = false;
 
+// a host that has just opened the port may still be setting it up, and may
+// discard what arrives meanwhile (seen with Chrome's Web Serial on Windows:
+// output sent right when diii connects never showed up), so output waits
+// until the port has been open this long
+#define SERIAL_TX_OPEN_SETTLE_US 200000
+static absolute_time_t host_ready_at; // nil while no host has the port open
+
+static bool host_ready() {
+  return tud_cdc_n_connected(0) && !is_nil_time(host_ready_at) && time_reached(host_ready_at);
+}
+
 static void serial_rx_noop(uint8_t *data, uint32_t len) {
   (void)data;
   (void)len;
@@ -35,9 +46,9 @@ void serial_task() {
     uint32_t count = tud_cdc_n_read(0, rx_buf, sizeof(rx_buf));
     rx_callback((uint8_t *)rx_buf, count);
   }
-  // outgoing; held back until a host has the port open, as anything written
-  // before that is thrown away by the usb stack
-  if (tx_w != tx_r && tud_cdc_n_connected(0)) {
+  // outgoing; held back until a host has had the port open for a moment
+  // (see host_ready): anything written before that is thrown away
+  if (tx_w != tx_r && host_ready()) {
     uint32_t available = tud_cdc_n_write_available(0);
     uint32_t ready = tx_w - tx_r;
     uint32_t count = (available < ready) ? available : ready;
@@ -69,7 +80,7 @@ void serial_tx_noop(const uint8_t *data, uint32_t len) {
 // to the front of the buffer
 static void serial_tx_drain() {
   absolute_time_t deadline = make_timeout_time_us(SERIAL_TX_STALL_US);
-  while (tx_r != tx_w && tud_cdc_n_connected(0)) {
+  while (tx_r != tx_w && host_ready()) {
     const uint32_t available = tud_cdc_n_write_available(0);
     if (available > 0) {
       const uint32_t ready = tx_w - tx_r;
@@ -122,7 +133,7 @@ static uint32_t serial_tx_space(uint32_t want) {
   // tx_w stays below SERIAL_TX_BUFSIZE (one byte kept for vsnprintf's \0)
   uint32_t space = SERIAL_TX_BUFSIZE - 1u - tx_w;
   if (space < want) {
-    if (tud_cdc_n_connected(0))
+    if (host_ready())
       serial_tx_drain();
     else
       serial_tx_discard_oldest(want);
@@ -201,6 +212,7 @@ void serial_set_line_state_callback(serial_line_state_callback_t callback) {
 // Invoked when cdc when line state changed e.g connected/disconnected
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
   (void)itf;
+  host_ready_at = dtr ? make_timeout_time_us(SERIAL_TX_OPEN_SETTLE_US) : nil_time;
   line_state_callback(dtr, rts);
 }
 
