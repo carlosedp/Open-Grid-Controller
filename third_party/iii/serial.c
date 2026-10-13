@@ -19,6 +19,9 @@ static uint16_t tx_r = 0;
 
 static char rx_buf[SERIAL_RX_BUFSIZE];
 
+// set when the host stopped taking output; see serial_tx_drain()
+static bool tx_stalled = false;
+
 static void serial_rx_noop(uint8_t *data, uint32_t len) {
   (void)data;
   (void)len;
@@ -41,6 +44,8 @@ void serial_task() {
       tud_cdc_n_write_char(0, tx_buf[tx_r]);
       tx_r++;
     }
+    if (count > 0)
+      tx_stalled = false; // the host is reading again
     if (tx_r == tx_w) {
       tx_r = 0;
       tx_w = 0;
@@ -71,8 +76,13 @@ static void serial_tx_drain() {
       tud_cdc_n_write(0, tx_buf + tx_r, count);
       tud_cdc_n_write_flush(0);
       tx_r += count;
+      tx_stalled = false;
       deadline = make_timeout_time_us(SERIAL_TX_STALL_US);
-    } else if (time_reached(deadline)) {
+    } else if (tx_stalled || time_reached(deadline)) {
+      // the host has the port open but isn't reading (e.g. a usb host that
+      // only uses midi): wait at most once, then drop output until it
+      // reads again, so prints don't each block the caller
+      tx_stalled = true;
       break;
     }
     tud_task();
