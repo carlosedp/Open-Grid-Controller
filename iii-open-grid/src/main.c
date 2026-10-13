@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.1"
+#define DEVICE_VERSION_BASE "og-0.3.2"
 
 #include <string.h>
 
