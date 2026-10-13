@@ -27,14 +27,18 @@ iii-open-grid/          iii firmware (Pico SDK + CMake)           ← new, GPL-3
   src/usb_descriptors.c per-mode USB descriptors
   src/status_led.{h,c}  WS2812 status LED (M2)
   src/heap_stats.{h,c}  C heap statistics for og_mem()
+  src/lua_vm_in_ram.h   puts the Lua interpreter loop in RAM (force-included)
+  src/generated/        pre-generated PIO program (WS2812)
   tools/pio_cmake.py    PlatformIO → CMake bridge
 diii/                   diii web app: fork of monome/web-diii as a git subtree (GPL-3.0)
-Makefile                firmware, upload, diii server, dist/ packaging (make help)
+scripts/og_bench.lua    memory/speed benchmark run on the device (results: docs/BENCHMARKS.md)
+Makefile                firmware, upload, diii server, dist/ packaging, iii/diii subtrees (make help)
 tools/dist.py           collects UF2s and the diii site into dist/
 platformio.ini          PlatformIO project for iii-open-grid (installs the whole toolchain)
-third_party/            vendored iii, lua, littlefs, FREEPOET_Keypad (see third_party/README.md)
+third_party/            vendored lua, littlefs, FREEPOET_Keypad; iii as a git subtree with our
+                        changes on top (see third_party/README.md)
 sw/                     original Arduino firmware (monome serial only), unchanged
-docs/                   this file
+docs/                   this file, BENCHMARKS.md
 ```
 
 ### 1.2 Hardware snapshot
@@ -49,10 +53,12 @@ docs/                   this file
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.2.0)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.1)
 
-Builds for both boards (≈ 323 KB flash, 33 KB static RAM). og-0.1.0 was tested on a XIAO RP2040
-without keypads (M0 step 1); og-0.2.0 adds the items marked _(0.2)_ and is not yet tested.
+Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
+virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
+Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's defaults), with Lua
+~1.8× faster; see [BENCHMARKS.md](BENCHMARKS.md).
 
 - **Two modes**, stored in iii's flash status byte (same scheme as monome's grids):
 
@@ -61,35 +67,44 @@ without keypads (M0 step 1); og-0.2.0 adds the items marked _(0.2)_ and is not y
   | iii (0)    | CDC (REPL) + USB MIDI | `cafe:1101` | `Open Grid` / `iii open grid`  | diii, DAWs, standalone      |
   | serial (1) | CDC                   | `cafe:1110` | `monome` / `grid`, serial `m…` | norns, serialosc, Max/PD/SC |
 
-  `cafe:1101` is required today: monome's hosted diii only lists ports with that ID. `0xCAFE` is
-  TinyUSB's shared test VID; see M6 for getting our own.
+  Interface names: `OpenGrid_Serial`, `OpenGrid_MIDI`. `cafe:1101` is required today: monome's
+  hosted diii only lists ports with that ID. `0xCAFE` is TinyUSB's shared test VID; see M6.
 
-- **Switching modes**:
+- **Switching modes and recovery**:
   - hold the top-left key while plugging in → toggles iii ↔ serial (monome's behavior); when
     switching to iii, keep holding ~1 s (row 1 fills up) to skip `init.lua` (clean boot);
-  - hold BOOT for 2 s while running → toggle and reboot (works without keypads);
+  - press BOOT while the status LED is cyan (first second after power-up) → iii, clean boot
+    (works without keypads; rescues a board whose `init.lua` hangs);
+  - hold BOOT for 2 s while running → toggle and reboot;
   - from Lua: `og_set_mode(0|1)`.
 - **Lua grid API** identical to monome's iii grids (`event_grid`, `grid_led`, `grid_led_all`,
   `grid_led_get`, `grid_intensity`, `grid_refresh`, `grid_size_x/y`), so existing iii grid
   scripts run unchanged. `device_id()` returns `"grid"` for the same reason.
 - **Open Grid Lua extras** (listed by `help()`):
 
-  | Call             | What it does                                                                |
-  | ---------------- | --------------------------------------------------------------------------- |
-  | `og_set_mode(m)` | 0 = iii, 1 = monome serial; saves and reboots                               |
-  | `og_keypads()`   | bitmask of keypad boards online                                             |
-  | `og_mem()`       | _(0.2)_ C heap: prints KB, returns bytes `free, largest, used, peak, total` |
-  | `og_key(x,y,z)`  | _(0.2)_ inject a key event through the same queue as real keys              |
-  | `og_led(r,g,b)`  | _(0.2)_ status LED color 0–255; `og_led()` returns it to the mode color     |
-  | `og_mirror(on)`  | _(0.2)_ stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii |
+  | Call             | What it does                                                                    |
+  | ---------------- | ------------------------------------------------------------------------------- |
+  | `og_set_mode(m)` | 0 = iii, 1 = monome serial; saves and reboots                                   |
+  | `og_keypads()`   | bitmask of keypad boards online                                                 |
+  | `og_mem(quiet)`  | C heap: prints KB, returns bytes `free, largest, used, peak, total, high_water` |
+  | `og_key(x,y,z)`  | inject a key event through the same queue as real keys                          |
+  | `og_led(r,g,b)`  | status LED color 0–255; `og_led()` returns it to the mode color                 |
+  | `og_mirror(on)`  | stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii             |
 
-- **Core split**: core1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty);
-  core0 runs USB + Lua. Events cross through a multicore-safe queue. Core1 registers for flash
-  lockout, so file writes from diii are safe.
+- **Cores**: core 1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty) and
+  runs from RAM; core 0 runs USB + Lua with 8 KB of stack (both scratch banks). Key events cross
+  through a multicore-safe queue; core 1 registers for flash lockout, so file writes are safe.
+- **Lua interpreter loop in RAM** by default (`OG_LUA_VM_IN_RAM`); **200 MHz** optional
+  (`OG_FAST_CLOCK`, env `*_200mhz`).
+- **iii itself** carries our fixes and memory/speed changes, tracked commit by commit in
+  [third_party/README.md](../third_party/README.md) and exportable as upstream patches (M4).
 - **1200-baud touch** reboots into the UF2 bootloader (PlatformIO upload works without BOOT).
 - serial mode mirrors monome's iii-grid-2022 command set (and fixes three small bugs found there).
 
 ### 1.4 Building
+
+**Make** — `make help` lists everything: `make upload [BOARD=rp2040_zero]`, `make diii` (serve
+diii locally), `make dist` (UF2s + diii site), `make iii-patches` (our iii changes as patches).
 
 **PlatformIO (VS Code extension or CLI)** — the root `platformio.ini` installs pico-sdk 2.2.0, Arm
 GCC 14.2, CMake and Ninja on first build:
@@ -100,7 +115,8 @@ pio run -e xiao_rp2040 -t upload      # or -e rp2040_zero
 
 **Offline PlatformIO** — `xiao_rp2040_offline` / `rp2040_zero_offline` reuse the Arduino-Pico
 toolchain already installed by `sw/`, a pico-sdk 2.2.0 checkout (with `lib/tinyusb`) in the
-git-ignored `.deps/pico-sdk-2.2.0`, and CMake + make from `PATH`. Nothing is downloaded.
+git-ignored `.deps/pico-sdk-2.2.0`, and CMake + make from `PATH`. Nothing is downloaded. Variants
+for comparison: `xiao_rp2040_offline_200mhz`, `xiao_rp2040_offline_vmflash` (interpreter in flash).
 
 **Plain CMake** — with any pico-sdk ≥ 2.0 (e.g. from the Raspberry Pi Pico VS Code extension):
 
@@ -209,26 +225,27 @@ Everything in §1.3. **Acceptance**, in order:
 - **Accept:** measured press-to-USB latency before/after; no ghost or missed presses in a 5-minute
   hammer test on all 128 keys.
 
-### M2 — Status feedback (implemented in og-0.2.0, hardware test pending)
+### M2 — Status feedback ✅ (verified on the XIAO; RP2040-Zero and keypads pending)
 
 - WS2812 status LED via PIO (RP2040-Zero GPIO16; XIAO GPIO12 with power on GPIO11). The PIO
   program header is pre-generated in `src/generated/`, so builds don't need `pioasm`.
 
-  | Color       | Meaning                                   |
-  | ----------- | ----------------------------------------- |
-  | green       | iii mode                                  |
-  | amber       | iii mode, clean boot (`init.lua` skipped) |
-  | blue        | monome serial mode                        |
-  | white flash | key press (real or `og_key`)              |
-  | red flash   | Lua error inside `event_grid`             |
-  | magenta     | BOOT held; mode switches at 2 s           |
+  | Color       | Meaning                                        |
+  | ----------- | ---------------------------------------------- |
+  | green       | iii mode                                       |
+  | amber       | iii mode, clean boot (`init.lua` skipped)      |
+  | blue        | monome serial mode                             |
+  | white flash | key press (real or `og_key`)                   |
+  | red flash   | Lua error inside `event_grid`                  |
+  | magenta     | BOOT held; mode switches at 2 s                |
+  | cyan        | first second after power-up: BOOT = clean boot |
 
   Scripts can take the LED over with `og_led(r,g,b)`.
 
 - Short left-to-right sweep on the grid when iii starts (skipped without keypads; serial mode
   stays dark, like today).
-- **Not covered:** errors in metro/MIDI callbacks and out-of-memory resets happen inside iii's
-  `vm.c`; flagging them needs a small iii hook (see M4 item 5).
+- **Not covered:** errors in metro/MIDI callbacks happen inside iii's `vm.c`; flagging them needs
+  a small iii hook (upstream candidate).
 - **Accept:** colors match the table on the XIAO and the RP2040-Zero; the sweep shows with keypads.
 
 ### M3 — Open Grid script library (replaces the old C++ MIDI-mode milestones)
@@ -238,10 +255,11 @@ Lua scripts in a new `scripts/` folder, each usable on its own and selectable fr
 - ✅ **Launcher**: use [many-roads](https://github.com/boreal-ground/many-roads-grid) (tested at
   `691af85`, listed in the README's recommended scripts). It lights one key per stored script, and
   triple-clicking the top-left key returns to it. It has no license, so it is linked rather than
-  vendored; ask the authors to add one (MIT, like most iii scripts), then vendor it. Its restart
-  deliberately runs out of memory, and iii responds with a watchdog reboot. iii's `device_reset()`
-  (which re-runs `init.lua` without a hardware reboot) could be a gentler option to suggest
-  upstream.
+  vendored; ask the authors to add one (MIT, like most iii scripts), then vendor it.
+  **Restart broken since og-0.2.6:** many-roads restarts by deliberately running out of memory,
+  relying on iii rebooting on a failed allocation. Our firmware now lets Lua recover instead (M4),
+  so the triple-click only prints "not enough memory". iii's `device_reset()` (re-runs `init.lua`)
+  does what it wants without the trick; propose that change to the many-roads authors.
 - **`midi_controller.lua`**: generic MIDI controller driven by a preset file (notes, CC momentary /
   toggle, faders as columns, page keys, MIDI-in LED feedback). Preset = a small Lua/JSON table in
   flash, written by diii or a web editor (M5).
@@ -252,42 +270,49 @@ Lua scripts in a new `scripts/` folder, each usable on its own and selectable fr
 - **Accept:** play a soft synth in a DAW with scale/root/octave changes without touching the
   computer; switch scripts without a computer.
 
-### M4 — Move hot Lua code to C (memory and speed)
+### M4 — Memory and speed ✅ (first round done; measurements in [BENCHMARKS.md](BENCHMARKS.md))
 
-Scripts already hit iii's memory limits (see the lines iii thread; tehn suggested moving libraries
-such as MIDI to C). RAM today: ~29 KB static (incl. iii's 16 KB serial TX + 4 KB RX buffers), a
-32 KB buffer allocated while uploading a file, the rest is Lua heap. Plan:
+Scripts hit iii's memory limits (lines iii thread; [monome/iii#7](https://github.com/monome/iii/issues/7),
+[#33](https://github.com/monome/iii/issues/33)). Work happens in `third_party/iii` (a git subtree)
+as one commit per topic, each exportable with `make iii-patches` and tracked with its measured
+effect in [third_party/README.md](../third_party/README.md); Lua API unchanged throughout.
 
-1. **Measure**: `mem()` (Lua heap in use, KB) after boot with `lib.lua` only, and with each M3
-   script; log peak usage. Baseline on og-0.1.0 (XIAO, 2026-10-09):
+**Done** (XIAO RP2040, 125 MHz):
 
-   | State                        | `mem()`  |
-   | ---------------------------- | -------- |
-   | boot, `lib.lua` only         | 64.2 KB  |
-   | `kria_iii.lua` v1.6.3 loaded | 147.3 KB |
+| Change                                                 | Effect                                                                |
+| ------------------------------------------------------ | --------------------------------------------------------------------- |
+| stream Lua files into the compiler                     | no full source copy while loading; kria_iii (29 KB) loads reliably    |
+| stream uploads to flash, no 32 KB buffer               | upload peak 197 → 168 KB; no 32 KB script limit                       |
+| no reboot on a failed allocation; panic handler        | Lua's emergency GC recovers; real OOM is a script error, not a reboot |
+| GC pause 120% instead of 200%                          | garbage can't outgrow RAM before a collection; no measurable cost     |
+| 4 KB serial TX that drains when full; 512 B RX         | −15.5 KB static RAM; output of any size (downloads, big prints) works |
+| `serial()` bounds; NUL-terminated version check; TRUNC | memory-corruption and lib.lua rewrite bugs fixed                      |
+| MIDI helpers in C                                      | correct; no measurable gain (code fetch dominates, see below)         |
+| core 0 stack 8 KB (core 1 stack moved to RAM)          | fixes silent lockups when Lua runs deep                               |
+| core 1 loop in RAM                                     | midi_to_msg/alloc+gc −45%, gc/redraw −8%                              |
+| Lua interpreter loop in RAM                            | pure Lua 1.8× faster, for ~11 KB (paid for by the serial buffers)     |
+| 200 MHz (optional)                                     | another 1.6–2.3×                                                      |
 
-   The RP2040 has 264 KB of RAM; firmware buffers and stacks take ~40–50 KB, and a file upload
-   from diii needs a further 32 KB, so kria leaves only a few tens of KB of headroom.
-   `og_mem()` (og-0.2.0) reports the real C-heap numbers (free, largest block, peak); record
-   them next to `mem()` for each script, and once more during a diii upload.
+**monome/iii#7 and #33**, point by point: string-building loops that hang (GC pacing → 120% pause);
+"raise a memory error properly" (allocator returns NULL, Lua raises "not enough memory"); lockups
+without a serial warning (core 0's stack overflowing into core 1's, and `serial()` writing past its
+buffer: both silent RAM corruption, both fixed); `lua_atpanic` (now prints and reboots); RAM
+"goblins" (32 KB upload buffer, 16 + 4 KB serial buffers: all gone); #33's freeze after ~1 hour
+with ansible (prints never read, so the 16 KB TX buffer filled in ~1 h and `serial()` overflowed;
+now output is dropped, after waiting at most once for a host that isn't reading). Still to verify
+on the device: #7's repro loop.
 
-2. Port, in order of payoff:
-   - MIDI encode/decode (`msg_to_midi_tx`, `midi_to_msg`, note/cc helpers) → C functions;
-   - `metro` bookkeeping (tables of metros) → C userdata;
-   - `slew` (per-tick Lua work) → C;
-   - `mu` scale/note tables → read-only C tables in flash (not copied into the heap).
-3. Smaller wins: shrink serial TX buffer, precompile `lib.lua` to bytecode, tune Lua GC
-   (`collectgarbage("generational")` / step sizes).
-4. Keep the Lua-visible API identical so scripts don't change.
-5. **Upstream first**: these changes belong in iii itself. Propose them on the iii thread /
-   codeberg before diverging; keep `third_party/iii` unmodified and carry any interim patch as an
-   explicit, documented patch file until it lands upstream. Other upstream candidates found so far:
-   - `serial()` in `serial.c` formats straight into the 16 KB TX buffer and adds the _untruncated_
-     length, so the buffer can overflow if the host stops reading (our code uses the
-     bounds-checked `serial_tx()` instead);
-   - a hook for Lua errors and out-of-memory (for the M2 status LED).
+**Findings:** code fetch from flash (16 KB XIP cache, shared by both cores) dominates speed, so
+moving hot code into RAM beats rewriting Lua in C. The RP2040-Zero runs flash at half the XIAO's
+clock (board headers: clk/4 vs clk/2), so measure on a Zero before drawing conclusions for the kit.
 
-- **Accept:** same scripts, measurably more free heap; no API changes.
+**Next:**
+
+1. **Compile peak:** loading kria still peaks at ~203 of 223 KB. Options: compile once and cache
+   bytecode in flash (keeping line info for errors), or reduce parser memory.
+2. More hot code in RAM where og_bench shows it pays (table access, GC mark), RAM permitting.
+3. `metro` bookkeeping, `slew` and `mu` tables in C: measure first; MIDI showed C alone isn't enough.
+4. Upstream: post the patch series (with measurements) on the iii thread / codeberg.
 
 ### M5 — diii fork (PWA + Open Grid features)
 
@@ -295,8 +320,8 @@ Fork of [monome/web-diii](https://github.com/monome/web-diii) (GPL-3.0, static s
 [carlosedp/web-diii](https://github.com/carlosedp/web-diii), imported into this repo as a **git
 subtree at `diii/`** (history kept). `make diii` serves it locally, `make dist` packages it with a
 per-build cache name, `make diii-pull-upstream` merges monome's `main`, and `make diii-push-fork`
-pushes `diii/` to the fork for upstream PRs. Hosting: GitHub Pages. Work so far (in the fork's
-local branches, not pushed; `virtual-grid` is what `diii/` contains):
+pushes `diii/` to the fork for upstream PRs. Hosting: GitHub Pages (not yet). Done so far, tested
+against og-0.2.x/0.3.x on the XIAO; nothing pushed yet:
 
 - ✅ branch `pwa-fixes` (based on upstream `main`, kept separate so it can go upstream as a PR):
   - relative service-worker and app-shell paths, so it installs from a sub-path; manifest
@@ -310,7 +335,8 @@ local branches, not pushed; `virtual-grid` is what `diii/` contains):
 
 Next:
 
-- Test both branches against og-0.2.0; push; enable GitHub Pages.
+- ✅ help button (prints `help()`).
+- Push the fork and enable GitHub Pages.
 - Offer `pwa-fixes` upstream as a PR to monome/web-diii.
 - Accept our own VID:PID (M6) alongside `cafe:1101`.
 - Preset editor for `midi_controller.lua` (M3), script launcher management.
@@ -339,6 +365,31 @@ Next:
   item 5).
 - **Accept:** Open Grid on a USB power bank plays a hardware synth directly.
 
+### M9 — Diii improvements
+
+- Maybe port Diii to a more modern web framework based on typescript for better maintainability, cleaner code, and improved developer experience.
+- ✅ Virtual grid for testing and development without physical hardware (M5).
+- Add a script editor so users can edit and change scripts in the diii too without the need to
+  dowload/change/upload. Allow save and save as new scripts. Maybe use syntax highlight
+- Add a MIDI monitor like the Alloy Controller have
+- ✅ Add a button to print the help commands (button that calls help())
+- Is there an issue renaming the USB device to OpenGrid_Serial and OpenGrid_MIDI specially for other
+  gear to identify it like Monome Norns?
+- Remove the "First" flag from a script (not load it on startup)
+- Investigate memory leak from running og_mem() repeatedly. Expected to increase until a gc()?
+  Likely expected: each REPL line is compiled into a chunk that becomes garbage until the next
+  collection; `og_mem()` itself keeps nothing. Check: `for i=1,1000 do og_mem(true) end
+  collectgarbage() print(collectgarbage("count"))` should stay flat.
+- Add an export function to backup all user configurations and scripts. Possible since og-0.3.0
+  (output of any size gets through). Plan: an iii function that streams a file from flash in
+  chunks (constant memory, works while big scripts run), a diii **Backup** button that downloads
+  every file into one zip, and **Restore** that uploads them back.
+- Add iii Lua command reference and help locally (to wlork offline)
+
+### M10 - Build firmware for stock versions of Grid
+
+- Have this improved firmware available for stock versions of Grids so users can also leverage the changes
+
 ### Asks for FREEPOET (keypad protocol `0x03`)
 
 Bitmap key read (8 bytes per board instead of 64), a "keys changed" flag or interrupt line, a
@@ -356,7 +407,10 @@ level→RGB palette register, an RGB block write, and a documented way to update
 - **Windows descriptor caching**: different PIDs per mode avoid stale drivers.
 - **GPL-3.0**: firmware built from `iii-open-grid/` is GPL-3.0 (iii). The Arduino firmware in `sw/`
   and the repo's other files keep their own license — the repo has no top-level LICENSE yet; add one.
-- **Lua memory** (M4) is the main scaling limit for big scripts.
+- **Lua memory** (M4): much better, but compiling big scripts is still the tightest moment.
+- **Behavior changes vs. stock iii**: out of memory is now a Lua error instead of a reboot (breaks
+  scripts that rely on the reboot, e.g. many-roads' restart, see M3); `lib.lua` is versioned
+  `v1.1.2-ogN` so our copy replaces the device's.
 
 ---
 
