@@ -17,6 +17,7 @@
 #define OG_COLOR_KEY OG_RGB(12, 12, 12)          // white flash: key event
 #define OG_COLOR_ERROR OG_RGB(40, 0, 0)          // red flash: Lua error
 #define OG_COLOR_MODE_SWITCH OG_RGB(20, 0, 20)   // magenta: BOOT held, switching mode
+#define OG_COLOR_BOOT_WINDOW OG_RGB(0, 14, 14)   // cyan: press BOOT now for a clean boot
 
 void og_status_init(void);
 

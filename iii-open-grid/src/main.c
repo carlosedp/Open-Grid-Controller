@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION "og-0.2.2"
+#define DEVICE_VERSION "og-0.2.3"
 
 #include <string.h>
 
@@ -47,6 +47,8 @@
 
 #define BOOTSEL_POLL_MS 100
 #define BOOTSEL_HOLD_MS 2000
+// After power-up, a BOOT press within this window means "clean boot".
+#define BOOT_WINDOW_MS 1000
 
 // LED mirror for diii's virtual grid: at most one frame per this interval.
 #define MIRROR_INTERVAL_MS 33
@@ -93,6 +95,29 @@ static bool __no_inline_not_in_flash_func(read_bootsel_raw)(void) {
                   GPIO_OVERRIDE_NORMAL << IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_LSB,
                   IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_BITS);
   return pressed;
+}
+
+// Before core 1 starts there is nothing to lock out.
+static bool bootsel_pressed_early(void) {
+  const uint32_t ints = save_and_disable_interrupts();
+  const bool pressed = read_bootsel_raw();
+  restore_interrupts(ints);
+  return pressed;
+}
+
+// Recovery without keypads: holding BOOT while plugging in enters the ROM
+// bootloader, so instead watch for a press right after power-up. A press
+// means "clean boot": iii mode with init.lua skipped, so a script that hangs
+// at startup can't lock you out of the REPL.
+static bool boot_button_window(void) {
+  og_status_set_base(OG_COLOR_BOOT_WINDOW);
+  og_status_task();
+  const absolute_time_t until = make_timeout_time_ms(BOOT_WINDOW_MS);
+  while (!time_reached(until)) {
+    if (bootsel_pressed_early()) return true;
+    sleep_ms(10);
+  }
+  return false;
 }
 
 static bool bootsel_pressed(void) {
@@ -153,7 +178,11 @@ int main(void) {
   // mode; when switching to iii, keep holding to also skip init.lua.
   bool run_script = true;
   mode = flash_read_mode();
-  if (check_device_key()) {
+  if (boot_button_window()) {
+    if (mode != MODE_III) flash_write_mode(MODE_III);
+    mode = MODE_III;
+    run_script = false;
+  } else if (check_device_key()) {
     if (mode == MODE_SERIAL) {
       flash_write_mode(MODE_III);
       mode = MODE_III;
