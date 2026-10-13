@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
-DIII_SKIP = {"docs", "README.md", "README-development.md", ".gitignore"}
+DIII_SKIP = {"docs", "README.md", "README-development.md", ".gitignore", ".github", ".clang-format"}
 
 
 def firmware_version() -> str:

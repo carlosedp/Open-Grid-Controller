@@ -16,7 +16,7 @@ PORT    ?= 8000
 
 DIII_UPSTREAM ?= https://github.com/monome/web-diii
 DIII_FORK     ?= https://github.com/carlosedp/web-diii
-DIII_BRANCH   ?= virtual-grid
+DIII_BRANCH   ?= main
 
 # third_party/iii is a git subtree of tehn/iii; our changes are commits on top.
 III_UPSTREAM ?= https://codeberg.org/tehn/iii

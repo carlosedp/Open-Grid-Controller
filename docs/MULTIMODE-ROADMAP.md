@@ -320,7 +320,9 @@ Fork of [monome/web-diii](https://github.com/monome/web-diii) (GPL-3.0, static s
 [carlosedp/web-diii](https://github.com/carlosedp/web-diii), imported into this repo as a **git
 subtree at `diii/`** (history kept). `make diii` serves it locally, `make dist` packages it with a
 per-build cache name, `make diii-pull-upstream` merges monome's `main`, and `make diii-push-fork`
-pushes `diii/` to the fork for upstream PRs. Hosting: GitHub Pages (not yet). Done so far, tested
+pushes `diii/` to the fork's `main`. Hosting: **https://diii.vfmod.com**, GitHub Pages deployed by
+`diii/.github/workflows/pages.yml` on every push to the fork's `main` (stamps the service-worker
+cache with the commit). Done so far, tested
 against og-0.2.x/0.3.x on the XIAO; nothing pushed yet:
 
 - ✅ branch `pwa-fixes` (based on upstream `main`, kept separate so it can go upstream as a PR):
@@ -336,7 +338,8 @@ against og-0.2.x/0.3.x on the XIAO; nothing pushed yet:
 Next:
 
 - ✅ help button (prints `help()`).
-- Push the fork and enable GitHub Pages.
+- Push the fork, set Pages to GitHub Actions + custom domain `diii.vfmod.com` (HTTPS), add the
+  DNS CNAME `diii` → `carlosedp.github.io`.
 - Offer `pwa-fixes` upstream as a PR to monome/web-diii.
 - Accept our own VID:PID (M6) alongside `cafe:1101`.
 - Preset editor for `midi_controller.lua` (M3), script launcher management.
@@ -367,28 +370,33 @@ Next:
 
 ### M9 — Diii improvements
 
-- Maybe port Diii to a more modern web framework based on typescript for better maintainability, cleaner code, and improved developer experience.
 - ✅ Virtual grid for testing and development without physical hardware (M5).
-- Add a script editor so users can edit and change scripts in the diii too without the need to
-  dowload/change/upload. Allow save and save as new scripts. Maybe use syntax highlight
-- Add a MIDI monitor like the Alloy Controller have
 - ✅ Add a button to print the help commands (button that calls help())
-- Is there an issue renaming the USB device to OpenGrid_Serial and OpenGrid_MIDI specially for other
+- ✅ Is there an issue renaming the USB device to OpenGrid_Serial and OpenGrid_MIDI specially for other
   gear to identify it like Monome Norns?
-- Remove the "First" flag from a script (not load it on startup)
-- Investigate memory leak from running og_mem() repeatedly. Expected to increase until a gc()?
+- Be able to remove the "First" flag from a script (not load it on startup)
+- ✅ Investigate memory leak from running og_mem() repeatedly. Expected to increase until a gc()?
   Likely expected: each REPL line is compiled into a chunk that becomes garbage until the next
   collection; `og_mem()` itself keeps nothing. Check: `for i=1,1000 do og_mem(true) end
-  collectgarbage() print(collectgarbage("count"))` should stay flat.
+collectgarbage() print(collectgarbage("count"))` should stay flat.
 - Add an export function to backup all user configurations and scripts. Possible since og-0.3.0
   (output of any size gets through). Plan: an iii function that streams a file from flash in
   chunks (constant memory, works while big scripts run), a diii **Backup** button that downloads
   every file into one zip, and **Restore** that uploads them back.
-- Add iii Lua command reference and help locally (to wlork offline)
+- Maybe port Diii to a more modern web framework based on typescript for better maintainability, cleaner code, and improved developer experience. If worth, add improvements below after the port to avoid working twice on same features otherwise implement them on current web app.
+- Improve visuals to a more modern and user-friendly interface.
+- Add a script editor so users can edit and change scripts in the diii too without the need to
+  dowload/change/upload. Allow save and save as new scripts. Maybe use syntax highlight
+- Add a MIDI monitor like the Alloy Controller have
+- Add iii Lua command reference and help locally (to work offline)
 
 ### M10 - Build firmware for stock versions of Grid
 
 - Have this improved firmware available for stock versions of Grids so users can also leverage the changes
+
+### M11 - Upstream iii changes and improvements
+
+- Consolidate the patches listed on third_party/README.md so they can be upstreamed to the main iii repository. Make sure our changes are not specific for Open Grid Controller but would also work on all Grid devices.
 
 ### Asks for FREEPOET (keypad protocol `0x03`)
 
