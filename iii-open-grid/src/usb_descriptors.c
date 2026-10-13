@@ -61,6 +61,9 @@ uint8_t const *tud_descriptor_device_cb(void) {
   return (uint8_t const *)(serial_mode() ? &desc_device_serial : &desc_device_iii);
 }
 
+// String descriptor indexes; CDC and MIDI name their interfaces.
+enum { STRID_LANGID = 0, STRID_MANUFACTURER, STRID_PRODUCT, STRID_SERIAL, STRID_CDC, STRID_MIDI };
+
 enum { ITF_III_CDC, ITF_III_CDC_DATA, ITF_III_MIDI, ITF_III_MIDI_STREAMING, ITF_III_TOTAL };
 enum { ITF_SERIAL_CDC, ITF_SERIAL_CDC_DATA, ITF_SERIAL_TOTAL };
 
@@ -75,21 +78,19 @@ enum { ITF_SERIAL_CDC, ITF_SERIAL_CDC_DATA, ITF_SERIAL_TOTAL };
 
 static const uint8_t desc_configuration_iii[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITF_III_TOTAL, 0, CONFIG_III_LEN, 0x00, 100),
-    TUD_CDC_DESCRIPTOR(ITF_III_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
-    TUD_MIDI_DESCRIPTOR(ITF_III_MIDI, 0, EPNUM_MIDI_OUT, EPNUM_MIDI_IN, 64),
+    TUD_CDC_DESCRIPTOR(ITF_III_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
+    TUD_MIDI_DESCRIPTOR(ITF_III_MIDI, STRID_MIDI, EPNUM_MIDI_OUT, EPNUM_MIDI_IN, 64),
 };
 
 static const uint8_t desc_configuration_serial[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITF_SERIAL_TOTAL, 0, CONFIG_SERIAL_LEN, 0x00, 100),
-    TUD_CDC_DESCRIPTOR(ITF_SERIAL_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
+    TUD_CDC_DESCRIPTOR(ITF_SERIAL_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
 };
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
   (void)index;
   return serial_mode() ? desc_configuration_serial : desc_configuration_iii;
 }
-
-enum { STRID_LANGID = 0, STRID_MANUFACTURER, STRID_PRODUCT, STRID_SERIAL, STRID_CDC, STRID_MIDI };
 
 static uint16_t desc_str[32 + 1];
 
@@ -121,10 +122,10 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
       break;
     }
     case STRID_CDC:
-      str = "serial";
+      str = "OpenGrid_Serial";
       break;
     case STRID_MIDI:
-      str = "midi";
+      str = "OpenGrid_MIDI";
       break;
     default:
       return NULL;
