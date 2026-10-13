@@ -213,35 +213,62 @@ static int l_fs_read_file(lua_State *l) {
   return 1;
 }
 
+// feeds a file to lua_load() in small chunks, so compiling a script
+// doesn't also need a full copy of its source in RAM
+#define FILE_READER_CHUNK 256
+typedef struct {
+  lfs_file_t file;
+  char buf[FILE_READER_CHUNK];
+} file_reader_t;
+
+static const char *file_reader(lua_State *l, void *ud, size_t *size) {
+  (void)l;
+  file_reader_t *r = (file_reader_t *)ud;
+  const int32_t n = fs_file_read(&r->file, r->buf, FILE_READER_CHUNK);
+  *size = n > 0 ? (size_t)n : 0;
+  return r->buf;
+}
+
+#define VM_FILE_NOT_FOUND (-1)
+
+// like luaL_dostring() on the file's contents: compile and run it, leaving
+// its results (or an error message) on the stack. returns a lua status, or
+// VM_FILE_NOT_FOUND (nothing pushed) if the file can't be opened.
+static int vm_dofile(lua_State *l, const char *path) {
+  file_reader_t *r = malloc(sizeof(file_reader_t));
+  if (r == NULL) {
+    lua_pushliteral(l, "not enough memory");
+    return LUA_ERRMEM;
+  }
+  if (path == NULL || fs_file_open(&r->file, path, LFS_O_RDONLY) != 0) {
+    free(r);
+    return VM_FILE_NOT_FOUND;
+  }
+  char chunkname[LFS_NAME_MAX + 2];
+  snprintf(chunkname, sizeof(chunkname), "@%s", path); // errors read "file.lua:12:"
+  int res = lua_load(l, file_reader, r, chunkname, NULL);
+  fs_file_close(&r->file);
+  free(r);
+  if (res == LUA_OK)
+    res = lua_pcall(l, 0, LUA_MULTRET, 0);
+  return res;
+}
+
 // read an entire file from the filesystem,
 // interpret it as lua code, returning the result
 static int l_fs_run_file(lua_State *l) {
   const char *path = lua_tostring(l, 1);
-  const int flags = LFS_O_RDONLY;
-  lfs_file_t file;
-  if (fs_file_open(&file, path, flags) == 0) {
-    const unsigned int sz = (unsigned int)fs_file_size(&file);
-    char *buf = malloc(sz + 1);
-    if (buf == NULL)
-      serial("malloc fail!\r\n");
-    buf[sz] = 0;
-    fs_file_read(&file, buf, sz);
-    fs_file_close(&file);
-    //int top = lua_gettop(L);
-    int res = luaL_dostring(L, buf);
-    free(buf);
-    if (res != LUA_OK) {
-      // TODO: handle errors...
-      const char *err = lua_tostring(L, -1);
-      serial("%s\n", (const uint8_t *)err);
-    }
-    //return lua_gettop(L) - top;
-    return 1;
-  } else {
-    // file not found
+  int res = vm_dofile(L, path);
+  if (res == VM_FILE_NOT_FOUND) {
     lua_pushnil(l);
+    return 0;
   }
-  return 0;
+  if (res != LUA_OK) {
+    // TODO: handle errors...
+    const char *err = lua_tostring(L, -1);
+    serial("%s\n", (const uint8_t *)err);
+  }
+  return 1;
 }
 
 static int l_fs_write_file(lua_State *l) {
@@ -397,20 +424,17 @@ void vm_init(bool run_script) {
 
   if (run_script) {
     // run lib.lua
-    if (fs_file_open(&f, "lib.lua", LFS_O_RDONLY) == 0) {
-      const unsigned int sz = (unsigned int)fs_file_size(&f);
-      char *buf = malloc(sz + 1);
-      buf[sz] = '\0';
-      fs_file_read(&f, buf, sz);
-      fs_file_close(&f);
+    struct lfs_info info;
+    int res = VM_FILE_NOT_FOUND;
+    if (fs_stat("lib.lua", &info) == LFS_ERR_OK) {
       serial("-- init: running lib\r\n");
-      int res = luaL_dostring(L, buf);
-      free(buf);
-      if (res != LUA_OK) {
+      res = vm_dofile(L, "lib.lua");
+      if (res != LUA_OK && res != VM_FILE_NOT_FOUND) {
         const char *err = lua_tostring(L, -1);
         serial("-- init: lib errors!\r\n%s\r\n", (const uint8_t *)err);
       }
-    } else {
+    }
+    if (res == VM_FILE_NOT_FOUND) {
       serial("-- init: lib fail!\r\n");
     }
 
@@ -418,18 +442,10 @@ void vm_init(bool run_script) {
 
     // run init.lua if present
     const char *path = "init.lua";
-    const int flags = LFS_O_RDONLY;
-    lfs_file_t file;
-    if (fs_file_open(&file, path, flags) == 0) {
-      const unsigned int sz = (unsigned int)fs_file_size(&file);
-      char *buf = malloc(sz + 1);
-      buf[sz] = '\0';
-      fs_file_read(&file, buf, sz);
-      fs_file_close(&file);
+    if (fs_stat(path, &info) == LFS_ERR_OK) {
       serial("-- init: running script\r\n");
-      int res = luaL_dostring(L, buf);
-      free(buf);
-      if (res != LUA_OK) {
+      res = vm_dofile(L, path);
+      if (res != LUA_OK && res != VM_FILE_NOT_FOUND) {
         serial("-- init: error running script\r\n");
         // TODO: handle errors better/differently?
         const char *err = lua_tostring(L, -1);
