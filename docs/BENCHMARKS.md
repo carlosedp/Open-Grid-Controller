@@ -30,6 +30,10 @@ og-0.2.1 + kria: out of memory while loading (fixed by the streaming loader in o
 
 - **200 MHz** (og-0.2.9-200mhz vs og-0.2.9): 1.6× (gc, redraw) to 2.3× (loop) faster; memory
   unchanged.
+- **Flash clock differs per board** (pico-sdk board headers): the XIAO runs flash at clk/2
+  (62.5 MHz at 125 MHz, 100 MHz at 200 MHz), the RP2040-Zero in the Open Grid kit at clk/4
+  (31.25 / 50 MHz). Since code fetch dominates, expect the Zero to be noticeably slower than
+  these XIAO numbers on the same build; measure on a Zero before drawing conclusions for the kit.
 - **Code fetch from flash dominates.** `midi_to_msg` costs ~95 µs at 125 MHz with the collector
   stopped (~12,000 cycles for a few Lua API calls), so the C port of the MIDI helpers (og-0.2.7)
   gained nothing measurable: the time goes to XIP cache misses, not to interpreting Lua.

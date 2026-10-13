@@ -97,8 +97,9 @@ target_include_directories(iii-open-grid PRIVATE
 target_compile_definitions(iii-open-grid PRIVATE
         ${OG_BOARD_DEFINE}
         OG_I2C_HZ=${OG_I2C_HZ}
-        # 200 MHz with the core voltage raised to 1.15 V by the SDK; flash
-        # stays at clk_sys/4 (50 MHz)
+        # 200 MHz with the core voltage raised to 1.15 V by the SDK. The flash
+        # divider comes from the board header: XIAO clk/2 (100 MHz at 200 MHz),
+        # RP2040-Zero clk/4 (50 MHz)
         $<$<BOOL:${OG_FAST_CLOCK}>:PICO_USE_FASTEST_SUPPORTED_CLOCK=1>
         PICO_MALLOC_PANIC=0
         # core 1 runs on its own stack in main RAM (grid.c), so core 0 gets
@@ -127,5 +128,5 @@ target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=_sbrk")
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.2.9")
+pico_set_program_version(iii-open-grid "og-0.2.10")
 pico_add_extra_outputs(iii-open-grid)

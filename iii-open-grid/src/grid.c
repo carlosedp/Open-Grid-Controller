@@ -34,7 +34,12 @@ static void render(uint8_t *out) {
   }
 }
 
-static void core1_entry(void) {
+// Runs from RAM. Both cores fetch code from flash through one shared 16 KB
+// XIP cache, and Lua on core 0 is limited by those fetches; a core 1 loop
+// running from flash (sleep_us() every 100 us) kept evicting core 0's code.
+// Now core 1 only touches flash for the scan and LED work, every 2-4 ms: the
+// waiting and the deadline checks below are inline timer register reads.
+static void __not_in_flash_func(core1_entry)(void) {
   // iii's flash writes pause this core; it must not run from flash meanwhile.
   multicore_lockout_victim_init();
 
@@ -47,14 +52,15 @@ static void core1_entry(void) {
       next_scan = make_timeout_time_us(OG_SCAN_INTERVAL_US);
       og_keypad_scan(push_event);
     }
-    if ((dirty || og_keypad_needs_led_sync()) && time_reached(next_led)) {
+    if (time_reached(next_led) && (dirty || og_keypad_needs_led_sync())) {
       next_led = make_timeout_time_us(OG_LED_INTERVAL_US);
       // Clear first so writes that land during render() trigger another flush.
       dirty = false;
       render(frame);
       og_keypad_write_leds(frame);
     }
-    sleep_us(100);
+    const uint32_t wake = time_us_32() + 100;
+    while ((int32_t)(time_us_32() - wake) < 0) tight_loop_contents();
   }
 }
 
