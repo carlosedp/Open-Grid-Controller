@@ -1,4 +1,4 @@
-iii_version="v1.1.2"
+iii_version="v1.1.2-og1"
 
 function first(name)
   if name then fs_write_file("init.lua","fs_run_file('"..name.."')")
