@@ -250,12 +250,15 @@ static const char *file_reader(lua_State *l, void *ud, size_t *size) {
 // like luaL_dostring() on the file's contents: compile and run it, leaving
 // its results (or an error message) on the stack. returns a lua status, or
 // VM_FILE_NOT_FOUND (nothing pushed) if the file can't be opened.
-static int vm_dofile(lua_State *l, const char *path) {
+// compile the file at `path` (named `name` in error messages), leaving the
+// function or an error message on the stack. returns a lua status, or
+// VM_FILE_NOT_FOUND (nothing pushed) if the file can't be opened.
+static int vm_loadfile(lua_State *l, const char *path, const char *name) {
   if (path == NULL)
     return VM_FILE_NOT_FOUND;
   // chunk name as a lua string rather than a buffer on the small C stack;
   // "@" makes errors read "file.lua:12:"
-  lua_pushfstring(l, "@%s", path);
+  lua_pushfstring(l, "@%s", name);
   file_reader_t *r = malloc(sizeof(file_reader_t));
   if (r == NULL) {
     lua_pop(l, 1);
@@ -272,6 +275,28 @@ static int vm_dofile(lua_State *l, const char *path) {
   fs_file_close(&r->file);
   free(r);
   lua_remove(l, -2); // the chunk name, under the function or error message
+  return res;
+}
+
+// like vm_test_script(), for a file: compile it, print the result
+bool vm_test_file(const char *path, const char *name) {
+  int res = vm_loadfile(L, path, name);
+  if (res == VM_FILE_NOT_FOUND) {
+    serial("-- lua error:\r\ncan't open %s\r\n", path);
+    return false;
+  }
+  if (res != LUA_OK) {
+    serial("-- lua error:\r\n%s\r\n", lua_tostring(L, -1));
+    lua_pop(L, 1);
+    return false;
+  }
+  serial("-- compiled ok\r\n");
+  lua_pop(L, 1); // the compiled chunk
+  return true;
+}
+
+static int vm_dofile(lua_State *l, const char *path) {
+  int res = vm_loadfile(l, path, path);
   if (res == LUA_OK)
     res = lua_pcall(l, 0, LUA_MULTRET, 0);
   return res;
