@@ -20,7 +20,7 @@ else ()
 endif ()
 
 set(OG_I2C_HZ 100000 CACHE STRING "Keypad I2C clock in Hz")
-option(OG_LUA_VM_IN_RAM "Run the Lua interpreter loop (luaV_execute, ~11 KB) from RAM; costs that much heap" OFF)
+option(OG_LUA_VM_IN_RAM "Run the Lua interpreter loop (luaV_execute, ~11 KB) from RAM; costs that much heap" ON)
 option(OG_FAST_CLOCK "Run at 200 MHz (officially supported on RP2040 since pico-sdk 2.1) instead of 125 MHz" OFF)
 
 #------------------------------------------------------------------------
@@ -133,5 +133,5 @@ target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=_sbrk")
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.2.10")
+pico_set_program_version(iii-open-grid "og-0.3.0")
 pico_add_extra_outputs(iii-open-grid)

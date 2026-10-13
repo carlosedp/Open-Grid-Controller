@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.2.10"
+#define DEVICE_VERSION_BASE "og-0.3.0"
 
 #include <string.h>
 
@@ -41,9 +41,9 @@
 #define DEVICE_VERSION_CLK ""
 #endif
 #ifdef OG_LUA_VM_IN_RAM
-#define DEVICE_VERSION_VM "-vmram"
-#else
 #define DEVICE_VERSION_VM ""
+#else
+#define DEVICE_VERSION_VM "-vmflash"
 #endif
 #define DEVICE_VERSION DEVICE_VERSION_BASE DEVICE_VERSION_CLK DEVICE_VERSION_VM
 
