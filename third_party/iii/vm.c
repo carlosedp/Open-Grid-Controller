@@ -403,21 +403,26 @@ static const struct luaL_Reg main_lib[] = {{"help", l_help},
 
                                            {NULL, NULL}};
 
+// on failure just return NULL: lua then runs an emergency full collection
+// and retries, and only if that fails too raises a "not enough memory"
+// error, which reaches the script like any other error
 void *my_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
   (void)ud;
   (void)osize;
   if (nsize == 0) {
     free(ptr);
     return NULL;
-  } else {
-    void *x = realloc(ptr, nsize);
-    if (x == NULL) {
-      serial("-- out of memory!\r\n");
-      watchdog_reboot(0, 0, 1000);
-      // TODO: actually do something else?
-    }
-    return x;
   }
+  return realloc(ptr, nsize);
+}
+
+// errors outside any protected call (e.g. out of memory while starting up)
+// can't be recovered from; report and restart rather than hang
+static int vm_panic(lua_State *l) {
+  const char *msg = lua_tostring(l, -1);
+  serial("-- lua panic: %s\r\n", msg ? msg : "?");
+  watchdog_reboot(0, 0, 1000);
+  return 0;
 }
 
 void vm_init(bool run_script) {
@@ -427,6 +432,7 @@ void vm_init(bool run_script) {
     serial("vm_init fail!\r\n");
     return;
   }
+  lua_atpanic(L, vm_panic);
 
   luaL_openlibs(L);
 
