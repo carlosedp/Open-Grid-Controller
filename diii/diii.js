@@ -14,6 +14,7 @@ import { luaMethods } from './js/lua.js';
 import { uploadMethods } from './js/uploads.js';
 import { fileMethods } from './js/files.js';
 import { gridMethods } from './js/grid.js';
+import { backupUiMethods } from './js/backup-ui.js';
 
 class diiiApp {
     constructor() {
@@ -100,6 +101,8 @@ class diiiApp {
             restartBtn: document.getElementById('restartBtn'),
             bootloaderBtn: document.getElementById('bootloaderBtn'),
             reformatBtn: document.getElementById('reformatBtn'),
+            backupBtn: document.getElementById('backupBtn'),
+            restoreBtn: document.getElementById('restoreBtn'),
             helpBtn: document.getElementById('helpBtn'),
             clearBtn: document.getElementById('clearBtn'),
             gridBtn: document.getElementById('gridBtn'),
@@ -130,6 +133,8 @@ class diiiApp {
         on(this.elements.restartBtn, 'click', () => this.restartDevice());
         on(this.elements.bootloaderBtn, 'click', () => this.bootloaderDevice());
         on(this.elements.reformatBtn, 'click', () => this.reformatFs());
+        on(this.elements.backupBtn, 'click', () => this.backupToZip());
+        on(this.elements.restoreBtn, 'click', () => this.restoreFromZip());
         on(this.elements.helpBtn, 'click', () => this.helpDevice());
         on(this.elements.clearBtn, 'click', () => this.clearOutput());
         on(this.elements.gridBtn, 'click', () => this.toggleGridPanel());
@@ -180,7 +185,8 @@ Object.assign(
     luaMethods,
     uploadMethods,
     fileMethods,
-    gridMethods
+    gridMethods,
+    backupUiMethods
 );
 
 document.addEventListener('DOMContentLoaded', () => {

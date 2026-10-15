@@ -1,5 +1,5 @@
 // Bump CACHE when the list below changes; old caches are deleted on activate.
-const CACHE = 'diii-v3';
+const CACHE = 'diii-v4';
 
 // Relative to this file, so the app works from any path (e.g. GitHub Pages
 // project sites), not only from the site root.
@@ -8,6 +8,8 @@ const APP_SHELL_FILES = [
     './index.html',
     './style.css',
     './diii.js',
+    './js/backup.js',
+    './js/backup-ui.js',
     './js/connection.js',
     './js/console.js',
     './js/device.js',
@@ -16,6 +18,7 @@ const APP_SHELL_FILES = [
     './js/layout.js',
     './js/lua.js',
     './js/uploads.js',
+    './js/zip.js',
     './manifest.webmanifest',
     './icons/logo.svg',
     './icons/icon-192.png',
