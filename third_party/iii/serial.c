@@ -87,7 +87,7 @@ static void serial_tx_drain() {
       const uint32_t count = (available < ready) ? available : ready;
       tud_cdc_n_write(0, tx_buf + tx_r, count);
       tud_cdc_n_write_flush(0);
-      tx_r += count;
+      tx_r = (uint16_t)(tx_r + count);  // count <= tx_w - tx_r
       tx_stalled = false;
       deadline = make_timeout_time_us(SERIAL_TX_STALL_US);
     } else if (tx_stalled || time_reached(deadline)) {
