@@ -11,6 +11,15 @@ BOARD   ?= xiao_rp2040
 BOARDS  := xiao_rp2040 rp2040_zero
 PORT    ?= 8000
 
+# Formatters run at pinned versions through uvx/npx, so everyone gets the
+# same output with nothing to install beyond uv and node.
+CLANG_FORMAT ?= uvx clang-format@22.1.8
+PRETTIER     ?= npx -y prettier@3.6.2
+RUFF         ?= uvx ruff@0.14.0
+FORMAT_C     := $(wildcard iii-open-grid/src/*.c iii-open-grid/src/*.h)
+FORMAT_JS    := diii/diii.js diii/sw.js $(wildcard diii/js/*.js)
+FORMAT_PY    := tools iii-open-grid/tools
+
 DIII_UPSTREAM ?= https://github.com/monome/web-diii
 DIII_FORK     ?= https://github.com/carlosedp/web-diii
 # branch of the fork to push diii/ to, for pull requests to monome/web-diii
@@ -20,7 +29,7 @@ DIII_BRANCH   ?= open-grid
 III_UPSTREAM ?= https://codeberg.org/tehn/iii
 III_BASE     := $(shell git log -1 --format=%H --grep="git-subtree-dir: third_party/iii")
 
-.PHONY: all help firmware firmware-all upload monitor diii dist clean \
+.PHONY: all help firmware firmware-all upload monitor diii dist clean format format-check \
         diii-pull-upstream diii-push-fork iii-changes iii-patches iii-pull-upstream
 
 all: firmware
@@ -36,6 +45,9 @@ help:
 	@echo Release:
 	@echo   make dist            firmware for all boards + diii into dist/
 	@echo   make clean           remove build outputs and dist/
+	@echo Code style:
+	@echo   make format          format our C, JS and Python in place
+	@echo   make format-check    fail if anything is not formatted
 	@echo diii subtree, tracking $(DIII_FORK):
 	@echo   make diii-pull-upstream   merge monome/web-diii main into diii/
 	@echo   make diii-push-fork       push diii/ to the fork, branch DIII_BRANCH, for upstream PRs
@@ -66,6 +78,16 @@ dist: firmware-all
 clean:
 	$(PIO) run -t clean $(foreach b,$(BOARDS),-e $(b))
 	$(PYTHON) tools/dist.py --clean
+
+format:
+	$(CLANG_FORMAT) -i $(FORMAT_C)
+	$(PRETTIER) --log-level warn --write $(FORMAT_JS)
+	$(RUFF) format $(FORMAT_PY)
+
+format-check:
+	$(CLANG_FORMAT) --dry-run --Werror $(FORMAT_C)
+	$(PRETTIER) --log-level warn --check $(FORMAT_JS)
+	$(RUFF) format --check $(FORMAT_PY)
 
 diii-pull-upstream:
 	git subtree pull --prefix=diii $(DIII_UPSTREAM) main

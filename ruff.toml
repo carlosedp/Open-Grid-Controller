@@ -1,0 +1,4 @@
+# Python style for tools/ and iii-open-grid/tools/ (`make format`).
+line-length = 100
+target-version = "py310"
+extend-exclude = ["third_party", "diii", "sw", ".deps", ".pio"]
