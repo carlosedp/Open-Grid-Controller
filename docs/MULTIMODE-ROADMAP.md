@@ -380,7 +380,12 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
   reconnects, partial lines, upload pacing) without tests. Instead, in this order:
   1. ✅ Split `diii.js` into native ES modules (`diii/js/`, mixed into the one app class; all
      methods verified identical). Still no build step.
-  2. Type checking without a build: `// @ts-check` + JSDoc, checked with `tsc --noEmit`.
+  2. ~~Type checking the existing code~~: tried `tsc --noEmit` with JSDoc (2026-10-15). The
+     methods mixed into one class make `App` a circular type (TS2456), with `@satisfies
+     ThisType<App>` and with per-method `@this`; typing it would need a hand-kept interface or a
+     composition refactor, not worth it for working code. Instead, new features (zip writer, MIDI
+     monitor) are standalone modules with explicit inputs, `// @ts-check`ed one by one (Web Serial
+     and File System Access types need `@types/w3c-web-serial` etc.).
   3. Backup / restore: an iii function that streams a file from flash in chunks (constant memory,
      works while big scripts run); a diii **Backup** button that downloads every file into one zip
      (store-only zip, ~60 lines, no dependency) and **Restore** that uploads them back. Possible
