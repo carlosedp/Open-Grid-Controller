@@ -30,7 +30,9 @@ og_i2c_hz = env.GetProjectOption("custom_og_i2c_hz", "100000")
 def option(name, default):
     """custom_og_<name> from platformio.ini; OG_<NAME> in the environment wins,
     so measurement builds don't need an env of their own each."""
-    value = os.environ.get("OG_" + name.upper()) or env.GetProjectOption("custom_og_" + name, default)
+    value = os.environ.get("OG_" + name.upper()) or env.GetProjectOption(
+        "custom_og_" + name, default
+    )
     return value.lower() in ("1", "yes", "true", "on")
 
 
@@ -61,7 +63,11 @@ def generator_args():
     if not make:
         env.Exit("Neither ninja nor make found; add tool-ninja to platform_packages")
     # MinGW Makefiles is for cmd.exe-style shells; CMake refuses it when sh.exe is on PATH.
-    gen = "Unix Makefiles" if shutil.which("sh") or not env.subst("$PLATFORM").startswith("win") else "MinGW Makefiles"
+    gen = (
+        "Unix Makefiles"
+        if shutil.which("sh") or not env.subst("$PLATFORM").startswith("win")
+        else "MinGW Makefiles"
+    )
     return ["-G", gen, "-DCMAKE_MAKE_PROGRAM=" + make]
 
 
@@ -79,20 +85,26 @@ def cmake_build(target, source, env):
     # The generator depends on the calling shell (Git Bash vs PowerShell), and
     # CMake refuses to switch generators in an existing build directory.
     binary_dir = join(cmake_dir, gen_args[1].replace(" ", "-").lower())
-    run([
-        cmake, "-S", firmware_dir, "-B", binary_dir,
-        *gen_args,
-        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-        "-DPICO_SDK_PATH=" + package_dir("framework-picosdk"),
-        "-DPICO_TOOLCHAIN_PATH=" + package_dir("toolchain-gccarmnoneeabi"),
-        "-DPython3_EXECUTABLE=" + env.subst("$PYTHONEXE"),
-        # PlatformIO makes the UF2 itself; don't let the SDK fetch and build picotool.
-        "-Dpicotool_FOUND=0",
-        "-DOG_BOARD=" + og_board,
-        "-DOG_I2C_HZ=" + og_i2c_hz,
-        "-DOG_FAST_CLOCK=" + ("ON" if og_fast_clock else "OFF"),
-        "-DOG_LUA_VM_IN_RAM=" + ("ON" if og_vm_in_ram else "OFF"),
-    ])
+    run(
+        [
+            cmake,
+            "-S",
+            firmware_dir,
+            "-B",
+            binary_dir,
+            *gen_args,
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+            "-DPICO_SDK_PATH=" + package_dir("framework-picosdk"),
+            "-DPICO_TOOLCHAIN_PATH=" + package_dir("toolchain-gccarmnoneeabi"),
+            "-DPython3_EXECUTABLE=" + env.subst("$PYTHONEXE"),
+            # PlatformIO makes the UF2 itself; don't let the SDK fetch and build picotool.
+            "-Dpicotool_FOUND=0",
+            "-DOG_BOARD=" + og_board,
+            "-DOG_I2C_HZ=" + og_i2c_hz,
+            "-DOG_FAST_CLOCK=" + ("ON" if og_fast_clock else "OFF"),
+            "-DOG_LUA_VM_IN_RAM=" + ("ON" if og_vm_in_ram else "OFF"),
+        ]
+    )
     run([cmake, "--build", binary_dir])
     shutil.copyfile(join(binary_dir, "iii-open-grid.elf"), str(target[0]))
 
@@ -106,8 +118,13 @@ def build_program(env):
     env.AlwaysBuild(elf)  # Ninja decides what is out of date
     # What PlatformIO's own BuildProgram also sets up; other targets depend on it.
     env.Replace(PIOMAINPROG=elf)
-    env.AlwaysBuild(env.Alias(
-        "checkprogsize", elf, env.VerboseAction(env.CheckUploadSize, "Checking size $PIOMAINPROG")))
+    env.AlwaysBuild(
+        env.Alias(
+            "checkprogsize",
+            elf,
+            env.VerboseAction(env.CheckUploadSize, "Checking size $PIOMAINPROG"),
+        )
+    )
     return elf
 
 

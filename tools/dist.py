@@ -30,10 +30,20 @@ def firmware_version() -> str:
 
 def git_revision() -> str:
     try:
-        rev = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
-                             capture_output=True, text=True, check=True).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain", "--", "diii"], cwd=ROOT,
-                               capture_output=True, text=True, check=True).stdout.strip()
+        rev = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "--", "diii"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
         return rev + ("-dirty" if dirty else "")
     except (OSError, subprocess.CalledProcessError):
         return "dev"
@@ -55,12 +65,16 @@ def copy_firmware(boards) -> None:
 def copy_diii() -> None:
     out = DIST / "diii"
     shutil.rmtree(out, ignore_errors=True)
-    shutil.copytree(ROOT / "diii", out, ignore=lambda _dir, names: [n for n in names if n in DIII_SKIP])
+    shutil.copytree(
+        ROOT / "diii", out, ignore=lambda _dir, names: [n for n in names if n in DIII_SKIP]
+    )
 
     # A new cache name per build makes installed copies pick up the release.
     sw = out / "sw.js"
     text = sw.read_text(encoding="utf-8")
-    text, count = re.subn(r"const CACHE = '[^']*';", f"const CACHE = 'diii-{git_revision()}';", text)
+    text, count = re.subn(
+        r"const CACHE = '[^']*';", f"const CACHE = 'diii-{git_revision()}';", text
+    )
     if count != 1:
         sys.exit("could not stamp the cache name in diii/sw.js")
     sw.write_text(text, encoding="utf-8", newline="\n")
@@ -71,8 +85,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("boards", nargs="*")
     parser.add_argument("--clean", action="store_true")
-    parser.add_argument("--diii-only", action="store_true",
-                        help="only build dist/diii (the GitHub Pages workflow uses this)")
+    parser.add_argument(
+        "--diii-only",
+        action="store_true",
+        help="only build dist/diii (the GitHub Pages workflow uses this)",
+    )
     args = parser.parse_args()
 
     if args.clean:
