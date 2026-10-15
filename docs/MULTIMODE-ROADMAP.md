@@ -53,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.3)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.4)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -90,6 +90,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   | `og_key(x,y,z)`  | inject a key event through the same queue as real keys                          |
   | `og_led(r,g,b)`  | status LED color 0–255; `og_led()` returns it to the mode color                 |
   | `og_mirror(on)`  | stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii             |
+  | `og_dump_file(f)` | print file `f` as base64 lines, then `size crc32`; for diii's backup           |
 
 - **Cores**: core 1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty) and
   runs from RAM; core 0 runs USB + Lua with 8 KB of stack (both scratch banks). Key events cross
@@ -386,10 +387,13 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      composition refactor, not worth it for working code. Instead, new features (zip writer, MIDI
      monitor) are standalone modules with explicit inputs, `// @ts-check`ed one by one (Web Serial
      and File System Access types need `@types/w3c-web-serial` etc.).
-  3. Backup / restore: an iii function that streams a file from flash in chunks (constant memory,
-     works while big scripts run); a diii **Backup** button that downloads every file into one zip
-     (store-only zip, ~60 lines, no dependency) and **Restore** that uploads them back. Possible
-     since og-0.3.0 (output of any size gets through).
+  3. ✅ Backup / restore (og-0.3.4, untested on hardware): `og_dump_file(name)` in our firmware
+     (`src/file_dump.c`, iii API only) sends a file as base64 lines plus size and CRC-32, 96 bytes
+     at a time from static buffers; diii's **backup** zips every file (`js/zip.js`, `js/backup.js`,
+     standalone, `tsc --strict` clean) and **restore** uploads a zip's files through the normal,
+     compile-checked upload path (skips `lib.lua`). Without `og_dump_file` diii falls back to
+     `cat()`. Later: move `og_dump_file` into iii as `fs_dump_file` (a fourth upstream PR) and
+     have diii look for both names; byte-exact restore would need a matching chunked write.
   4. Script editor: edit scripts in diii without download/change/upload; save and save as; Lua
      syntax highlighting (CodeMirror 6, vendored so it works offline).
   5. MIDI monitor like the Alloy Controller's, through the browser's Web MIDI (no firmware change).
