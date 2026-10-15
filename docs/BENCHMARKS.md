@@ -12,6 +12,7 @@ full collection. Before that, `midi_to_msg` meant what is now `alloc+gc`.
 
 | Build           | Clock   | Script | Lua   | Heap free / largest | High water   | loop    | midi_to_msg | alloc+gc | gc      | redraw  |
 | --------------- | ------- | ------ | ----- | ------------------- | ------------ | ------- | ----------- | -------- | ------- | ------- |
+| og-0.3.3 fresh  | 125 MHz | kria   | 110.6 | 99.4 / 61.3         | 155.2 of 223 | 4.60 µs | 47.0 µs     | 54.2 µs  | 2.18 ms | 1.00 ms |
 | og-0.3.3        | 125 MHz | -      | 41.9  | 173.3 / 91.8        | 59.2 of 223  | 4.60 µs | 48.5 µs     | 54.4 µs  | 2.89 ms | 1.00 ms |
 | og-0.3.3        | 125 MHz | kria   | 110.7 | 99.2 / 53.7         | 147.2 of 223 | 4.60 µs | 48.4 µs     | 55.6 µs  | 2.20 ms | 0.98 ms |
 | og-0.3.0        | 125 MHz | -      | 41.7  | 173.8 / 89.3        | 151.4 of 223 | 4.59 µs | 47.0 µs     | 53.4 µs  | 2.95 ms | 0.98 ms |
@@ -64,4 +65,6 @@ og-0.2.1 + kria: out of memory while loading (fixed by the streaming loader in o
   `luaV_execute` alone is 11.4 KB and shares the 16 KB XIP cache with all other code.
 - **Layout-sensitive:** the plain `loop` went from 6.1 µs (og-0.2.1 to 0.2.6) to 8.9 µs (og-0.2.8)
   without any change to the interpreter. Compare builds by several metrics, not one.
-- **Memory:** loading kria peaks at ~204–208 KB of 220 KB (compiler working memory).
+- **Memory:** loading kria peaks at 155 of 223 KB (og-0.3.3, "fresh": kria benchmark right after
+  boot, nothing before it). The ~204–208 KB peaks recorded up to og-0.3.0 were inflated by
+  og_mem's own probe (fixed in og-0.3.1).

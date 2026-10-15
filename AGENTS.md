@@ -108,7 +108,7 @@ iii is a git subtree so our changes can go upstream as patches.
 - **Core 1 must not run from flash in its idle loop**, and it must keep
   `multicore_lockout_victim_init()`: iii's flash writes pause it.
 - **Memory:** ~223 KB of heap. Compiling a big script is the tightest moment (kria_iii peaks at
-  ~203 KB). `og_mem()` shows the C heap; Lua's `mem()` only counts Lua's share.
+  ~155 KB, og-0.3.3). `og_mem()` shows the C heap; Lua's `mem()` only counts Lua's share.
 - **Files uploaded through the REPL end with a `\0`**; anything reading scripts must stop there.
 - **Write files with `LFS_O_TRUNC`**, or a shorter new file keeps the old file's tail.
 - **Serial output**: 4 KB buffer, held until a host has had the port open for 200 ms (Chrome on

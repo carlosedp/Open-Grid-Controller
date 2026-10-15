@@ -53,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.1)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.3)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -268,14 +268,14 @@ Lua scripts in a new `scripts/` folder, each usable on its own and selectable fr
 - **Accept:** play a soft synth in a DAW with scale/root/octave changes without touching the
   computer; switch scripts without a computer.
 
-### M4 — Memory and speed ✅ (first round done; measurements in [BENCHMARKS.md](BENCHMARKS.md))
+### M4 — Memory and speed ✅ (verified on the XIAO, og-0.3.3; measurements in [BENCHMARKS.md](BENCHMARKS.md))
 
 Scripts hit iii's memory limits (lines iii thread; [monome/iii#7](https://github.com/monome/iii/issues/7),
 [#33](https://github.com/monome/iii/issues/33)). Work happens in `third_party/iii` (a git subtree)
 as one commit per topic, each exportable with `make iii-patches` and tracked with its measured
 effect in [third_party/README.md](../third_party/README.md); Lua API unchanged throughout.
 
-**Done** (XIAO RP2040, 125 MHz):
+- ✅ **Done** (XIAO RP2040, 125 MHz):
 
 | Change                                                 | Effect                                                                |
 | ------------------------------------------------------ | --------------------------------------------------------------------- |
@@ -297,20 +297,16 @@ without a serial warning (core 0's stack overflowing into core 1's, and `serial(
 buffer: both silent RAM corruption, both fixed); `lua_atpanic` (now prints and reboots); RAM
 "goblins" (32 KB upload buffer, 16 + 4 KB serial buffers: all gone); #33's freeze after ~1 hour
 with ansible (prints never read, so the 16 KB TX buffer filled in ~1 h and `serial()` overflowed;
-now output is dropped, after waiting at most once for a host that isn't reading). Still to verify
-on the device: #7's repro loop.
+now output is dropped, after waiting at most once for a host that isn't reading). #7's repro
+([scripts/issue7.lua](../scripts/issue7.lua)) verified on og-0.3.3: n=10 and n=13 complete, a
+300 KB allocation raises "not enough memory", and the REPL keeps running.
 
 **Findings:** code fetch from flash (16 KB XIP cache, shared by both cores) dominates speed, so
 moving hot code into RAM beats rewriting Lua in C. The RP2040-Zero runs flash at half the XIAO's
 clock (board headers: clk/4 vs clk/2), so measure on a Zero before drawing conclusions for the kit.
 
-**Next:**
-
-1. **Compile peak:** loading kria still peaks at ~203 of 223 KB. Options: compile once and cache
-   bytecode in flash (keeping line info for errors), or reduce parser memory.
-2. More hot code in RAM where og_bench shows it pays (table access, GC mark), RAM permitting.
-3. `metro` bookkeeping, `slew` and `mu` tables in C: measure first; MIDI showed C alone isn't enough.
-4. Upstream: post the patch series (with measurements) on the iii thread / codeberg.
+Loading kria peaks at 155 of 223 KB, so compiling big scripts no longer needs work. Optional
+speedups are under §5; sending the patches upstream is M11.
 
 ### M5 — diii fork (PWA + Open Grid features)
 
@@ -396,6 +392,7 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
 ### M11 - Upstream iii changes and improvements
 
 - Consolidate the patches listed on third_party/README.md so they can be upstreamed to the main iii repository. Make sure our changes are not specific for Open Grid Controller but would also work on all Grid devices.
+- Post the series with its measurements (BENCHMARKS.md, issue7.lua) on the iii thread / codeberg, referencing monome/iii#7 and #33.
 
 ### Asks for FREEPOET (keypad protocol `0x03`)
 
@@ -414,7 +411,8 @@ level→RGB palette register, an RGB block write, and a documented way to update
 - **Windows descriptor caching**: different PIDs per mode avoid stale drivers.
 - **GPL-3.0**: firmware built from `iii-open-grid/` is GPL-3.0 (iii). The Arduino firmware in `sw/`
   and the repo's other files keep their own license — the repo has no top-level LICENSE yet; add one.
-- **Lua memory** (M4): much better, but compiling big scripts is still the tightest moment.
+- **Lua memory** (M4): compiling big scripts is still the peak (kria: 155 of 223 KB), with ~68 KB
+  to spare.
 - **Behavior changes vs. stock iii**: out of memory is now a Lua error instead of a reboot (breaks
   scripts that rely on the reboot, e.g. many-roads' restart, see M3); `lib.lua` is versioned
   `v1.1.2-ogN` so our copy replaces the device's.
@@ -423,6 +421,9 @@ level→RGB palette register, an RGB block write, and a documented way to update
 
 ## 5. Other ideas
 
+- More speed (M4 follow-ups, measure with og_bench first): more hot code in RAM (table access, GC
+  mark), RAM permitting; `metro` bookkeeping, `slew` and `mu` tables in C (MIDI showed C alone
+  isn't enough); caching compiled bytecode in flash if load-time memory gets tight again.
 - HID keyboard/macro script (needs an iii HID interface).
 - OSC via serialosc in serial mode: Max/MSP, Pure Data, SuperCollider, TouchDesigner, VCV Rack.
 - Lighting/VJ: MIDI → QLC+ (DMX), Resolume clip launching with feedback.
