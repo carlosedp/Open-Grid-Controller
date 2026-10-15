@@ -387,7 +387,7 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      composition refactor, not worth it for working code. Instead, new features (zip writer, MIDI
      monitor) are standalone modules with explicit inputs, `// @ts-check`ed one by one (Web Serial
      and File System Access types need `@types/w3c-web-serial` etc.).
-  3. ✅ Backup / restore (og-0.3.4, untested on hardware): `og_dump_file(name)` in our firmware
+  3. ✅ Backup / restore (og-0.3.4, verified on the XIAO 2026-10-15, also while kria runs): `og_dump_file(name)` in our firmware
      (`src/file_dump.c`, iii API only) sends a file as base64 lines plus size and CRC-32, 96 bytes
      at a time from static buffers; diii's **backup** zips every file (`js/zip.js`, `js/backup.js`,
      standalone, `tsc --strict` clean) and **restore** uploads a zip's files through the normal,
