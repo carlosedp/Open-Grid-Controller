@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.3"
+#define DEVICE_VERSION_BASE "og-0.3.4"
 
 #include <string.h>
 
@@ -29,6 +29,7 @@
 #include "util.h"
 #include "vm.h"
 
+#include "file_dump.h"
 #include "grid.h"
 #include "heap_stats.h"
 #include "monome_serial.h"
@@ -434,6 +435,7 @@ static const struct luaL_Reg device_lib[] = {
     {"og_mirror", l_og_mirror},
     {"og_key", l_og_key},
     {"og_led", l_og_led},
+    {"og_dump_file", og_l_dump_file},
     {NULL, NULL},
 };
 
@@ -455,6 +457,7 @@ static const char *device_help_str =
     "  og_mem(quiet)   C heap: free, largest block, used, peak, total\n"
     "  og_key(x,y,z)   inject a key event, as if pressed on the grid\n"
     "  og_led(r,g,b)   status LED color (0-255); og_led() = mode color\n"
-    "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n";
+    "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n"
+    "  og_dump_file(f) print a file as base64, then size and CRC-32\n";
 
 const char *device_help_txt() { return device_help_str; }
