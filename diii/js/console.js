@@ -65,10 +65,11 @@ export const consoleMethods = {
     handleGlobalShortcuts(event) {
         if (event.defaultPrevented) return;
 
-        const isConnectToggle = (event.metaKey || event.ctrlKey)
-            && event.shiftKey
-            && !event.altKey
-            && String(event.key).toLowerCase() === 'c';
+        const isConnectToggle =
+            (event.metaKey || event.ctrlKey) &&
+            event.shiftKey &&
+            !event.altKey &&
+            String(event.key).toLowerCase() === 'c';
 
         if (!isConnectToggle) return;
 
@@ -94,9 +95,10 @@ export const consoleMethods = {
 
         if (this.historyIndex === -1) return;
         this.historyIndex -= 1;
-        input.value = this.historyIndex === -1
-            ? this.currentInput
-            : this.commandHistory[this.commandHistory.length - 1 - this.historyIndex];
+        input.value =
+            this.historyIndex === -1
+                ? this.currentInput
+                : this.commandHistory[this.commandHistory.length - 1 - this.historyIndex];
         input.selectionStart = input.selectionEnd = input.value.length;
     },
 
@@ -194,9 +196,7 @@ export const consoleMethods = {
             }
 
             const event = eventMatch[1];
-            const args = eventMatch[2]
-                ? eventMatch[2].split(',').map((item) => item.trim())
-                : [];
+            const args = eventMatch[2] ? eventMatch[2].split(',').map((item) => item.trim()) : [];
 
             this.handleiiiEvent(event, args);
         }
@@ -243,6 +243,8 @@ export const consoleMethods = {
         this.outputLine(' ^^c          clean init');
         this.outputLine(' help()       print iii api');
         this.outputLine('');
-        this.outputHTML('Docs: <a href="https://monome.org/docs/iii/code" target="_blank" rel="noopener noreferrer">monome.org/docs/iii/code</a>\n');
+        this.outputHTML(
+            'Docs: <a href="https://monome.org/docs/iii/code" target="_blank" rel="noopener noreferrer">monome.org/docs/iii/code</a>\n'
+        );
     }
 };

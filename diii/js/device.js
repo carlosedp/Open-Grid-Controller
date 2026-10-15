@@ -34,9 +34,7 @@ export const deviceMethods = {
                 }
             }
 
-            this.connectedDeviceLabel = reconnectPort
-                ? this.getCachedDeviceLabel(reconnectPort)
-                : null;
+            this.connectedDeviceLabel = reconnectPort ? this.getCachedDeviceLabel(reconnectPort) : null;
 
             let connected = await this.iiiDevice.connect(reconnectPort);
 
@@ -60,7 +58,7 @@ export const deviceMethods = {
                     this.elements.replStatusText.textContent = cachedDeviceType;
                 }
 
-                const deviceType = cachedDeviceType || await this.updateConnectedDeviceLabel();
+                const deviceType = cachedDeviceType || (await this.updateConnectedDeviceLabel());
 
                 if (auto) {
                     if (deviceType) {
@@ -246,8 +244,7 @@ export const deviceMethods = {
         const infoB = preferredInfo || this.getPortInfo(portB);
         if (!infoA || !infoB) return false;
 
-        return infoA.usbVendorId === infoB.usbVendorId
-            && infoA.usbProductId === infoB.usbProductId;
+        return infoA.usbVendorId === infoB.usbVendorId && infoA.usbProductId === infoB.usbProductId;
     },
 
     findMatchingPort(ports, preferredPort, preferredInfo = null) {
@@ -262,13 +259,16 @@ export const deviceMethods = {
             return null;
         }
 
-        return ports.find((port) => {
-            const info = this.getPortInfo(port);
-            if (!info) return false;
+        return (
+            ports.find((port) => {
+                const info = this.getPortInfo(port);
+                if (!info) return false;
 
-            return info.usbVendorId === preferredInfo.usbVendorId
-                && info.usbProductId === preferredInfo.usbProductId;
-        }) || null;
+                return (
+                    info.usbVendorId === preferredInfo.usbVendorId && info.usbProductId === preferredInfo.usbProductId
+                );
+            }) || null
+        );
     },
 
     clearAutoReconnectTimer() {

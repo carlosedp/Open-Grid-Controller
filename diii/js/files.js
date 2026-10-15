@@ -67,7 +67,9 @@ export const fileMethods = {
         }
 
         const sortedEntries = this.getSortedFileEntries();
-        const pinnedCount = sortedEntries.filter((entry) => entry.name === 'lib.lua' || this.isInitFile(entry.name)).length;
+        const pinnedCount = sortedEntries.filter(
+            (entry) => entry.name === 'lib.lua' || this.isInitFile(entry.name)
+        ).length;
 
         for (let index = 0; index < sortedEntries.length; index += 1) {
             const entry = sortedEntries[index];
@@ -124,15 +126,15 @@ export const fileMethods = {
 
             const actions = isInitLuaFile
                 ? [
-                    { label: 'read', fn: () => this.showFile(entry.name) },
-                    { label: 'delete', fn: () => this.deleteFile(entry.name) }
-                ]
+                      { label: 'read', fn: () => this.showFile(entry.name) },
+                      { label: 'delete', fn: () => this.deleteFile(entry.name) }
+                  ]
                 : isLibFile
-                    ? [
+                  ? [
                         { label: 'download', fn: () => this.downloadFile(entry.name) },
                         { label: 'read', fn: () => this.showFile(entry.name) }
                     ]
-                    : [
+                  : [
                         { label: 'run', fn: () => this.enqueueRunFile(entry.name) },
                         { label: 'download', fn: () => this.downloadFile(entry.name) },
                         { label: 'first', fn: () => this.configureFirst(entry.name) },
@@ -289,9 +291,7 @@ export const fileMethods = {
         }
 
         const hasMatchingFile = entries.some((entry) => entry.name === targetName);
-        this.firstBadgeFileNames = hasMatchingFile
-            ? new Set([targetName])
-            : new Set();
+        this.firstBadgeFileNames = hasMatchingFile ? new Set([targetName]) : new Set();
     },
 
     async readRemoteFile(fileName) {
@@ -357,9 +357,7 @@ export const fileMethods = {
             await this.runFile(fileName);
         };
 
-        this.fileRunQueue = this.fileRunQueue
-            .catch(() => {})
-            .then(task);
+        this.fileRunQueue = this.fileRunQueue.catch(() => {}).then(task);
 
         return this.fileRunQueue;
     },

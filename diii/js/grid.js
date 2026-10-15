@@ -9,7 +9,10 @@ export const gridMethods = {
             const lines = await this.executeLuaCapture(
                 'print(og_mirror ~= nil and grid_size_x ~= nil and (grid_size_x() .. "x" .. grid_size_y()) or "none")'
             );
-            const match = lines.map((line) => String(line).trim()).join('').match(/^(\d+)x(\d+)$/);
+            const match = lines
+                .map((line) => String(line).trim())
+                .join('')
+                .match(/^(\d+)x(\d+)$/);
             if (match) size = { x: Number(match[1]), y: Number(match[2]) };
         } catch {
             // device busy or not answering; treat as unsupported
@@ -84,7 +87,7 @@ export const gridMethods = {
             if (level === this.gridLevels[i]) continue;
             this.gridLevels[i] = level;
             this.gridCells[i].style.backgroundColor = level
-                ? `rgba(255, 190, 100, ${(0.12 + 0.88 * level / 15).toFixed(3)})`
+                ? `rgba(255, 190, 100, ${(0.12 + (0.88 * level) / 15).toFixed(3)})`
                 : '';
         }
     },

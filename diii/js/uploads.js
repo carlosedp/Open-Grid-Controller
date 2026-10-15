@@ -95,13 +95,15 @@ export const uploadMethods = {
             const handles = await window.showOpenFilePicker({
                 multiple: false,
                 excludeAcceptAllOption: true,
-                types: [{
-                    description: 'Lua scripts',
-                    accept: {
-                        'text/plain': ['.lua'],
-                        'application/x-lua': ['.lua']
+                types: [
+                    {
+                        description: 'Lua scripts',
+                        accept: {
+                            'text/plain': ['.lua'],
+                            'application/x-lua': ['.lua']
+                        }
                     }
-                }]
+                ]
             });
 
             const handle = handles?.[0];
@@ -176,7 +178,7 @@ export const uploadMethods = {
         if (this.lastUploadedScript.fileHandle) {
             try {
                 const file = await this.lastUploadedScript.fileHandle.getFile();
-                
+
                 return {
                     name: file.name,
                     text: await file.text(),
@@ -245,10 +247,14 @@ export const uploadMethods = {
 
     setupDragAndDrop() {
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
-            document.body.addEventListener(eventName, (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-            }, false);
+            document.body.addEventListener(
+                eventName,
+                (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                },
+                false
+            );
         });
 
         document.body.addEventListener('drop', async (event) => {

@@ -43,9 +43,8 @@ export const layoutMethods = {
 
     clampExplorerWidth(width) {
         const containerWidth = this.elements.splitContainer?.clientWidth || 0;
-        const dynamicMax = containerWidth > 0
-            ? Math.max(this.explorerWidthMin, containerWidth - 320)
-            : this.explorerWidthMax;
+        const dynamicMax =
+            containerWidth > 0 ? Math.max(this.explorerWidthMin, containerWidth - 320) : this.explorerWidthMax;
         const hardMax = Math.max(this.explorerWidthMin, Math.min(this.explorerWidthMax, dynamicMax));
         return Math.max(this.explorerWidthMin, Math.min(hardMax, Math.round(width)));
     },
@@ -127,7 +126,7 @@ export const layoutMethods = {
         }
 
         const direction = key === 'ArrowRight' ? 1 : -1;
-        this.setExplorerWidth(currentWidth + (direction * step));
+        this.setExplorerWidth(currentWidth + direction * step);
     },
 
     startExplorerResize(event) {

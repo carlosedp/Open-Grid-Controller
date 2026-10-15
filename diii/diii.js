@@ -148,7 +148,8 @@ class diiiApp {
         });
 
         this.iiiDevice.onDataReceived = (data) => this.handleiiiOutput(data);
-        this.iiiDevice.onConnectionChange = (connected, error, detail) => this.handleConnectionChange(connected, error, detail);
+        this.iiiDevice.onConnectionChange = (connected, error, detail) =>
+            this.handleConnectionChange(connected, error, detail);
 
         if ('serial' in navigator) {
             navigator.serial.addEventListener('connect', (event) => this.handleSerialPortConnect(event));
@@ -171,7 +172,8 @@ class diiiApp {
     }
 }
 
-Object.assign(diiiApp.prototype,
+Object.assign(
+    diiiApp.prototype,
     layoutMethods,
     consoleMethods,
     deviceMethods,

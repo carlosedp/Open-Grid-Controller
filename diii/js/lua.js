@@ -78,9 +78,7 @@ export const luaMethods = {
         try {
             await this.iiiDevice.writeLine(`print(${this.luaQuote(beginToken)})`);
 
-            const lines = Array.isArray(commands)
-                ? commands
-                : String(commands).split('\n');
+            const lines = Array.isArray(commands) ? commands : String(commands).split('\n');
 
             for (const rawLine of lines) {
                 const line = String(rawLine).trim();

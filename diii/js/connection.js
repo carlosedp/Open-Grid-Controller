@@ -24,7 +24,7 @@ export class iiiConnection {
 
             if (!this.port) {
                 this.port = await navigator.serial.requestPort({
-                    filters: [{ usbVendorId: 0xCAFE, usbProductId: 0x1101 }]
+                    filters: [{ usbVendorId: 0xcafe, usbProductId: 0x1101 }]
                 });
             }
 
