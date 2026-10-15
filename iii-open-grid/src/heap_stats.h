@@ -6,11 +6,11 @@
 #include <stdint.h>
 
 typedef struct {
-  uint32_t total;    // heap region size (end of .bss to the stack limit)
-  uint32_t used;     // bytes currently allocated
-  uint32_t free;     // bytes still allocatable in total (may be fragmented)
-  uint32_t largest;  // largest single block malloc can return right now
-  uint32_t peak;     // highest `used` seen since boot (sampled between Lua calls)
+  uint32_t total;       // heap region size (end of .bss to the stack limit)
+  uint32_t used;        // bytes currently allocated
+  uint32_t free;        // bytes still allocatable in total (may be fragmented)
+  uint32_t largest;     // largest single block malloc can return right now
+  uint32_t peak;        // highest `used` seen since boot (sampled between Lua calls)
   uint32_t high_water;  // most heap ever claimed, exact; includes fragmentation.
                         // When this reaches `total`, the heap has hit the RAM limit.
 } og_heap_stats_t;

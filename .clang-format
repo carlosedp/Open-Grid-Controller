@@ -9,3 +9,6 @@ AllowShortLoopsOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
 IncludeBlocks: Preserve
 SortIncludes: false
+# pointer style of the existing code, iii and the Pico SDK: `char *p`
+DerivePointerAlignment: false
+PointerAlignment: Right

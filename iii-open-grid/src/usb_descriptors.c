@@ -84,7 +84,8 @@ static const uint8_t desc_configuration_iii[] = {
 
 static const uint8_t desc_configuration_serial[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITF_SERIAL_TOTAL, 0, CONFIG_SERIAL_LEN, 0x00, 100),
-    TUD_CDC_DESCRIPTOR(ITF_SERIAL_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
+    TUD_CDC_DESCRIPTOR(ITF_SERIAL_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN,
+                       64),
 };
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
@@ -104,31 +105,22 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
       desc_str[1] = 0x0409;  // English
       desc_str[0] = (uint16_t)((TUSB_DESC_STRING << 8) | 4);
       return desc_str;
-    case STRID_MANUFACTURER:
-      str = device_str1();
-      break;
-    case STRID_PRODUCT:
-      str = device_str2();
-      break;
+    case STRID_MANUFACTURER: str = device_str1(); break;
+    case STRID_PRODUCT: str = device_str2(); break;
     case STRID_SERIAL: {
       // serialosc looks for monome-style serials: 'm' + 7 digits.
       pico_unique_board_id_t id;
       pico_get_unique_board_id(&id);
-      const uint32_t n =
-          ((uint32_t)id.id[7] << 24) | ((uint32_t)id.id[6] << 16) | ((uint32_t)id.id[5] << 8) | id.id[4];
+      const uint32_t n = ((uint32_t)id.id[7] << 24) | ((uint32_t)id.id[6] << 16) |
+                         ((uint32_t)id.id[5] << 8) | id.id[4];
       snprintf(serial, sizeof(serial), serial_mode() ? "m%07lu" : "%08lu",
                (unsigned long)(n % (serial_mode() ? 10000000u : 100000000u)));
       str = serial;
       break;
     }
-    case STRID_CDC:
-      str = "OpenGrid_Serial";
-      break;
-    case STRID_MIDI:
-      str = "OpenGrid_MIDI";
-      break;
-    default:
-      return NULL;
+    case STRID_CDC: str = "OpenGrid_Serial"; break;
+    case STRID_MIDI: str = "OpenGrid_MIDI"; break;
+    default: return NULL;
   }
 
   size_t count = strlen(str);

@@ -82,18 +82,10 @@ static void handle_command(const uint8_t *b) {
       send(packet, 3);
       return;
     }
-    case LED_OFF:
-      og_grid_led(b[1], b[2], 0);
-      break;
-    case LED_ON:
-      og_grid_led(b[1], b[2], 15);
-      break;
-    case LED_ALL_OFF:
-      og_grid_led_all(0);
-      break;
-    case LED_ALL_ON:
-      og_grid_led_all(15);
-      break;
+    case LED_OFF: og_grid_led(b[1], b[2], 0); break;
+    case LED_ON: og_grid_led(b[1], b[2], 15); break;
+    case LED_ALL_OFF: og_grid_led_all(0); break;
+    case LED_ALL_ON: og_grid_led_all(15); break;
     case LED_MAP: {
       const uint8_t x_off = b[1] & 0x8;
       if (b[2] & 0x8) return;  // only one quad row on a 16x8 grid
@@ -112,15 +104,9 @@ static void handle_command(const uint8_t *b) {
       for (uint8_t i = 0; i < 8; i++) og_grid_led(b[1], i, ((b[3] >> i) & 1) * 15);
       break;
     }
-    case LED_INTENSITY:
-      og_grid_set_intensity(b[1]);
-      return;
-    case LED_LEVEL:
-      og_grid_led(b[1], b[2], b[3]);
-      break;
-    case LED_LEVEL_ALL:
-      og_grid_led_all(b[1]);
-      break;
+    case LED_INTENSITY: og_grid_set_intensity(b[1]); return;
+    case LED_LEVEL: og_grid_led(b[1], b[2], b[3]); break;
+    case LED_LEVEL_ALL: og_grid_led_all(b[1]); break;
     case LED_LEVEL_MAP: {
       const uint8_t x_off = b[1] & 0x8;
       if (b[2] & 0x8) return;

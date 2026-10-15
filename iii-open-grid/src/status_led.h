@@ -11,13 +11,13 @@
 
 // Dim on purpose: the LED sits right next to the grid.
 #define OG_COLOR_OFF OG_RGB(0, 0, 0)
-#define OG_COLOR_III OG_RGB(0, 16, 0)            // green: iii mode
-#define OG_COLOR_III_CLEAN OG_RGB(20, 10, 0)     // amber: iii, init.lua skipped
-#define OG_COLOR_SERIAL OG_RGB(0, 0, 20)         // blue: monome serial mode
-#define OG_COLOR_KEY OG_RGB(12, 12, 12)          // white flash: key event
-#define OG_COLOR_ERROR OG_RGB(40, 0, 0)          // red flash: Lua error
-#define OG_COLOR_MODE_SWITCH OG_RGB(20, 0, 20)   // magenta: BOOT held, switching mode
-#define OG_COLOR_BOOT_WINDOW OG_RGB(0, 14, 14)   // cyan: press BOOT now for a clean boot
+#define OG_COLOR_III OG_RGB(0, 16, 0)           // green: iii mode
+#define OG_COLOR_III_CLEAN OG_RGB(20, 10, 0)    // amber: iii, init.lua skipped
+#define OG_COLOR_SERIAL OG_RGB(0, 0, 20)        // blue: monome serial mode
+#define OG_COLOR_KEY OG_RGB(12, 12, 12)         // white flash: key event
+#define OG_COLOR_ERROR OG_RGB(40, 0, 0)         // red flash: Lua error
+#define OG_COLOR_MODE_SWITCH OG_RGB(20, 0, 20)  // magenta: BOOT held, switching mode
+#define OG_COLOR_BOOT_WINDOW OG_RGB(0, 14, 14)  // cyan: press BOOT now for a clean boot
 
 void og_status_init(void);
 

@@ -216,8 +216,8 @@ int main(void) {
   }
 
   og_status_set_base(mode == MODE_SERIAL ? OG_COLOR_SERIAL
-                     : run_script         ? OG_COLOR_III
-                                          : OG_COLOR_III_CLEAN);
+                     : run_script        ? OG_COLOR_III
+                                         : OG_COLOR_III_CLEAN);
   og_status_task();
 
   tud_init(BOARD_TUD_RHPORT);
@@ -377,10 +377,11 @@ static int l_og_mem(lua_State *l) {
   og_heap_stats_t h;
   og_heap_stats(&h);
   if (!lua_toboolean(l, 1)) {
-    serial("heap KB: free %.1f, largest block %.1f, used %.1f, peak %.1f, "
-           "high water %.1f of %.1f\r\n",
-           h.free / 1024.0, h.largest / 1024.0, h.used / 1024.0, h.peak / 1024.0,
-           h.high_water / 1024.0, h.total / 1024.0);
+    serial(
+        "heap KB: free %.1f, largest block %.1f, used %.1f, peak %.1f, "
+        "high water %.1f of %.1f\r\n",
+        h.free / 1024.0, h.largest / 1024.0, h.used / 1024.0, h.peak / 1024.0,
+        h.high_water / 1024.0, h.total / 1024.0);
   }
   lua_pushinteger(l, h.free);
   lua_pushinteger(l, h.largest);

@@ -275,9 +275,9 @@ void og_keypad_write_leds(const uint8_t *levels) {
 
     bool ok = true;
     for (uint8_t start = 0; ok && start < KEYS_PER_BOARD; start += PACKED_LEVEL_BLOCK_MAX) {
-      const uint8_t count = (uint8_t)((KEYS_PER_BOARD - start) < PACKED_LEVEL_BLOCK_MAX
-                                          ? (KEYS_PER_BOARD - start)
-                                          : PACKED_LEVEL_BLOCK_MAX);
+      const uint8_t count =
+          (uint8_t)((KEYS_PER_BOARD - start) < PACKED_LEVEL_BLOCK_MAX ? (KEYS_PER_BOARD - start)
+                                                                      : PACKED_LEVEL_BLOCK_MAX);
       ok = write_packed_level_block(boards[b].address, start, count, block + start);
     }
     if (!ok || !show_leds(boards[b].address)) {
