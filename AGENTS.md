@@ -67,8 +67,12 @@ Agents can build but can't run anything on the device. The maintainer flashes an
   `iii-open-grid:`, `diii:`, `docs:`, `build:`, `tools:`, `scripts:`, `third_party:`). The body
   says what was wrong and why the change fixes it; include measurements when relevant. Never
   mix `third_party/iii` changes with other paths in one commit.
-- **Formatting**: `.clang-format` (Google-based, 2 spaces, 100 columns) for our C code;
-  `third_party/` and `diii/` keep upstream's style (formatting disabled there).
+- **Formatting**: run `make format` before committing; `make format-check` must pass. It runs
+  clang-format (`.clang-format`: Google-based, 2 spaces, 100 columns, `char *p`) on
+  `iii-open-grid/src`, Prettier (`diii/.prettierrc.json`: 4 spaces, single quotes, 120 columns) on
+  diii's JS, and ruff (`ruff.toml`) on the Python tools, all at pinned versions via uvx/npx.
+  `third_party/` and `sw/` keep upstream's style; `.editorconfig` covers the basics in editors.
+  Reformatting goes in its own commit, never mixed with changes.
 - **Comments** explain why, not what; match the surrounding code's density.
 - **Docs**: when behavior changes, update the roadmap status (§1.3) and the relevant milestone;
   user-facing changes also go in `README.md`.

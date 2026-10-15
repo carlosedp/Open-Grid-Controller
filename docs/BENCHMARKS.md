@@ -45,7 +45,7 @@ og-0.2.1 + kria: out of memory while loading (fixed by the streaming loader in o
   (62.5 MHz at 125 MHz, 100 MHz at 200 MHz), the RP2040-Zero in the Open Grid kit at clk/4
   (31.25 / 50 MHz). Since code fetch dominates, expect the Zero to be noticeably slower than
   these XIAO numbers on the same build; measure on a Zero before drawing conclusions for the kit.
-- **MIDI helpers, C vs Lua** (og-0.3.3, `require("midi_lua.lua")` loads v1.1.2's Lua
+- **MIDI helpers, C vs Lua** (og-0.3.3, a temporary `midi_lua.lua`, in git history at `d663e7d`, loads v1.1.2's Lua
   `midi_to_msg` over the C one, fresh boot each): Lua 10% faster per call (42.0 vs 46.8 µs),
   C 3% faster with garbage (52.9 vs 54.6 µs), C saves 1.8 KB of Lua memory. With the interpreter
   in RAM the Lua if/elseif chain is cheap, while the C version's table calls run from flash.

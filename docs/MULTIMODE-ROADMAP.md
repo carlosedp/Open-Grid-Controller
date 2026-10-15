@@ -298,7 +298,7 @@ buffer: both silent RAM corruption, both fixed); `lua_atpanic` (now prints and r
 "goblins" (32 KB upload buffer, 16 + 4 KB serial buffers: all gone); #33's freeze after ~1 hour
 with ansible (prints never read, so the 16 KB TX buffer filled in ~1 h and `serial()` overflowed;
 now output is dropped, after waiting at most once for a host that isn't reading). #7's repro
-([scripts/issue7.lua](../scripts/issue7.lua)) verified on og-0.3.3: n=10 and n=13 complete, a
+(the loop from the issue; was `scripts/issue7.lua`, see git history) verified on og-0.3.3: n=10 and n=13 complete, a
 300 KB allocation raises "not enough memory", and the REPL keeps running.
 
 **Findings:** code fetch from flash (16 KB XIP cache, shared by both cores) dominates speed, so
@@ -429,7 +429,7 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
   mark them in third_party/README.md and `make iii-pull-upstream`. Our unsquashed commits will
   conflict with the merged versions; resolve to upstream's code, keeping our fork-only commits
   (`v1.1.2-ogN`, MIDI helpers in C).
-- Post the series with its measurements (BENCHMARKS.md, issue7.lua) on the iii thread / codeberg, referencing monome/iii#7 and #33.
+- Post the series with its measurements (BENCHMARKS.md, the #7 loop) on the iii thread / codeberg, referencing monome/iii#7 and #33.
 
 Refs:
 
