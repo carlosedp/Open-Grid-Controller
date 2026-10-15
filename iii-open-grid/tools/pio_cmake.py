@@ -9,9 +9,10 @@ regular PlatformIO targets (UF2 generation, size, upload) keep working.
 Used as `extra_scripts = pre:iii-open-grid/tools/pio_cmake.py`.
 """
 
+import os
 import shutil
 import subprocess
-from os.path import isabs, join
+from os.path import join
 
 Import("env")  # noqa: F821  (provided by PlatformIO)
 
@@ -24,10 +25,17 @@ cmake_dir = join(build_dir, "cmake")
 
 og_board = env.GetProjectOption("custom_og_board")
 og_i2c_hz = env.GetProjectOption("custom_og_i2c_hz", "100000")
-og_vm_in_ram = env.GetProjectOption("custom_og_lua_vm_in_ram", "yes").lower() in ("1", "yes", "true", "on")
-og_fast_clock = env.GetProjectOption("custom_og_fast_clock", "no").lower() in ("1", "yes", "true", "on")
-# Optional: use a pico-sdk checkout instead of the framework-picosdk package.
-sdk_override = env.GetProjectOption("custom_pico_sdk_path", "")
+
+
+def option(name, default):
+    """custom_og_<name> from platformio.ini; OG_<NAME> in the environment wins,
+    so measurement builds don't need an env of their own each."""
+    value = os.environ.get("OG_" + name.upper()) or env.GetProjectOption("custom_og_" + name, default)
+    return value.lower() in ("1", "yes", "true", "on")
+
+
+og_vm_in_ram = option("lua_vm_in_ram", "yes")
+og_fast_clock = option("fast_clock", "no")
 
 
 def package_dir(name):
@@ -43,12 +51,6 @@ def find_tool(package, relpath, exe):
     if path:
         return join(path, relpath)
     return shutil.which(exe)
-
-
-def pico_sdk_path():
-    if sdk_override:
-        return sdk_override if isabs(sdk_override) else join(project_dir, sdk_override)
-    return package_dir("framework-picosdk")
 
 
 def generator_args():
@@ -81,7 +83,7 @@ def cmake_build(target, source, env):
         cmake, "-S", firmware_dir, "-B", binary_dir,
         *gen_args,
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-        "-DPICO_SDK_PATH=" + pico_sdk_path(),
+        "-DPICO_SDK_PATH=" + package_dir("framework-picosdk"),
         "-DPICO_TOOLCHAIN_PATH=" + package_dir("toolchain-gccarmnoneeabi"),
         "-DPython3_EXECUTABLE=" + env.subst("$PYTHONEXE"),
         # PlatformIO makes the UF2 itself; don't let the SDK fetch and build picotool.

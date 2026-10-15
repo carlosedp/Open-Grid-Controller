@@ -12,6 +12,8 @@ full collection. Before that, `midi_to_msg` meant what is now `alloc+gc`.
 
 | Build           | Clock   | Script | Lua   | Heap free / largest | High water   | loop    | midi_to_msg | alloc+gc | gc      | redraw  |
 | --------------- | ------- | ------ | ----- | ------------------- | ------------ | ------- | ----------- | -------- | ------- | ------- |
+| og-0.3.3        | 125 MHz | -      | 41.9  | 173.3 / 91.8        | 59.2 of 223  | 4.60 µs | 48.5 µs     | 54.4 µs  | 2.89 ms | 1.00 ms |
+| og-0.3.3        | 125 MHz | kria   | 110.7 | 99.2 / 53.7         | 147.2 of 223 | 4.60 µs | 48.4 µs     | 55.6 µs  | 2.20 ms | 0.98 ms |
 | og-0.3.0        | 125 MHz | -      | 41.7  | 173.8 / 89.3        | 151.4 of 223 | 4.59 µs | 47.0 µs     | 53.4 µs  | 2.95 ms | 0.98 ms |
 | og-0.3.0        | 125 MHz | kria   | 110.7 | 99.4 / 57.9         | 203.4 of 223 | 4.59 µs | 46.3 µs     | 54.4 µs  | 2.22 ms | 1.00 ms |
 | og-0.2.10-vmram | 125 MHz | -      | 41.7  | 158.3 / 83.8        | 151.9 of 208 | 4.60 µs | 47.1 µs     | 53.6 µs  | 3.00 ms | 0.98 ms |
@@ -40,6 +42,10 @@ og-0.2.1 + kria: out of memory while loading (fixed by the streaming loader in o
   (62.5 MHz at 125 MHz, 100 MHz at 200 MHz), the RP2040-Zero in the Open Grid kit at clk/4
   (31.25 / 50 MHz). Since code fetch dominates, expect the Zero to be noticeably slower than
   these XIAO numbers on the same build; measure on a Zero before drawing conclusions for the kit.
+- **Toolchain** (og-0.3.3, PlatformIO's Arm GCC 14.2 and pico-sdk 2.2.0, vs og-0.3.0 built with
+  the Arduino-Pico GCC): loop, gc and redraw unchanged; midi_to_msg +3–5%, alloc+gc +2%, within
+  what code layout alone moves. The lower high water is og-0.3.1's probe fix (the og-0.3.0 rows
+  were inflated by it), not the toolchain.
 - **og-0.3.0 default** (interpreter in RAM, 4 KB serial buffers): same speed as the -vmram
   experiment with 223.4 KB of heap instead of 208 (and 220 before either change).
 - **High water caveat:** until og-0.3.1, og_mem()'s largest-block probe could raise the high

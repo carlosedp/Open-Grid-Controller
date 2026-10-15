@@ -110,7 +110,7 @@ make dist                      # UF2s for all boards + the diii web app into dis
 
 You can also open the repository root in VS Code with the PlatformIO extension and use its Build/Upload buttons.
 
-The Makefile builds the `*_offline` PlatformIO environments by default. They reuse the Arduino-Pico toolchain that the `sw/` project installs and a pico-sdk 2.2.0 checkout with `lib/tinyusb` in `.deps/pico-sdk-2.2.0`. To let PlatformIO download pico-sdk and the official Arm toolchain instead (about 300 MB), use `make OFFLINE=`.
+The first build downloads pico-sdk 2.2.0, the Arm toolchain, CMake and Ninja through PlatformIO (about 300 MB).
 
 ### diii
 

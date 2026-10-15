@@ -95,7 +95,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   runs from RAM; core 0 runs USB + Lua with 8 KB of stack (both scratch banks). Key events cross
   through a multicore-safe queue; core 1 registers for flash lockout, so file writes are safe.
 - **Lua interpreter loop in RAM** by default (`OG_LUA_VM_IN_RAM`); **200 MHz** optional
-  (`OG_FAST_CLOCK`, env `*_200mhz`).
+  (`OG_FAST_CLOCK=1` in the environment).
 - **iii itself** carries our fixes and memory/speed changes, tracked commit by commit in
   [third_party/README.md](../third_party/README.md) and exportable as upstream patches (M4).
 - **1200-baud touch** reboots into the UF2 bootloader (PlatformIO upload works without BOOT).
@@ -113,10 +113,8 @@ GCC 14.2, CMake and Ninja on first build:
 pio run -e xiao_rp2040 -t upload      # or -e rp2040_zero
 ```
 
-**Offline PlatformIO** — `xiao_rp2040_offline` / `rp2040_zero_offline` reuse the Arduino-Pico
-toolchain already installed by `sw/`, a pico-sdk 2.2.0 checkout (with `lib/tinyusb`) in the
-git-ignored `.deps/pico-sdk-2.2.0`, and CMake + make from `PATH`. Nothing is downloaded. Variants
-for comparison: `xiao_rp2040_offline_200mhz`, `xiao_rp2040_offline_vmflash` (interpreter in flash).
+Builds for comparison set `OG_FAST_CLOCK=1` (200 MHz) or `OG_LUA_VM_IN_RAM=0` (interpreter in
+flash) in the environment, e.g. `OG_FAST_CLOCK=1 pio run -e xiao_rp2040`.
 
 **Plain CMake** — with any pico-sdk ≥ 2.0 (e.g. from the Raspberry Pi Pico VS Code extension):
 
@@ -321,7 +319,7 @@ Fork of [monome/web-diii](https://github.com/monome/web-diii) (GPL-3.0, static s
 subtree at `diii/`** (history kept). `make diii` serves it locally, `make dist` packages it with a
 per-build cache name, `make diii-pull-upstream` merges monome's `main`, and `make diii-push-fork`
 pushes `diii/` to a branch of the fork (`open-grid`) for upstream PRs. Hosting:
-**https://diii.vfmod.com**, published from this repository by `.github/workflows/diii-pages.yml`
+**<https://diii.vfmod.com>**, published from this repository by `.github/workflows/diii-pages.yml`
 whenever `diii/` changes on `main` (built with `tools/dist.py --diii-only`, which stamps the
 service-worker cache with the commit). Done so far, tested
 against og-0.2.x/0.3.x on the XIAO; nothing pushed yet:
@@ -339,7 +337,7 @@ against og-0.2.x/0.3.x on the XIAO; nothing pushed yet:
 Next:
 
 - ✅ help button (prints `help()`).
-- Publish: in carlosedp/Open-Grid-Controller set Pages → Source: GitHub Actions, custom domain
+- ✅ Publish: in carlosedp/Open-Grid-Controller set Pages → Source: GitHub Actions, custom domain
   `diii.vfmod.com` (Enforce HTTPS); DNS CNAME `diii` → `carlosedp.github.io`.
 - Offer `pwa-fixes` upstream as a PR to monome/web-diii.
 - Accept our own VID:PID (M6) alongside `cafe:1101`.

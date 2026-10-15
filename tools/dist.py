@@ -5,7 +5,7 @@ dist/
   firmware/iii-open-grid-<version>-<board>.uf2   from the PlatformIO builds
   diii/                                          the web app, ready to host
 
-usage: dist.py [--env-suffix _offline] BOARD...
+usage: dist.py BOARD...
        dist.py --diii-only
        dist.py --clean
 """
@@ -39,12 +39,12 @@ def git_revision() -> str:
         return "dev"
 
 
-def copy_firmware(boards, env_suffix) -> None:
+def copy_firmware(boards) -> None:
     out = DIST / "firmware"
     out.mkdir(parents=True, exist_ok=True)
     version = firmware_version()
     for board in boards:
-        uf2 = ROOT / ".pio" / "build" / f"{board}{env_suffix}" / "firmware.uf2"
+        uf2 = ROOT / ".pio" / "build" / board / "firmware.uf2"
         if not uf2.is_file():
             sys.exit(f"missing {uf2.relative_to(ROOT)}; build it first (make firmware-all)")
         target = out / f"iii-open-grid-{version}-{board}.uf2"
@@ -70,7 +70,6 @@ def copy_diii() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("boards", nargs="*")
-    parser.add_argument("--env-suffix", default="")
     parser.add_argument("--clean", action="store_true")
     parser.add_argument("--diii-only", action="store_true",
                         help="only build dist/diii (the GitHub Pages workflow uses this)")
@@ -81,7 +80,7 @@ def main() -> None:
         return
     print("dist:")
     if not args.diii_only:
-        copy_firmware(args.boards, args.env_suffix)
+        copy_firmware(args.boards)
     copy_diii()
 
 

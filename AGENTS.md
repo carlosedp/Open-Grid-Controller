@@ -30,13 +30,13 @@ make diii                      # serve diii at http://localhost:8000 (Web Serial
 make dist                      # UF2s for all boards + the diii site into dist/
 ```
 
-- The Makefile uses the **offline** PlatformIO envs (`*_offline`): the Arduino-Pico toolchain
-  already installed by `sw/`, pico-sdk 2.2.0 in the git-ignored `.deps/pico-sdk-2.2.0`, system
-  CMake + make. `make OFFLINE=` uses the full PlatformIO toolchain download instead.
-- Variants for measurements: `xiao_rp2040_offline_200mhz`, `xiao_rp2040_offline_vmflash`.
-  Build any env with `pio run -e <env>`; outputs in `.pio/build/<env>/firmware.uf2`.
+- PlatformIO envs: `xiao_rp2040` and `rp2040_zero`. The first build downloads pico-sdk 2.2.0,
+  Arm GCC 14.2, CMake and Ninja. Outputs in `.pio/build/<env>/firmware.uf2`.
+- Measurement variants come from environment variables, not extra envs:
+  `OG_FAST_CLOCK=1 pio run -e xiao_rp2040` (200 MHz), `OG_LUA_VM_IN_RAM=0` (interpreter in flash).
+  They reuse the env's build directory, so build the default again afterwards.
 - Plain CMake also works: `cmake -S iii-open-grid -B build -DOG_BOARD=xiao_rp2040 -DPICO_SDK_PATH=...`.
-- Build options (CMake / PlatformIO `custom_og_*`): `OG_BOARD`, `OG_I2C_HZ`, `OG_FAST_CLOCK`
+- Build options (CMake / PlatformIO `custom_og_*` / environment `OG_*`): `OG_BOARD`, `OG_I2C_HZ`, `OG_FAST_CLOCK`
   (200 MHz), `OG_LUA_VM_IN_RAM` (default ON).
 
 A clean build with **no new warnings in our files** is the minimum bar for every change.
