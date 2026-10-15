@@ -15,7 +15,7 @@ published at https://diii.vfmod.com).
 | `iii-open-grid/`                                 | our firmware (Pico SDK + CMake): device glue, keypad driver, serial mode | ours; GPL-3.0 (links iii)                 |
 | `third_party/iii/`                               | monome iii, **git subtree** of codeberg.org/tehn/iii + our commits       | see "Changing iii" below                  |
 | `third_party/lua`, `littlefs`, `FREEPOET_Keypad` | vendored exports                                                         | don't edit; re-export to update           |
-| `diii/`                                          | web-diii fork, **git subtree** of monome/web-diii                        | plain JS/HTML/CSS, no build step          |
+| `diii/`                                          | web-diii fork, **git subtree** of monome/web-diii                        | plain JS (ES modules in `js/`), no build  |
 | `scripts/og_bench.lua`                           | on-device benchmark                                                      | results go to `docs/BENCHMARKS.md`        |
 | `sw/`                                            | original Arduino firmware (monome serial only)                           | keep as-is; known-good fallback for norns |
 | `docs/`                                          | roadmap, benchmark history                                               | keep current when behavior changes        |

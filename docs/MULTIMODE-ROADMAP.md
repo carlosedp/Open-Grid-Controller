@@ -374,16 +374,26 @@ Next:
   Likely expected: each REPL line is compiled into a chunk that becomes garbage until the next
   collection; `og_mem()` itself keeps nothing. Check: `for i=1,1000 do og_mem(true) end
 collectgarbage() print(collectgarbage("count"))` should stay flat.
-- Add an export function to backup all user configurations and scripts. Possible since og-0.3.0
-  (output of any size gets through). Plan: an iii function that streams a file from flash in
-  chunks (constant memory, works while big scripts run), a diii **Backup** button that downloads
-  every file into one zip, and **Restore** that uploads them back.
-- Maybe port Diii to a more modern web framework based on typescript for better maintainability, cleaner code, and improved developer experience. If worth, add improvements below after the port to avoid working twice on same features otherwise implement them on current web app.
-- Improve visuals to a more modern and user-friendly interface.
-- Add a script editor so users can edit and change scripts in the diii too without the need to
-  dowload/change/upload. Allow save and save as new scripts. Maybe use syntax highlight
-- Add a MIDI monitor like the Alloy Controller have
-- Add iii Lua command reference and help locally (to work offline)
+- **Framework port: decided against (2026-10-15).** diii is ~2,000 lines of plain JS with no
+  dependencies, and our fork follows monome/web-diii; a TypeScript/framework rewrite would end
+  upstream merges and PRs and mean re-finding the Web Serial quirks (port opening on Windows,
+  reconnects, partial lines, upload pacing) without tests. Instead, in this order:
+  1. ✅ Split `diii.js` into native ES modules (`diii/js/`, mixed into the one app class; all
+     methods verified identical). Still no build step.
+  2. Type checking without a build: `// @ts-check` + JSDoc, checked with `tsc --noEmit`.
+  3. Backup / restore: an iii function that streams a file from flash in chunks (constant memory,
+     works while big scripts run); a diii **Backup** button that downloads every file into one zip
+     (store-only zip, ~60 lines, no dependency) and **Restore** that uploads them back. Possible
+     since og-0.3.0 (output of any size gets through).
+  4. Script editor: edit scripts in diii without download/change/upload; save and save as; Lua
+     syntax highlighting (CodeMirror 6, vendored so it works offline).
+  5. MIDI monitor like the Alloy Controller's, through the browser's Web MIDI (no firmware change).
+  6. iii Lua command reference and help in diii, cached for offline use.
+
+  Revisit a framework (Preact/Lit) only if diii grows past ~5,000 lines with several views sharing
+  state, or we stop following upstream.
+- **Visual refresh**, done separately from the items above so it can be evaluated on its own
+  (kept, changed or dropped): a more modern, user-friendly interface.
 
 ### M10 - Build firmware for stock versions of Grid
 
