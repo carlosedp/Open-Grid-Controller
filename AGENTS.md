@@ -84,12 +84,15 @@ iii is a git subtree so our changes can go upstream as patches.
    working.
 3. Nothing Open Grid-specific inside iii; it must make sense on every iii device (grids, arc,
    Pico). Board-specific code goes in `iii-open-grid/`.
-4. Record each change and its measured effect in the table in
+4. iii's sources build with the warnings monome's device firmwares use (`-Wall -Wextra
+   -Wconversion ... -Werror`, set in `iii-open-grid/CMakeLists.txt`); a change that warns there
+   would break their builds.
+5. Record each change and its measured effect in the table in
    [third_party/README.md](third_party/README.md).
-5. `make iii-changes` lists our iii commits; `make iii-patches` exports them to
+6. `make iii-changes` lists our iii commits; `make iii-patches` exports them to
    `dist/patches/iii/` with paths relative to tehn/iii (check with `git apply --check`).
    `make iii-pull-upstream` merges new upstream releases.
-6. Changing `lua/lib.lua`: regenerate `resource/lib_lua.c` with
+7. Changing `lua/lib.lua`: regenerate `resource/lib_lua.c` with
    `python iii-open-grid/tools/embed_lua.py third_party/iii/lua/lib.lua third_party/iii/resource/lib_lua.c`
    and bump the fork version in `iii.h` **and** line 1 of `lib.lua` (`v1.1.2-ogN`, must stay
    within 24 characters). Devices only rewrite their `lib.lua` when the version string changes.

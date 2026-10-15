@@ -70,15 +70,7 @@ target_include_directories(lfs PUBLIC ${THIRD_PARTY}/littlefs)
 #------------------------------------------------------------------------
 #--- firmware
 
-add_executable(iii-open-grid
-        src/main.c
-        src/grid.c
-        src/keypad.c
-        src/monome_serial.c
-        src/heap_stats.c
-        src/newlib_locks.c
-        src/status_led.c
-        src/usb_descriptors.c
+set(III_SOURCES
         ${III_DIR}/flash.c
         ${III_DIR}/fs.c
         ${III_DIR}/iii.c
@@ -88,8 +80,25 @@ add_executable(iii-open-grid
         ${III_DIR}/serial.c
         ${III_DIR}/util.c
         ${III_DIR}/vm.c
+)
+
+add_executable(iii-open-grid
+        src/main.c
+        src/grid.c
+        src/keypad.c
+        src/monome_serial.c
+        src/heap_stats.c
+        src/newlib_locks.c
+        src/status_led.c
+        src/usb_descriptors.c
+        ${III_SOURCES}
         ${LIB_LUA_C}
 )
+
+# monome's device firmwares build iii with TinyUSB's example warnings as
+# errors; use the same here so our iii changes still build there
+set_source_files_properties(${III_SOURCES} PROPERTIES COMPILE_OPTIONS
+        "-Wall;-Wextra;-Werror;-Wfatal-errors;-Wdouble-promotion;-Wfloat-equal;-Wwrite-strings;-Wsign-compare;-Wmissing-format-attribute;-Wunreachable-code;-Wcast-align;-Wcast-qual;-Wnull-dereference;-Wuninitialized;-Wunused;-Wredundant-decls;-Wconversion;-Wcast-function-type;-Wstrict-overflow;-Wno-strict-aliasing")
 
 target_include_directories(iii-open-grid PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src
