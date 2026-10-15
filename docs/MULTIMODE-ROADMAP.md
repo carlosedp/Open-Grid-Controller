@@ -389,7 +389,7 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
 
 - Have this improved firmware available for stock versions of Grids so users can also leverage the changes
 
-### M11 - Upstream iii changes and improvements
+### M11 - Upstream iii changes and improvements ✅ (submitted 2026-10-15; waiting for review)
 
 - Consolidate the patches listed on third_party/README.md so they can be upstreamed to the main iii repository. Make sure our changes are not specific for Open Grid Controller but would also work on all Grid devices.
 - ✅ Tested outside our firmware (2026-10-15): tehn's iii-grid-2022 built for a XIAO RP2040
@@ -407,6 +407,13 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
   back (changes `lib.lua`, no gain on its own), so no `III_VERSION` bump. Every commit builds in
   iii-grid-2022 with `-Werror`; the three merged equal the build that passed #7 on the XIAO. All
   four device repos already set `PICO_MALLOC_PANIC=0`, which the allocation-failure patch needs.
+- ✅ Posted as [tehn/iii#10](https://codeberg.org/tehn/iii/pulls/10) (fixes),
+  [#11](https://codeberg.org/tehn/iii/pulls/11) (loading) and
+  [#12](https://codeberg.org/tehn/iii/pulls/12) (serial), and announced on the lines iii thread.
+- Next: answer review comments (rework in carlosedp/iii, test in iii-grid-2022 again); as PRs merge,
+  mark them in third_party/README.md and `make iii-pull-upstream`. Our unsquashed commits will
+  conflict with the merged versions; resolve to upstream's code, keeping our fork-only commits
+  (`v1.1.2-ogN`, MIDI helpers in C).
 - Post the series with its measurements (BENCHMARKS.md, issue7.lua) on the iii thread / codeberg, referencing monome/iii#7 and #33.
 
 ### Asks for FREEPOET (keypad protocol `0x03`)
