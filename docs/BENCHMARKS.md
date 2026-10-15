@@ -12,6 +12,8 @@ full collection. Before that, `midi_to_msg` meant what is now `alloc+gc`.
 
 | Build           | Clock   | Script | Lua   | Heap free / largest | High water   | loop    | midi_to_msg | alloc+gc | gc      | redraw  |
 | --------------- | ------- | ------ | ----- | ------------------- | ------------ | ------- | ----------- | -------- | ------- | ------- |
+| og-0.3.3 +Lua midi | 125 MHz | -   | 43.5  | 171.7 / 89.4        | 67.2 of 223  | 4.60 µs | 42.0 µs     | 54.6 µs  | 2.46 ms | 0.98 ms |
+| og-0.3.3 C midi | 125 MHz | -      | 41.7  | 173.5 / 88.9        | 71.2 of 223  | 4.60 µs | 46.8 µs     | 52.9 µs  | 2.88 ms | 0.99 ms |
 | og-0.3.3 fresh  | 125 MHz | kria   | 110.6 | 99.4 / 61.3         | 155.2 of 223 | 4.60 µs | 47.0 µs     | 54.2 µs  | 2.18 ms | 1.00 ms |
 | og-0.3.3        | 125 MHz | -      | 41.9  | 173.3 / 91.8        | 59.2 of 223  | 4.60 µs | 48.5 µs     | 54.4 µs  | 2.89 ms | 1.00 ms |
 | og-0.3.3        | 125 MHz | kria   | 110.7 | 99.2 / 53.7         | 147.2 of 223 | 4.60 µs | 48.4 µs     | 55.6 µs  | 2.20 ms | 0.98 ms |
@@ -43,6 +45,12 @@ og-0.2.1 + kria: out of memory while loading (fixed by the streaming loader in o
   (62.5 MHz at 125 MHz, 100 MHz at 200 MHz), the RP2040-Zero in the Open Grid kit at clk/4
   (31.25 / 50 MHz). Since code fetch dominates, expect the Zero to be noticeably slower than
   these XIAO numbers on the same build; measure on a Zero before drawing conclusions for the kit.
+- **MIDI helpers, C vs Lua** (og-0.3.3, `require("midi_lua.lua")` loads v1.1.2's Lua
+  `midi_to_msg` over the C one, fresh boot each): Lua 10% faster per call (42.0 vs 46.8 µs),
+  C 3% faster with garbage (52.9 vs 54.6 µs), C saves 1.8 KB of Lua memory. With the interpreter
+  in RAM the Lua if/elseif chain is cheap, while the C version's table calls run from flash.
+  The benchmark uses note-on, Lua's first branch (its best case). Kept in C here; not sent
+  upstream.
 - **Toolchain** (og-0.3.3, PlatformIO's Arm GCC 14.2 and pico-sdk 2.2.0, vs og-0.3.0 built with
   the Arduino-Pico GCC): loop, gc and redraw unchanged; midi_to_msg +3–5%, alloc+gc +2%, within
   what code layout alone moves. The lower high water is og-0.3.1's probe fix (the og-0.3.0 rows
