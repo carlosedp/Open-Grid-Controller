@@ -392,6 +392,15 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
 ### M11 - Upstream iii changes and improvements
 
 - Consolidate the patches listed on third_party/README.md so they can be upstreamed to the main iii repository. Make sure our changes are not specific for Open Grid Controller but would also work on all Grid devices.
+- ✅ Tested outside our firmware (2026-10-15): tehn's iii-grid-2022 built for a XIAO RP2040
+  (pico-sdk 2.2.0, his `-Werror` warning set; D0/D1 tied to 3V3 so the ADC key scan reads no
+  keys), stock iii v1.1.2 vs v1.1.2 + our 17 upstream patches. #7's n=10 loop: stock prints
+  `-- out of memory!` and reboots (watchdog); patched completes n=10 and n=13, a 300 KB
+  allocation raises "not enough memory", the REPL keeps running. The build also caught a
+  `-Wconversion` error in our serial TX change (fixed; our build now uses the same flags).
+- Posting notes: the series changes `lib.lua`, so upstream must bump `III_VERSION`; all four device
+  repos already set `PICO_MALLOC_PANIC=0`, which the allocation-failure patch relies on; stock's
+  version check is a substring match, so `v1.1.2-ogN` passes as `v1.1.2` (harmless for upstream).
 - Post the series with its measurements (BENCHMARKS.md, issue7.lua) on the iii thread / codeberg, referencing monome/iii#7 and #33.
 
 ### Asks for FREEPOET (keypad protocol `0x03`)
