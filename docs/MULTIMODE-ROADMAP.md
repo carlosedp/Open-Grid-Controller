@@ -416,6 +416,11 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
   (`v1.1.2-ogN`, MIDI helpers in C).
 - Post the series with its measurements (BENCHMARKS.md, issue7.lua) on the iii thread / codeberg, referencing monome/iii#7 and #33.
 
+Refs:
+
+<https://llllllll.co/t/iii/74311/177>
+<https://codeberg.org/tehn/iii/pulls>
+
 ### Asks for FREEPOET (keypad protocol `0x03`)
 
 Bitmap key read (8 bytes per board instead of 64), a "keys changed" flag or interrupt line, a
