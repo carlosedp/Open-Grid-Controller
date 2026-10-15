@@ -398,12 +398,15 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
   `-- out of memory!` and reboots (watchdog); patched completes n=10 and n=13, a 300 KB
   allocation raises "not enough memory", the REPL keeps running. The build also caught a
   `-Wconversion` error in our serial TX change (fixed; our build now uses the same flags).
-- ✅ Series prepared: one PR, 10 commits (fixups squashed, messages merged), cover letter as the PR
-  text; exported to `dist/patches/iii-upstream/` (`git am` onto v1.1.2). MIDI helpers in C held
-  back (changes `lib.lua`, no gain on its own), so no `III_VERSION` bump is needed. Each commit
-  builds in iii-grid-2022 with `-Werror`; the 10-patch build passes the same #7 test on the XIAO.
-  All four device repos already set `PICO_MALLOC_PANIC=0`, which the allocation-failure patch needs.
-  Split if tehn prefers: fixes (1, 4–8), loader/uploads (2–3), serial (9–10, after 1).
+- ✅ Prepared as three PRs (branches `pr1-fixes`, `pr2-loading`, `pr3-serial` in a clone of
+  carlosedp/iii; patches and PR texts in `dist/patches/iii-upstream/`): fixes (OOM as a Lua
+  error, GC pause, serial overflow, lib.lua version/truncate), loading (streaming loader and
+  uploads, compile-error names; builds on tehn's unmerged `chunks` branch and says so), serial
+  (draining 4 KB TX buffer, held boot output; on top of the fixes). Fixups squashed, no `iii:`
+  prefix, an AI-assistance note in each PR text instead of commit trailers. MIDI helpers in C held
+  back (changes `lib.lua`, no gain on its own), so no `III_VERSION` bump. Every commit builds in
+  iii-grid-2022 with `-Werror`; the three merged equal the build that passed #7 on the XIAO. All
+  four device repos already set `PICO_MALLOC_PANIC=0`, which the allocation-failure patch needs.
 - Post the series with its measurements (BENCHMARKS.md, issue7.lua) on the iii thread / codeberg, referencing monome/iii#7 and #33.
 
 ### Asks for FREEPOET (keypad protocol `0x03`)
