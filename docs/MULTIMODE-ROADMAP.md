@@ -413,7 +413,8 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      update helper (device ▾ → firmware: latest GitHub release, download for this board, backup,
      bootloader, steps); `make release` publishes the UF2s. Next: the MIDI monitor; also tabs,
      ✅ REPL history across sessions (`hc` clears it), memory in the footer, the virtual grid beside
-     the editor (✅ as a drawer at the top of the console), Tab completion in the REPL.
+     the editor (✅ as a drawer at the top of the console), ✅ Tab completion in the REPL (API, Lua,
+     and the device's own globals and table keys).
   5. ✅ MIDI monitor (og-0.3.8, verified on the XIAO 2026-10-16): a drawer above the button bar; the firmware
      reports MIDI in and out (`og_midi_monitor`, link-time wraps of `midi_tx`/`vm_handle_midi`)
      instead of diii opening the port, so both directions show and a DAW keeps the port on
