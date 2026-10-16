@@ -12,5 +12,5 @@
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "skipLibCheck": true
     },
-    "files": ["js/zip.js", "js/backup.js", "js/editor.js"]
+    "files": ["js/zip.js", "js/backup.js", "js/editor.js", "js/init-lua.js"]
 }

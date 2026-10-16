@@ -2,6 +2,7 @@
 // Mixed into diiiApp (diii.js); `this` is the app.
 
 import { hasExactFiles, readDeviceFile } from './backup.js';
+import { disableStartupScript, onlyStartsScript, setStartupScript } from './init-lua.js';
 
 export const fileMethods = {
     formatSizeKb(bytes) {
@@ -306,26 +307,59 @@ export const fileMethods = {
         return lines.join('\n');
     },
 
-    async configureFirst(fileName) {
-        try {
-            await this.executeLuaCapture(`first(${this.luaQuote(fileName)})`);
-            this.outputLine(`${fileName} will now run at startup`);
-            await this.requestFileListRefresh();
-        } catch (error) {
-            this.outputLine(`First error: ${error.message}`);
+    // init.lua's text, or null when there is none
+    async readInitLua() {
+        if (!this.fileEntries.some((entry) => entry.name === 'init.lua')) return null;
+        const api = this.backupApi();
+        this.initExactFiles = await hasExactFiles(api);
+        const data = await readDeviceFile(api, 'init.lua', this.initExactFiles);
+        return new TextDecoder().decode(data).replace(/\0+$/, '');
+    },
+
+    async writeInitLua(text) {
+        if (!(await this.uploadChecked('init.lua', text, { keepOld: Boolean(this.initExactFiles) }))) {
+            throw new Error('init.lua not written; it is unchanged');
         }
     },
 
-    // first() with no name deletes init.lua, so nothing runs at startup.
-    async clearFirst(fileName) {
-        if (!window.confirm(`Stop running ${fileName} at startup? This deletes init.lua.`)) return;
+    // first() replaces init.lua with one fs_run_file() line; used only when
+    // init.lua has nothing else, otherwise just its startup call changes.
+    async configureFirst(fileName) {
         try {
-            await this.executeLuaCapture('first()');
-            this.outputLine(`${fileName} no longer runs at startup`);
-            await this.requestFileListRefresh();
+            const init = await this.readInitLua();
+            if (init === null || onlyStartsScript(init)) {
+                await this.executeLuaCapture(`first(${this.luaQuote(fileName)})`);
+            } else {
+                await this.writeInitLua(setStartupScript(init, fileName));
+                this.outputLine('init.lua: changed only its startup line');
+            }
+            this.outputLine(`${fileName} will now run at startup`);
         } catch (error) {
             this.outputLine(`First error: ${error.message}`);
         }
+        await this.requestFileListRefresh();
+    },
+
+    // Disables just the call that starts fileName; init.lua goes away only
+    // when that call was all it held.
+    async clearFirst(fileName) {
+        if (!window.confirm(`Stop running ${fileName} at startup?`)) return;
+        try {
+            const init = (await this.readInitLua()) ?? '';
+            if (onlyStartsScript(init)) {
+                await this.executeLuaCapture(`fs_remove_file('init.lua')`);
+                this.outputLine('init.lua only started this script; removed it');
+            } else {
+                const { text, changed } = disableStartupScript(init, fileName);
+                if (!changed) throw new Error(`no fs_run_file('${fileName}') call found in init.lua`);
+                await this.writeInitLua(text);
+                this.outputLine('init.lua: commented out its startup line; the rest is unchanged');
+            }
+            this.outputLine(`${fileName} no longer runs at startup`);
+        } catch (error) {
+            this.outputLine(`First error: ${error.message}`);
+        }
+        await this.requestFileListRefresh();
     },
 
     async downloadFile(fileName) {
