@@ -4,6 +4,10 @@
 
 import { RELEASES_PAGE, fetchLatestRelease, isNewer, parseVersion } from './firmware.js';
 
+// first version with the filesystem at a fixed flash offset; devices on an
+// older one lose their files' place once when they update
+const FIXED_LAYOUT_VERSION = 'og-0.3.7';
+
 export const firmwareUiMethods = {
     // After connecting: version (and board, on Open Grid firmware) into the
     // status pill, then one update check per session.
@@ -140,12 +144,17 @@ export const firmwareUiMethods = {
             li.append(...children);
             steps.append(li);
         };
+        // og-0.3.7 moved the files to a fixed place in flash; coming from an
+        // older version they have to be restored once after updating
+        const movesFiles = parseVersion(current) && isNewer(FIXED_LAYOUT_VERSION, current);
         step(
             el('span', 'Back up your files first. '),
             button('backup', () => this.backupToZip(), 'download every file as one zip'),
             el(
                 'span',
-                ' A firmware that is a lot bigger can move where files are kept, and they would seem gone (restore them from the zip).'
+                movesFiles
+                    ? ` This update moves where files are kept (once): afterwards the device starts with no files and in iii mode. Restore them with device ▾ → restore.`
+                    : ' Updates keep your files; the backup is just in case.'
             )
         );
         step(el('span', 'Download the .uf2 for your board (above).'));
