@@ -394,8 +394,12 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      compile-checked upload path (skips `lib.lua`). Without `og_dump_file` diii falls back to
      `cat()`. Later: move `og_dump_file` into iii as `fs_dump_file` (a fourth upstream PR) and
      have diii look for both names; byte-exact restore would need a matching chunked write.
-  4. Script editor: edit scripts in diii without download/change/upload; save and save as; Lua
-     syntax highlighting (CodeMirror 6, vendored so it works offline).
+  4. ✅ Script editor (untested on hardware): "edit" in a file's menu opens a panel next to the
+     console (which stays as is): prism-code-editor 5.4 (25 KB, vendored, Lua highlighting,
+     search, bracket matching, indent guides), save (Ctrl+S) / save as / run / close, unsaved
+     dot. On Open Grid firmware a failed save keeps the device's file. Tooling: `diii/package.json`
+     for dev tools, Node dev server, `make diii-check` / `diii-vendor`. Later: tabs, iii API
+     autocomplete (prism-code-editor's autocomplete extension).
   5. MIDI monitor like the Alloy Controller's, through the browser's Web MIDI (no firmware change).
   6. iii Lua command reference and help in diii, cached for offline use.
 
