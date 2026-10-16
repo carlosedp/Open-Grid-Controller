@@ -371,7 +371,7 @@ Next:
 - ✅ Add a button to print the help commands (button that calls help())
 - ✅ Is there an issue renaming the USB device to OpenGrid_Serial and OpenGrid_MIDI specially for other
   gear to identify it like Monome Norns?
-- Be able to remove the "First" flag from a script (not load it on startup)
+- ✅ Be able to remove the "First" flag from a script (not load it on startup): "not first" in its menu.
 - ✅ Investigate memory leak from running og_mem() repeatedly. Expected to increase until a gc()?
   Likely expected: each REPL line is compiled into a chunk that becomes garbage until the next
   collection; `og_mem()` itself keeps nothing. Check: `for i=1,1000 do og_mem(true) end
@@ -404,6 +404,10 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      (reboot, bootloader, backup, restore, reformat) in a header menu next to connect; rename
      (atomic with og-0.3.5's `og_rename_file`, copy + delete elsewhere). Later: tabs,
      iii API autocomplete (prism-code-editor's autocomplete extension).
+     Round 1 of UX polish: clickable `file.lua:N:` errors open the editor at the line, console
+     scroll lock, unsaved drafts kept in the browser, "not first", multi-file upload. Next:
+     autocomplete + offline help, then the MIDI monitor or firmware update helper; also tabs,
+     REPL history across sessions, memory in the footer, the virtual grid beside the editor.
   5. MIDI monitor like the Alloy Controller's, through the browser's Web MIDI (no firmware change).
   6. iii Lua command reference and help in diii, cached for offline use.
 
