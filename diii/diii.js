@@ -99,6 +99,7 @@ class diiiApp {
             replInput: document.getElementById('replInput'),
             replPane: document.getElementById('replPane'),
             uploadBtn: document.getElementById('uploadBtn'),
+            reinitBtn: document.getElementById('reinitBtn'),
             restartBtn: document.getElementById('restartBtn'),
             bootloaderBtn: document.getElementById('bootloaderBtn'),
             reformatBtn: document.getElementById('reformatBtn'),
@@ -150,6 +151,7 @@ class diiiApp {
         on(this.elements.explorerResizer, 'pointerdown', (e) => this.startExplorerResize(e));
         on(this.elements.explorerResizer, 'keydown', (e) => this.handleExplorerResizerKeydown(e));
         on(this.elements.uploadBtn, 'click', () => this.openUploadPicker());
+        on(this.elements.reinitBtn, 'click', () => this.reinitDevice());
         on(this.elements.restartBtn, 'click', () => this.restartDevice());
         on(this.elements.bootloaderBtn, 'click', () => this.bootloaderDevice());
         on(this.elements.reformatBtn, 'click', () => this.reformatFs());

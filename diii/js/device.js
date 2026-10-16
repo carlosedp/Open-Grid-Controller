@@ -322,6 +322,18 @@ export const deviceMethods = {
         this.iiiDevice.writeLine('^^b');
     },
 
+    // ^^i: restart Lua and run lib.lua and init.lua (the "first" script)
+    // again, without rebooting, so the USB connection stays up.
+    reinitDevice() {
+        if (!this.iiiDevice.isConnected) {
+            this.outputLine('Error: Not connected to usb device');
+            return;
+        }
+        this.releaseAllGridKeys();
+        this.outputLine('> ^^i');
+        this.iiiDevice.writeLine('^^i');
+    },
+
     async reformatFs() {
         if (!this.iiiDevice.isConnected) {
             this.outputLine('Error: Not connected to usb device');
