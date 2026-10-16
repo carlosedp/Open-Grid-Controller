@@ -19,19 +19,46 @@ export const gridMethods = {
         }
 
         this.gridSupported = Boolean(size);
-        if (this.elements.gridBtn) this.elements.gridBtn.hidden = !this.gridSupported;
-
-        if (!this.gridSupported) {
-            if (this.gridPanelOpen) this.toggleGridPanel(false);
-            return;
-        }
+        // the drawer only exists for devices that can mirror their LEDs
+        if (this.elements.gridDrawer) this.elements.gridDrawer.hidden = !this.gridSupported;
+        if (!this.gridSupported) return;
 
         if (!this.gridCells.length || size.x !== this.gridSize.x || size.y !== this.gridSize.y) {
             this.gridSize = size;
             this.buildGridCells();
         }
         this.elements.gridCells?.classList.remove('offline');
+        this.updateGridStatus();
         if (this.gridPanelOpen) await this.setGridMirror(true);
+    },
+
+    // The drawer remembers whether it was open; the device decides whether it shows.
+    restoreGridDrawer() {
+        let open = false;
+        try {
+            open = window.localStorage.getItem('webdiii.gridDrawer') === 'open';
+        } catch {
+            // storage blocked
+        }
+        this.gridPanelOpen = open;
+        this.showGridDrawerState();
+    },
+
+    showGridDrawerState() {
+        const open = this.gridPanelOpen;
+        this.elements.gridDrawer?.classList.toggle('open', open);
+        if (this.elements.gridToggleBtn) {
+            this.elements.gridToggleBtn.textContent = open ? 'grid ▾' : 'grid ▸';
+            this.elements.gridToggleBtn.setAttribute('aria-expanded', String(open));
+        }
+        this.updateGridStatus();
+    },
+
+    updateGridStatus() {
+        if (!this.elements.gridStatus) return;
+        const size = `${this.gridSize.x}×${this.gridSize.y}`;
+        const live = this.gridPanelOpen && this.iiiDevice.isConnected;
+        this.elements.gridStatus.textContent = this.gridSupported ? (live ? `${size} · live` : size) : '';
     },
 
     buildGridCells() {
@@ -40,6 +67,9 @@ export const gridMethods = {
 
         container.replaceChildren();
         container.style.gridTemplateColumns = `repeat(${this.gridSize.x}, minmax(0, 1fr))`;
+        container.style.gridTemplateRows = `repeat(${this.gridSize.y}, minmax(0, 1fr))`;
+        // keeps keys square while the grid follows the drawer's size (style.css)
+        container.style.setProperty('--grid-ratio', String(this.gridSize.x / this.gridSize.y));
         this.gridCells = [];
         this.gridLevels = [];
 
@@ -59,8 +89,12 @@ export const gridMethods = {
 
     async toggleGridPanel(open = !this.gridPanelOpen) {
         this.gridPanelOpen = open;
-        if (this.elements.gridPanel) this.elements.gridPanel.hidden = !open;
-        this.elements.gridBtn?.classList.toggle('active', open);
+        try {
+            window.localStorage.setItem('webdiii.gridDrawer', open ? 'open' : 'closed');
+        } catch {
+            // storage blocked
+        }
+        this.showGridDrawerState();
         if (!open) this.releaseAllGridKeys();
         if (this.iiiDevice.isConnected && this.gridSupported) {
             await this.setGridMirror(open);

@@ -34,6 +34,8 @@
                         <button type="button" id="firmwareBtn" class="file-menu-item" role="menuitem" title="firmware version and updates">firmware</button>
                     </div>
                 </div>
+                <button type="button" id="uploadBtn" class="repl-connection-btn" title="upload .lua files (or drop them anywhere)">upload</button>
+                <button type="button" id="helpBtn" class="repl-connection-btn" title="diii shortcuts and the device's help()">help</button>
             </div>
             <div class="header-right">
                 <button id="scriptReferenceBtn" class="repl-connection-btn" title="iii reference (works offline)">reference</button>
@@ -69,9 +71,15 @@
                 <div id="workArea" class="work-area">
                 <div class="repl-pane full-width" id="replPane">
                     <div class="repl-content">
-                        <div id="gridPanel" class="grid-panel" hidden>
-                            <div id="gridCells" class="grid-cells" role="grid" aria-label="virtual grid"></div>
-                        </div>
+                        <section id="gridDrawer" class="grid-drawer" aria-label="virtual grid" hidden>
+                            <div class="midi-drawer-bar">
+                                <button type="button" id="gridToggleBtn" class="midi-toggle" aria-expanded="false" aria-controls="gridBody" title="show the grid's LEDs and press keys from here">grid ▸</button>
+                                <span id="gridStatus" class="midi-status"></span>
+                            </div>
+                            <div id="gridBody" class="grid-body">
+                                <div id="gridCells" class="grid-cells" role="grid" aria-label="virtual grid"></div>
+                            </div>
+                        </section>
                         <div class="repl-output-area">
                             <div id="output" class="repl-output"></div>
                             <button type="button" id="clearBtn" class="repl-action-btn output-cleanup-btn">clean</button>
@@ -94,12 +102,6 @@
                                 <div id="midiList" class="midi-list" role="log" aria-label="MIDI messages"></div>
                             </div>
                         </section>
-                        <div class="repl-actions">
-                            <button type="button" id="uploadBtn" class="repl-action-btn">upload</button>
-                            <button type="button" id="gridBtn" class="repl-action-btn" title="show the grid's LEDs and press keys from here" hidden>grid</button>
-                            <div class="repl-actions-spacer"></div>
-                            <button type="button" id="helpBtn" class="repl-action-btn">help</button>
-                        </div>
                         <div class="repl-input-container">
                             <div class="repl-input-row">
                                 <span class="repl-input-prompt" aria-hidden="true">&gt;&gt;</span>

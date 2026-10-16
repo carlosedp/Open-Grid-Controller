@@ -322,7 +322,7 @@ export const consoleMethods = {
         this.outputLine(' hc           clear the command history (kept across sessions)');
         this.outputLine(' Cmd/Ctrl+Shift+C  connect/disconnect');
         if (this.gridSupported) {
-            this.outputLine(' grid button  show the LEDs and press keys from the browser');
+            this.outputLine(' grid ▸       (top of the console) show the LEDs and press keys from here');
         }
         this.outputLine('');
         this.outputLine(' common iii commands:');

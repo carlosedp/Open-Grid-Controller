@@ -79,6 +79,7 @@ class diiiApp {
         this.outputLine('//// welcome. connect to an iii compatible grid or arc to begin.');
         this.restoreHistory();
         this.restoreMidiDrawer();
+        this.restoreGridDrawer();
         this.announceDraft();
     }
 
@@ -149,8 +150,9 @@ class diiiApp {
             editorCloseBtn: document.getElementById('editorCloseBtn'),
             helpBtn: document.getElementById('helpBtn'),
             clearBtn: document.getElementById('clearBtn'),
-            gridBtn: document.getElementById('gridBtn'),
-            gridPanel: document.getElementById('gridPanel'),
+            gridDrawer: document.getElementById('gridDrawer'),
+            gridToggleBtn: document.getElementById('gridToggleBtn'),
+            gridStatus: document.getElementById('gridStatus'),
             gridCells: document.getElementById('gridCells'),
 
             fileInput: document.getElementById('fileInput'),
@@ -220,7 +222,7 @@ class diiiApp {
         on(this.elements.clearBtn, 'click', () => this.clearOutput());
         on(this.elements.fileSpaceFooter, 'click', () => this.iiiDevice.isConnected && this.requestFileListRefresh());
         on(this.elements.output, 'click', (e) => this.handleOutputClick(e));
-        on(this.elements.gridBtn, 'click', () => this.toggleGridPanel());
+        on(this.elements.gridToggleBtn, 'click', () => this.toggleGridPanel());
         on(this.elements.gridCells, 'pointerdown', (e) => this.handleGridPointerDown(e));
         on(window, 'pointerup', (e) => this.handleGridPointerUp(e));
         on(window, 'pointercancel', (e) => this.handleGridPointerUp(e));

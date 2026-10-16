@@ -172,6 +172,7 @@ export const deviceMethods = {
         this.elements.replStatusIndicator.classList.remove('connected');
         this.elements.gridCells?.classList.add('offline');
         this.releaseAllGridKeys({ send: false });
+        this.updateGridStatus();
 
         const browserError = String(detail?.browserError || '').trim();
         const isConnectFailure = error === 'connection failed';

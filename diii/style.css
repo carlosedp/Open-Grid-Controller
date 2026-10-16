@@ -405,22 +405,69 @@ body.is-resizing-explorer * {
     min-height: 0;
 }
 
-.grid-panel {
-    padding: 12px;
+/* virtual grid: a drawer at the top of the console */
+.grid-drawer {
     border-bottom: 1px solid var(--neutral-trim);
-    background-color: var(--bg-surface);
+    background-color: var(--bg-default);
 }
 
-.grid-panel[hidden] {
+/* When the console is short (editor stacked above it), the drawers give up
+   space before the output does; the input line never shrinks. */
+.grid-drawer,
+.midi-drawer {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-height: 0;
+}
+
+/* the grid keeps its minimum size; the MIDI list can shrink to its bar */
+.grid-drawer.open {
+    /* its bar plus the grid's minimum */
+    min-height: 150px;
+}
+
+.midi-drawer {
+    flex-shrink: 4;
+    min-height: 31px;
+    overflow: hidden;
+}
+
+.repl-input-container {
+    flex: none;
+}
+
+.grid-drawer .midi-drawer-bar,
+.midi-drawer .midi-drawer-bar {
+    flex: none;
+}
+
+.grid-drawer[hidden],
+.grid-drawer:not(.open) .grid-body {
     display: none;
 }
 
+/* resizable from its bottom-right corner; the grid scales to fit */
+.grid-body {
+    display: flex;
+    justify-content: center;
+    flex: 0 1 auto;
+    height: 230px;
+    min-height: 120px;
+    max-height: 70vh;
+    resize: vertical;
+    overflow: hidden;
+    padding: 6px 12px 10px;
+    container-type: size;
+}
+
+/* as large as fits while keeping keys square (--grid-ratio: columns / rows) */
 .grid-cells {
     display: grid;
-    grid-template-columns: repeat(16, minmax(0, 1fr));
-    gap: 4px;
-    max-width: 640px;
-    margin: 0 auto;
+    /* gaps shrink with the grid, so small grids keep usable keys */
+    gap: clamp(1px, 1.6cqh, 4px);
+    width: min(100cqw, calc(100cqh * var(--grid-ratio, 2)));
+    height: min(100cqh, calc(100cqw / var(--grid-ratio, 2)));
     touch-action: none;
     user-select: none;
 }
@@ -430,7 +477,6 @@ body.is-resizing-explorer * {
 }
 
 .grid-cell {
-    aspect-ratio: 1;
     border-radius: 3px;
     border: 1px solid var(--neutral-trim);
     background-color: var(--bg-subdued);
@@ -449,7 +495,8 @@ body.is-resizing-explorer * {
 .repl-output-area {
     position: relative;
     flex: 1;
-    min-height: 0;
+    /* the drawers around it shrink first */
+    min-height: 60px;
 }
 
 .repl-output {
@@ -914,9 +961,18 @@ body.is-resizing-editor-rows * {
 }
 
 /* resizable from its bottom-right corner */
+.midi-body {
+    display: flex;
+    flex-direction: column;
+    flex: 0 4 auto;
+    min-height: 0;
+}
+
 .midi-list {
+    /* gives up space before the grid does */
+    flex: 0 4 auto;
     height: 160px;
-    min-height: 60px;
+    min-height: 50px;
     max-height: 60vh;
     resize: vertical;
     overflow-y: auto;
