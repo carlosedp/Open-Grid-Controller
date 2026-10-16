@@ -18,6 +18,7 @@ import { backupUiMethods } from './js/backup-ui.js';
 import { editorUiMethods } from './js/editor-ui.js';
 import { firmwareUiMethods } from './js/firmware-ui.js';
 import { midiUiMethods } from './js/midi-ui.js';
+import { appUpdateMethods } from './js/app-update.js';
 
 class diiiApp {
     constructor() {
@@ -86,6 +87,7 @@ class diiiApp {
     cacheElements() {
         this.elements = {
             scriptReferenceBtn: document.getElementById('scriptReferenceBtn'),
+            appUpdateBtn: document.getElementById('appUpdateBtn'),
             referenceModal: document.getElementById('referenceModal'),
             referenceSearch: document.getElementById('referenceSearch'),
             referenceList: document.getElementById('referenceList'),
@@ -236,6 +238,7 @@ class diiiApp {
         });
 
         on(this.elements.scriptReferenceBtn, 'click', () => this.openReference());
+        on(this.elements.appUpdateBtn, 'click', () => this.reloadForAppUpdate());
         on(this.elements.referenceSearch, 'input', () => this.renderReferenceList());
         on(this.elements.referenceCloseBtn, 'click', () => this.closeReference());
         on(this.elements.referenceModal, 'click', (e) => {
@@ -282,15 +285,12 @@ Object.assign(
     backupUiMethods,
     editorUiMethods,
     firmwareUiMethods,
-    midiUiMethods
+    midiUiMethods,
+    appUpdateMethods
 );
 
 document.addEventListener('DOMContentLoaded', () => {
-    new diiiApp();
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch((error) => {
-            console.error('Service worker registration failed:', error);
-        });
-    }
+    const app = new diiiApp();
+    // registers the service worker (offline use) and watches for new releases
+    app.watchAppUpdates();
 });

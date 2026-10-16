@@ -1018,6 +1018,21 @@ body.is-resizing-editor-rows * {
     color: var(--neutral-medium);
 }
 
+/* a newer diii was published */
+.app-update-btn {
+    color: #fff !important;
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+.app-update-btn:hover {
+    background-color: var(--accent-hover) !important;
+}
+
+.app-update-btn[hidden] {
+    display: none !important;
+}
+
 /* firmware version and updates */
 .firmware-content {
     display: flex;
