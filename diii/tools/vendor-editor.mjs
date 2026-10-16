@@ -25,6 +25,8 @@ export { matchBrackets } from 'prism-code-editor/match-brackets';
 export { highlightBracketPairs } from 'prism-code-editor/highlight-brackets';
 export { indentGuides } from 'prism-code-editor/guides';
 export { cursorPosition } from 'prism-code-editor/cursor';
+export { autoComplete, registerCompletions, fuzzyFilter } from 'prism-code-editor/autocomplete';
+export { editorHoverDescriptions } from 'prism-code-editor/hover';
 `;
 
 await mkdir(out, { recursive: true });
@@ -40,11 +42,13 @@ await build({
 });
 
 const css = await Promise.all(
-    ['layout.css', 'guides.css', 'search.css', 'scrollbar.css'].map((f) => readFile(join(pkgDir, 'dist', f), 'utf8'))
+    ['layout.css', 'guides.css', 'search.css', 'scrollbar.css', 'autocomplete.css', 'autocomplete-icons.css'].map((f) =>
+        readFile(join(pkgDir, 'dist', f), 'utf8')
+    )
 );
 await writeFile(
     join(out, 'prism-code-editor.css'),
-    `/* prism-code-editor ${version} (MIT): layout, guides, search, scrollbar */\n${css.join('\n')}`
+    `/* prism-code-editor ${version} (MIT): layout, guides, search, scrollbar, autocomplete */\n${css.join('\n')}`
 );
 await copyFile(join(pkgDir, 'LICENSE'), join(out, 'prism-code-editor.LICENSE'));
 console.log(`vendor/prism-code-editor.{js,css} from prism-code-editor ${version}`);

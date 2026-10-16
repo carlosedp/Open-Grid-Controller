@@ -4,17 +4,62 @@
 // It only holds text; saving and running are up to the app (editor-ui.js).
 
 import {
+    autoComplete,
     createEditor,
     cursorPosition,
     defaultKeymap,
     editHistory,
     editorCommands,
+    editorHoverDescriptions,
+    fuzzyFilter,
     highlightBracketPairs,
     highlightSelectionMatches,
     indentGuides,
     matchBrackets,
+    registerCompletions,
     searchWidget
 } from '../vendor/prism-code-editor.js';
+import { completionsAt, entryForToken, renderEntryDocs } from './completions.js';
+
+/** @type {import('./iii-api.js').ApiEntry[]} */
+let currentApi = [];
+/** @type {Map<string, import('./iii-api.js').ApiEntry>} */
+let apiByName = new Map();
+
+/**
+ * Sets the iii functions autocomplete and hover help offer (they depend on
+ * the connected device).
+ * @param {import('./iii-api.js').ApiEntry[]} api
+ */
+export function setEditorApi(api) {
+    currentApi = api;
+    apiByName = new Map(api.map((entry) => [entry.name, entry]));
+}
+
+registerCompletions(['lua'], {
+    sources: [
+        (context, editor) => {
+            const result = completionsAt(currentApi, context.lineBefore, editor.value, context.explicit);
+            return result && { from: context.pos - result.query.length, options: result.options };
+        }
+    ]
+});
+
+/**
+ * Hover help: the signature and description of the iii function under the pointer.
+ * @param {string[]} _types
+ * @param {string} _language
+ * @param {string} text
+ * @param {HTMLSpanElement} element
+ */
+function hoverHelp(_types, _language, text, element) {
+    let before = '';
+    for (let node = element.previousSibling; node && before.length < 40; node = node.previousSibling) {
+        before = (node.textContent || '') + before;
+    }
+    const entry = entryForToken(apiByName, text, before);
+    return entry ? renderEntryDocs(entry) : null;
+}
 
 /**
  * @typedef {object} EditorHooks
@@ -76,7 +121,9 @@ export class ScriptEditor {
             matchBrackets(),
             highlightBracketPairs(),
             indentGuides(),
-            cursorPosition()
+            cursorPosition(),
+            autoComplete({ filter: fuzzyFilter }),
+            editorHoverDescriptions(hoverHelp, { maxWidth: '420px' })
         );
         this.name = name;
         this.savedText = isNew ? null : text;

@@ -81,6 +81,10 @@ class diiiApp {
     cacheElements() {
         this.elements = {
             scriptReferenceBtn: document.getElementById('scriptReferenceBtn'),
+            referenceModal: document.getElementById('referenceModal'),
+            referenceSearch: document.getElementById('referenceSearch'),
+            referenceList: document.getElementById('referenceList'),
+            referenceCloseBtn: document.getElementById('referenceCloseBtn'),
 
             splitContainer: document.getElementById('splitContainer'),
             fileExplorerPane: document.getElementById('fileExplorerPane'),
@@ -189,8 +193,14 @@ class diiiApp {
             this.elements.browserWarning.style.display = 'none';
         });
 
-        on(this.elements.scriptReferenceBtn, 'click', () => {
-            window.open('https://monome.org/docs/iii/code', '_blank');
+        on(this.elements.scriptReferenceBtn, 'click', () => this.openReference());
+        on(this.elements.referenceSearch, 'input', () => this.renderReferenceList());
+        on(this.elements.referenceCloseBtn, 'click', () => this.closeReference());
+        on(this.elements.referenceModal, 'click', (e) => {
+            if (e.target === this.elements.referenceModal) this.closeReference();
+        });
+        on(document, 'keydown', (e) => {
+            if (e.key === 'Escape' && this.elements.referenceModal?.style.display === 'flex') this.closeReference();
         });
 
         this.iiiDevice.onDataReceived = (data) => this.handleiiiOutput(data);

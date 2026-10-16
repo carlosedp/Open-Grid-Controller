@@ -39,3 +39,36 @@ export function matchBrackets(rainbowBrackets?: boolean): EditorExtension;
 export function highlightBracketPairs(): EditorExtension;
 export function indentGuides(): EditorExtension;
 export function cursorPosition(): EditorExtension;
+
+export interface CompletionContext {
+    before: string;
+    lineBefore: string;
+    pos: number;
+    language: string;
+    explicit: boolean;
+}
+export interface CompletionResult {
+    from: number;
+    to?: number;
+    options: object[];
+}
+export type CompletionSource = (context: CompletionContext, editor: PrismEditor) => CompletionResult | null | undefined;
+export type CompletionFilter = (query: string, option: string) => [number, number[]] | undefined;
+export const fuzzyFilter: CompletionFilter;
+export function autoComplete(config: {
+    filter: CompletionFilter;
+    preferAbove?: boolean;
+    closeOnBlur?: boolean;
+    explicitOnly?: boolean;
+}): EditorExtension;
+export function registerCompletions(languages: string[], definition: { sources: CompletionSource[] }): void;
+export function editorHoverDescriptions(
+    callback: (
+        types: string[],
+        language: string,
+        text: string,
+        element: HTMLSpanElement,
+        editor: PrismEditor
+    ) => (string | Node)[] | null | undefined,
+    options?: { above?: boolean; maxWidth?: string; maxHeight?: string }
+): EditorExtension;

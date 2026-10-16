@@ -3,8 +3,10 @@
 // without closing. The editing itself is in editor.js. Mixed into diiiApp
 // (diii.js); `this` is the app.
 
-import { ScriptEditor } from './editor.js';
+import { ScriptEditor, setEditorApi } from './editor.js';
 import { hasExactFiles, readDeviceFile } from './backup.js';
+import { apiFor } from './iii-api.js';
+import { renderReference } from './reference.js';
 
 const STORAGE = {
     layout: 'webdiii.editorLayout', // 'side' or 'stacked'
@@ -94,6 +96,36 @@ export const editorUiMethods = {
         if (draft) this.outputLine(`unsaved changes to ${draft.name} are kept; open it with edit to restore them`);
     },
 
+    // iii functions for the connected device: grid or arc, plus og_* on
+    // Open Grid firmware (known once a file was read: og_dump_file exists)
+    currentApi() {
+        const id = String(this.connectedDeviceLabel || '').toLowerCase();
+        return apiFor({
+            deviceId: id === 'grid' || id === 'arc' ? id : null,
+            openGrid: Boolean(this.editorExactFiles || this.gridSupported)
+        });
+    },
+
+    openReference() {
+        const modal = this.elements.referenceModal;
+        if (!modal) return;
+        modal.style.display = 'flex';
+        this.renderReferenceList();
+        this.elements.referenceSearch?.focus();
+        this.elements.referenceSearch?.select();
+    },
+
+    closeReference() {
+        if (this.elements.referenceModal) this.elements.referenceModal.style.display = 'none';
+    },
+
+    renderReferenceList() {
+        if (!this.elements.referenceList) return;
+        // not connected: everything, so the reference is useful offline too
+        const entries = this.iiiDevice.isConnected ? this.currentApi() : apiFor({ openGrid: true });
+        renderReference(this.elements.referenceList, entries, this.elements.referenceSearch?.value || '');
+    },
+
     async openFileAtLine(fileName, line) {
         if (this.scriptEditor?.name !== fileName || this.elements.editorPane?.hidden) {
             await this.editFile(fileName);
@@ -145,6 +177,7 @@ export const editorUiMethods = {
             const text = new TextDecoder().decode(data).replace(/\0+$/, '');
             const editor = this.getScriptEditor();
             this.showEditorPane(true);
+            setEditorApi(this.currentApi());
             editor.open(fileName, text);
             this.updateEditorTitle(false);
             this.offerDraftRestore(fileName, text);
@@ -171,6 +204,7 @@ export const editorUiMethods = {
         this.editorExactFiles = await hasExactFiles(this.backupApi()).catch(() => false);
         const editor = this.getScriptEditor();
         this.showEditorPane(true);
+        setEditorApi(this.currentApi());
         editor.open(name, '', { isNew: true });
         this.offerDraftRestore(name, '');
         editor.focus();
