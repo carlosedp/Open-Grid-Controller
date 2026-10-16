@@ -586,6 +586,180 @@ body.is-resizing-explorer * {
     border-color: var(--accent);
 }
 
+/* --- script editor ---------------------------------------------------- */
+
+.split-container {
+    position: relative;
+}
+
+.editor-resizer[hidden],
+.editor-pane[hidden] {
+    display: none;
+}
+
+.editor-resizer {
+    border-right: 0;
+    border-left: 1px solid var(--neutral-trim);
+}
+
+/* shares the space with the console until resized (then a fixed width) */
+.editor-pane {
+    flex: 1 1 0;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-default);
+}
+
+.repl-pane {
+    flex: 1 1 0;
+}
+
+/* the console gets narrow next to the editor */
+.repl-actions {
+    flex-wrap: wrap;
+}
+
+.editor-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--neutral-trim);
+}
+
+.editor-title {
+    font-size: 0.85rem;
+    color: var(--neutral-heavy);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-dirty {
+    color: var(--accent-hover);
+    font-size: 0.8rem;
+}
+
+.editor-dirty[hidden] {
+    display: none;
+}
+
+.editor-close-btn {
+    border: 0;
+    background: transparent;
+    color: var(--interactive-medium);
+    font-family: monospace;
+    font-size: 0.95rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.editor-close-btn:hover {
+    color: var(--interactive-selected);
+    background-color: var(--bg-surface);
+}
+
+.editor-host {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+.editor-host > .prism-code-editor {
+    flex: 1;
+    height: 100%;
+    font-family: monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* Editor colors: diii's palette, VS Code Dark+ token colors */
+.prism-code-editor {
+    color-scheme: dark;
+    --pce-bg: var(--bg-default);
+    --pce-cursor: var(--interactive-selected);
+    --pce-selection: #264f78;
+    --pce-selection-match: #3a3d41;
+    --pce-bg-highlight: #ffffff0a;
+    --pce-line-number: #6e7681;
+    --pce-guide-indent: #ffffff1a;
+    --pce-scrollbar: 0, 0%, 35%;
+    --pce-search-match: #623315;
+    --pce-widget-bg: var(--bg-surface);
+    --pce-widget-border: var(--neutral-trim);
+    --pce-widget-color: var(--neutral-heavy);
+    --pce-widget-color-active: var(--interactive-selected);
+    --pce-widget-color-options: var(--neutral-medium);
+    --pce-widget-bg-input: var(--bg-default);
+    --pce-widget-bg-hover: #5a5d5e4f;
+    --pce-widget-bg-active: #0a84ff40;
+    --pce-widget-focus: var(--accent);
+    --pce-widget-bg-error: #5a1d1d;
+    --pce-widget-error: #f48771;
+    color: #d4d4d4;
+}
+
+.prism-code-editor .active-line {
+    --pce-line-number: var(--neutral-heavy);
+}
+
+.prism-code-editor .active-indent {
+    --pce-guide-indent: #ffffff3d;
+}
+
+.prism-code-editor .token.keyword {
+    color: #569cd6;
+}
+
+.prism-code-editor .token.string {
+    color: #ce9178;
+}
+
+.prism-code-editor .token.number,
+.prism-code-editor .token.boolean,
+.prism-code-editor .token.constant {
+    color: #b5cea8;
+}
+
+.prism-code-editor .token.comment {
+    color: #6a9955;
+}
+
+.prism-code-editor .token.function {
+    color: #dcdcaa;
+}
+
+.prism-code-editor .token.operator,
+.prism-code-editor .token.punctuation {
+    color: #d4d4d4;
+}
+
+.prism-code-editor .token.bracket-level-0,
+.prism-code-editor .token.bracket-level-3 {
+    color: #ffd700;
+}
+
+.prism-code-editor .token.bracket-level-1,
+.prism-code-editor .token.bracket-level-4 {
+    color: #da70d6;
+}
+
+.prism-code-editor .token.bracket-level-2,
+.prism-code-editor .token.bracket-level-5 {
+    color: #179fff;
+}
+
+.prism-code-editor .active-bracket {
+    box-shadow: inset 0 0 0 1px #888888;
+}
+
+.prism-code-editor .word-matches span {
+    box-shadow: inset 0 0 0 9in #ffffff14;
+}
+
 .modal {
     position: fixed;
     inset: 0;
@@ -645,5 +819,17 @@ body.is-resizing-explorer * {
     .file-explorer-pane {
         width: 220px;
         min-width: 180px;
+    }
+
+    /* no room for two panes: the editor covers the console until closed */
+    .editor-pane {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        min-width: 0;
+    }
+
+    .editor-resizer {
+        display: none;
     }
 }

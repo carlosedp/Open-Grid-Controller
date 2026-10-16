@@ -180,6 +180,9 @@ export const consoleMethods = {
             return;
         }
 
+        // e.g. the editor waiting for "-- file written: ..." after a save
+        for (const observe of this.outputObservers || []) observe(cleaned);
+
         if (!cleaned.includes('^^')) {
             this.outputLine(cleaned);
             return;

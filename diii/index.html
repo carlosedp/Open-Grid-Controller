@@ -7,6 +7,7 @@
     <title>diii</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="vendor/prism-code-editor.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -80,6 +81,19 @@
                         </div>
                     </div>
                 </div>
+                <div id="editorResizer" class="explorer-resizer editor-resizer" role="separator" aria-orientation="vertical" aria-label="resize editor" hidden></div>
+                <section id="editorPane" class="editor-pane" aria-label="script editor" hidden>
+                    <div class="editor-header">
+                        <span id="editorTitle" class="editor-title"></span>
+                        <span id="editorDirty" class="editor-dirty" title="unsaved changes" hidden>●</span>
+                        <div class="repl-actions-spacer"></div>
+                        <button type="button" id="editorSaveBtn" class="repl-action-btn" title="save to the device (Ctrl+S)">save</button>
+                        <button type="button" id="editorSaveAsBtn" class="repl-action-btn" title="save under another name">save as</button>
+                        <button type="button" id="editorRunBtn" class="repl-action-btn" title="save and run">run</button>
+                        <button type="button" id="editorCloseBtn" class="editor-close-btn" aria-label="close editor" title="close">✕</button>
+                    </div>
+                    <div id="editorHost" class="editor-host"></div>
+                </section>
             </div>
         </div>
 

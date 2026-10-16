@@ -126,6 +126,7 @@ export const fileMethods = {
 
             const actions = isInitLuaFile
                 ? [
+                      { label: 'edit', fn: () => this.editFile(entry.name) },
                       { label: 'read', fn: () => this.showFile(entry.name) },
                       { label: 'delete', fn: () => this.deleteFile(entry.name) }
                   ]
@@ -136,6 +137,7 @@ export const fileMethods = {
                     ]
                   : [
                         { label: 'run', fn: () => this.enqueueRunFile(entry.name) },
+                        { label: 'edit', fn: () => this.editFile(entry.name) },
                         { label: 'download', fn: () => this.downloadFile(entry.name) },
                         { label: 'first', fn: () => this.configureFirst(entry.name) },
                         { label: 'read', fn: () => this.showFile(entry.name) },

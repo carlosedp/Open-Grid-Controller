@@ -15,6 +15,7 @@ import { uploadMethods } from './js/uploads.js';
 import { fileMethods } from './js/files.js';
 import { gridMethods } from './js/grid.js';
 import { backupUiMethods } from './js/backup-ui.js';
+import { editorUiMethods } from './js/editor-ui.js';
 
 class diiiApp {
     constructor() {
@@ -103,6 +104,16 @@ class diiiApp {
             reformatBtn: document.getElementById('reformatBtn'),
             backupBtn: document.getElementById('backupBtn'),
             restoreBtn: document.getElementById('restoreBtn'),
+
+            editorPane: document.getElementById('editorPane'),
+            editorResizer: document.getElementById('editorResizer'),
+            editorHost: document.getElementById('editorHost'),
+            editorTitle: document.getElementById('editorTitle'),
+            editorDirty: document.getElementById('editorDirty'),
+            editorSaveBtn: document.getElementById('editorSaveBtn'),
+            editorSaveAsBtn: document.getElementById('editorSaveAsBtn'),
+            editorRunBtn: document.getElementById('editorRunBtn'),
+            editorCloseBtn: document.getElementById('editorCloseBtn'),
             helpBtn: document.getElementById('helpBtn'),
             clearBtn: document.getElementById('clearBtn'),
             gridBtn: document.getElementById('gridBtn'),
@@ -135,6 +146,14 @@ class diiiApp {
         on(this.elements.reformatBtn, 'click', () => this.reformatFs());
         on(this.elements.backupBtn, 'click', () => this.backupToZip());
         on(this.elements.restoreBtn, 'click', () => this.restoreFromZip());
+        on(this.elements.editorSaveBtn, 'click', () => this.editorSave());
+        on(this.elements.editorSaveAsBtn, 'click', () => this.editorSaveAs());
+        on(this.elements.editorRunBtn, 'click', () => this.editorRun());
+        on(this.elements.editorCloseBtn, 'click', () => this.closeEditor());
+        on(this.elements.editorResizer, 'pointerdown', (e) => this.startEditorResize(e));
+        on(window, 'beforeunload', (e) => {
+            if (this.scriptEditor?.dirty) e.preventDefault();
+        });
         on(this.elements.helpBtn, 'click', () => this.helpDevice());
         on(this.elements.clearBtn, 'click', () => this.clearOutput());
         on(this.elements.gridBtn, 'click', () => this.toggleGridPanel());
@@ -186,7 +205,8 @@ Object.assign(
     uploadMethods,
     fileMethods,
     gridMethods,
-    backupUiMethods
+    backupUiMethods,
+    editorUiMethods
 );
 
 document.addEventListener('DOMContentLoaded', () => {

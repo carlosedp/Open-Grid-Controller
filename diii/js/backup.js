@@ -51,28 +51,46 @@ export function decodeDump(name, lines) {
 }
 
 /**
+ * Whether the device has og_dump_file() (Open Grid firmware), i.e. exact file
+ * reads, and uploads that keep the old file when the new one doesn't compile.
+ * @param {DeviceApi} device
+ * @returns {Promise<boolean>}
+ */
+export async function hasExactFiles(device) {
+    const probe = await device.capture('print(og_dump_file ~= nil)');
+    return probe.some((line) => line.trim() === 'true');
+}
+
+/**
+ * Reads one file: exact with og_dump_file(), else through cat().
+ * @param {DeviceApi} device
+ * @param {string} name
+ * @param {boolean} exact result of hasExactFiles()
+ * @returns {Promise<Uint8Array>}
+ */
+export async function readDeviceFile(device, name, exact) {
+    if (exact) return decodeDump(name, await device.capture(`og_dump_file(${luaQuote(name)})`));
+    return new TextEncoder().encode((await device.capture(`cat(${luaQuote(name)})`)).join('\n'));
+}
+
+/**
  * Reads every file on the device into a zip.
  * @param {DeviceApi} device
  * @returns {Promise<{ zip: Uint8Array, count: number, exact: boolean }>}
  */
 export async function backupDevice(device) {
-    const probe = await device.capture('print(og_dump_file ~= nil)');
-    const exact = probe.some((line) => line.trim() === 'true');
+    const exact = await hasExactFiles(device);
     if (!exact) device.log('backup: this firmware has no og_dump_file(); using cat(), not byte-exact');
 
     const names = (await device.capture('for _, n in ipairs(fs_list_files()) do print(n) end'))
         .map((line) => line.trim())
         .filter((name) => name && !name.startsWith('.'));
 
-    const encoder = new TextEncoder();
     /** @type {import('./zip.js').ZipEntry[]} */
     const entries = [];
     for (const name of names) {
         device.log(`backup: ${name}`);
-        const data = exact
-            ? decodeDump(name, await device.capture(`og_dump_file(${luaQuote(name)})`))
-            : encoder.encode((await device.capture(`cat(${luaQuote(name)})`)).join('\n'));
-        entries.push({ name, data });
+        entries.push({ name, data: await readDeviceFile(device, name, exact) });
     }
 
     return { zip: createZip(entries), count: entries.length, exact };

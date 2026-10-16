@@ -27,21 +27,24 @@ export const uploadMethods = {
         await this.delay(100);
     },
 
-    async sendScriptTextToiii(fileName, text) {
+    async sendScriptTextToiii(fileName, text, options = {}) {
         // Anything sent between ^^s and ^^w would end up inside the file.
         this.releaseAllGridKeys();
         this.uploadInProgress = true;
         try {
-            await this.sendScriptLinesToiii(fileName, text);
+            await this.sendScriptLinesToiii(fileName, text, options);
         } finally {
             this.uploadInProgress = false;
         }
     },
 
-    async sendScriptLinesToiii(fileName, text) {
+    // keepOld: the firmware replaces the file only once the new one compiles
+    // (Open Grid), so don't delete it first; stock iii writes without
+    // truncating, so a shorter file would keep the old one's tail.
+    async sendScriptLinesToiii(fileName, text, { keepOld = false } = {}) {
         const lines = this.getUploadLines(text);
 
-        await this.executeLuaCapture(`fs_remove_file(${this.luaQuote(fileName)})`);
+        if (!keepOld) await this.executeLuaCapture(`fs_remove_file(${this.luaQuote(fileName)})`);
         // Match diii upload protocol:
         // ^^s, <filename>, ^^f, ^^s, <file lines>, ^^w
         await this.openAndSelectRemoteFile(fileName);
