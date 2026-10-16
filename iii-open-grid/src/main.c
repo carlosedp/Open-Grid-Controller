@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.7"
+#define DEVICE_VERSION_BASE "og-0.3.8"
 
 #include <string.h>
 
@@ -445,6 +445,8 @@ static int l_og_board(lua_State *l) {
   return 1;
 }
 
+int og_l_midi_monitor(lua_State *l);  // midi_monitor.c
+
 static const struct luaL_Reg device_lib[] = {
     {"grid_led", l_grid_led},
     {"grid_led_get", l_grid_led_get},
@@ -462,6 +464,7 @@ static const struct luaL_Reg device_lib[] = {
     {"og_dump_file", og_l_dump_file},
     {"og_rename_file", l_og_rename_file},
     {"og_board", l_og_board},
+    {"og_midi_monitor", og_l_midi_monitor},
     {NULL, NULL},
 };
 
@@ -486,6 +489,7 @@ static const char *device_help_str =
     "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n"
     "  og_dump_file(f) print a file as base64, then size and CRC-32\n"
     "  og_rename_file(old, new)  rename a file (replaces new)\n"
-    "  og_board()      board this firmware is built for\n";
+    "  og_board()      board this firmware is built for\n"
+    "  og_midi_monitor(on) report MIDI in/out as ^^midi(...) for diii\n";
 
 const char *device_help_txt() { return device_help_str; }

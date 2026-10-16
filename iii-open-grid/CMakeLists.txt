@@ -88,6 +88,7 @@ set(III_SOURCES
 add_executable(iii-open-grid
         src/main.c
         src/file_dump.c
+        src/midi_monitor.c
         src/grid.c
         src/keypad.c
         src/monome_serial.c
@@ -150,9 +151,11 @@ target_link_libraries(iii-open-grid PRIVATE
 
 # heap_stats.c tracks the heap high-water mark by wrapping newlib's _sbrk
 target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=_sbrk")
+# midi_monitor.c sees every MIDI message sent and received
+target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=midi_tx" "LINKER:--wrap=vm_handle_midi")
 
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.3.7")
+pico_set_program_version(iii-open-grid "og-0.3.8")
 pico_add_extra_outputs(iii-open-grid)
