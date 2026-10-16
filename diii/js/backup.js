@@ -1,10 +1,11 @@
 // @ts-check
 // Backup and restore of every file on the device, as one zip.
 //
-// Backup reads files with og_dump_file() (Open Grid firmware): base64 lines,
-// then "size crc32", so each file arrives byte for byte and is checked. On
-// devices without it, cat() is used instead; that copy can differ in line
-// endings and loses the '\0' uploads end with, which Lua doesn't mind.
+// Files are read byte for byte on any iii firmware: with og_dump_file() (Open
+// Grid) as base64 lines plus "size crc32"; elsewhere a few KB at a time, each
+// piece turned into hex by Lua on the device (readFileInChunks). cat() lost
+// blank lines (diii drops empty output lines) and, on stock iii, everything
+// past its 16 KB output buffer.
 // Restore uploads each file through the normal upload path, so every file is
 // compile-checked on the device before it replaces the old one.
 
@@ -61,16 +62,51 @@ export async function hasExactFiles(device) {
     return probe.some((line) => line.trim() === 'true');
 }
 
+// Bytes per piece for readFileInChunks: twice that in hex is printed per
+// command, well inside stock iii's 16 KB output buffer (which only empties
+// between commands).
+const CHUNK_BYTES = 3072;
+
 /**
- * Reads one file: exact with og_dump_file(), else through cat().
+ * Reads a file on firmware without og_dump_file(): its size, then one command
+ * per CHUNK_BYTES that prints that piece as hex (Lua encodes it on the device,
+ * so blank lines, '\r' and '\0' come through), each checked for length.
+ * Slower than og_dump_file (Lua reads the whole file for every piece), but
+ * exact, and works for any size.
  * @param {DeviceApi} device
  * @param {string} name
- * @param {boolean} exact result of hasExactFiles()
+ * @returns {Promise<Uint8Array>}
+ */
+export async function readFileInChunks(device, name) {
+    const quoted = luaQuote(name);
+    const size = Number.parseInt((await device.capture(`print(fs_file_size(${quoted}) or -1)`))[0], 10);
+    if (!Number.isFinite(size) || size < 0) throw new Error(`${name}: not found`);
+
+    const data = new Uint8Array(size);
+    for (let start = 0; start < size; start += CHUNK_BYTES) {
+        const expected = Math.min(CHUNK_BYTES, size - start);
+        const lines = await device.capture(
+            `do local s = fs_read_file(${quoted}) if s then print((s:sub(${start + 1}, ${start + expected}):gsub(".", function(c) return string.format("%02x", c:byte()) end))) end end`
+        );
+        const hex = lines.join('').trim();
+        if (hex.length !== expected * 2 || /[^0-9a-f]/i.test(hex)) {
+            throw new Error(`${name}: transfer damaged at byte ${start}`);
+        }
+        for (let i = 0; i < expected; i++) data[start + i] = Number.parseInt(hex.substr(i * 2, 2), 16);
+    }
+    return data;
+}
+
+/**
+ * Reads one file exactly: og_dump_file() when there is one, else in chunks.
+ * @param {DeviceApi} device
+ * @param {string} name
+ * @param {boolean} exact result of hasExactFiles() (og_dump_file available)
  * @returns {Promise<Uint8Array>}
  */
 export async function readDeviceFile(device, name, exact) {
     if (exact) return decodeDump(name, await device.capture(`og_dump_file(${luaQuote(name)})`));
-    return new TextEncoder().encode((await device.capture(`cat(${luaQuote(name)})`)).join('\n'));
+    return readFileInChunks(device, name);
 }
 
 /**
@@ -80,7 +116,7 @@ export async function readDeviceFile(device, name, exact) {
  */
 export async function backupDevice(device) {
     const exact = await hasExactFiles(device);
-    if (!exact) device.log('backup: this firmware has no og_dump_file(); using cat(), not byte-exact');
+    if (!exact) device.log('backup: this firmware has no og_dump_file(); reading in pieces (slower)');
 
     const names = (await device.capture('for _, n in ipairs(fs_list_files()) do print(n) end'))
         .map((line) => line.trim())

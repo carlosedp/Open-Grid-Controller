@@ -335,9 +335,12 @@ export const fileMethods = {
         this.firstBadgeFileNames = hasMatchingFile ? new Set([targetName]) : new Set();
     },
 
+    // A file's text, exactly (blank lines included, any size): og_dump_file on
+    // Open Grid firmware, read in pieces elsewhere; without the '\0' uploads end with.
     async readRemoteFile(fileName) {
-        const lines = await this.executeLuaCapture(`cat(${this.luaQuote(fileName)})`);
-        return lines.join('\n');
+        const api = this.backupApi();
+        const data = await readDeviceFile(api, fileName, await hasExactFiles(api));
+        return new TextDecoder().decode(data).replace(/\0+$/, '');
     },
 
     // init.lua's text, or null when there is none
@@ -425,8 +428,8 @@ export const fileMethods = {
             headerLine.textContent = `${fileName} contents:\n\n`;
             this.elements.output.appendChild(headerLine);
 
-            const lines = await this.executeLuaCapture(`cat(${this.luaQuote(fileName)})`);
-            for (const line of lines) {
+            const text = await this.readRemoteFile(fileName);
+            for (const line of text.replace(/\r\n?/g, '\n').split('\n')) {
                 this.outputLine(line, { autoScroll: false });
             }
 

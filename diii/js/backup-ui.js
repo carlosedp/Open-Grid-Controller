@@ -20,7 +20,7 @@ export const backupUiMethods = {
 
         try {
             this.outputLine('backup: reading files...');
-            const { zip, count, exact } = await backupDevice(this.backupApi());
+            const { zip, count } = await backupDevice(this.backupApi());
             const stamp = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
             const label = String(this.connectedDeviceLabel || 'iii').replace(/[^a-z0-9_-]+/gi, '-');
             const fileName = `${label}-backup-${stamp}.zip`;
@@ -34,7 +34,7 @@ export const backupUiMethods = {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            this.outputLine(`backup: ${count} files saved to ${fileName}${exact ? '' : ' (not byte-exact)'}`);
+            this.outputLine(`backup: ${count} files saved to ${fileName}`);
         } catch (error) {
             this.outputLine(`Backup error: ${error.message}`);
         }
