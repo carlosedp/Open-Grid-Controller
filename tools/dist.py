@@ -104,8 +104,14 @@ def main() -> None:
         action="store_true",
         help="only build dist/diii (the GitHub Pages workflow uses this)",
     )
+    parser.add_argument(
+        "--version", action="store_true", help="print the firmware version (make release)"
+    )
     args = parser.parse_args()
 
+    if args.version:
+        print(firmware_version())
+        return
     if args.clean:
         shutil.rmtree(DIST, ignore_errors=True)
         return

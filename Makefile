@@ -32,7 +32,7 @@ DIII_BRANCH   ?= open-grid
 III_UPSTREAM ?= https://codeberg.org/tehn/iii
 III_BASE     := $(shell git log -1 --format=%H --grep="git-subtree-dir: third_party/iii")
 
-.PHONY: all help firmware firmware-all upload monitor diii diii-check diii-vendor dist clean \
+.PHONY: all help firmware firmware-all upload monitor diii diii-check diii-vendor dist release clean \
         format format-check diii-pull-upstream diii-push-fork iii-changes iii-patches iii-pull-upstream
 
 all: firmware
@@ -49,6 +49,7 @@ help:
 	@echo   make diii-vendor     rebuild diii/vendor/ (the code editor) from diii/package.json
 	@echo Release:
 	@echo   make dist            firmware for all boards + diii into dist/
+	@echo   make release         dist, then a GitHub release with the UF2s (diii offers it as an update)
 	@echo   make clean           remove build outputs and dist/
 	@echo Code style:
 	@echo   make format          format our C, JS and Python in place
@@ -90,6 +91,14 @@ diii-vendor: diii/node_modules
 
 dist: firmware-all
 	$(PYTHON) tools/dist.py $(BOARDS)
+
+# Publishes the firmware: a GitHub release tagged with the version in main.c,
+# carrying the UF2s; diii's "firmware" dialog finds it there. Needs gh, logged
+# in, and the commit pushed (the tag is made on the remote's main).
+release: dist
+	gh release create $(shell $(PYTHON) tools/dist.py --version) \
+		$(wildcard dist/firmware/iii-open-grid-$(shell $(PYTHON) tools/dist.py --version)-*.uf2) \
+		--target main --title $(shell $(PYTHON) tools/dist.py --version) --generate-notes
 
 clean:
 	$(PIO) run -t clean $(foreach b,$(BOARDS),-e $(b))
