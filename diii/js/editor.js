@@ -19,6 +19,7 @@ import {
 /**
  * @typedef {object} EditorHooks
  * @property {(dirty: boolean) => void} [onChange] the text started or stopped differing from the saved one
+ * @property {() => void} [onInput] the text changed (every edit)
  * @property {() => void} [onSave] Ctrl+S / Cmd+S
  */
 
@@ -63,7 +64,10 @@ export class ScriptEditor {
                 tabSize: 2,
                 insertSpaces: true,
                 lineNumbers: true,
-                onUpdate: () => this.notifyIfChanged()
+                onUpdate: () => {
+                    this.notifyIfChanged();
+                    this.hooks.onInput?.();
+                }
             },
             editorCommands(defaultKeymap),
             editHistory(),
@@ -105,6 +109,32 @@ export class ScriptEditor {
         this.name = name;
         this.savedText = text;
         this.notifyIfChanged();
+    }
+
+    /**
+     * Replaces the text (e.g. with a restored draft); it counts as an edit.
+     * @param {string} text
+     */
+    setText(text) {
+        this.editor?.setOptions({ value: text });
+        this.notifyIfChanged();
+    }
+
+    /**
+     * Selects line `line` (1-based) and scrolls it into view.
+     * @param {number} line
+     */
+    goToLine(line) {
+        if (!this.editor) return;
+        const lines = this.text.split('\n');
+        const n = Math.max(1, Math.min(Math.floor(line) || 1, lines.length));
+        let start = 0;
+        for (let i = 0; i < n - 1; i++) start += lines[i].length + 1;
+        const textarea = this.editor.textarea;
+        textarea.focus();
+        textarea.setSelectionRange(start, start + lines[n - 1].length);
+        // lines[0] is the editor's overlay; line n is lines[n]
+        this.editor.lines[n]?.scrollIntoView({ block: 'center' });
     }
 
     focus() {

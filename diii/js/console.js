@@ -2,13 +2,52 @@
 // Mixed into diiiApp (diii.js); `this` is the app.
 
 export const consoleMethods = {
+    // Follows new output only while the view is at the bottom, so reading
+    // further up isn't interrupted.
+    isOutputAtBottom() {
+        const output = this.elements.output;
+        return !output || output.scrollHeight - output.scrollTop - output.clientHeight < 24;
+    },
+
+    scrollOutputToBottom() {
+        if (this.elements.output) this.elements.output.scrollTop = this.elements.output.scrollHeight;
+    },
+
     outputText(text, options = {}) {
         const { autoScroll = true } = options;
         if (!this.elements.output) return;
-        this.elements.output.appendChild(document.createTextNode(text));
-        if (autoScroll) {
-            this.elements.output.scrollTop = this.elements.output.scrollHeight;
+        const follow = autoScroll && this.isOutputAtBottom();
+        this.appendOutputText(text);
+        if (follow) this.scrollOutputToBottom();
+    },
+
+    // "kria.lua:12: ..." (compile and runtime errors) becomes a link that
+    // opens the file in the editor at that line.
+    appendOutputText(text) {
+        const output = this.elements.output;
+        const pattern = /([A-Za-z0-9_.-]+\.lua):(\d+):/g;
+        let last = 0;
+        for (const match of text.matchAll(pattern)) {
+            if (match[1] === 'lib.lua') continue;
+            output.appendChild(document.createTextNode(text.slice(last, match.index)));
+            const link = document.createElement('a');
+            link.href = '#';
+            link.className = 'output-file-link';
+            link.dataset.file = match[1];
+            link.dataset.line = match[2];
+            link.title = `open ${match[1]} at line ${match[2]}`;
+            link.textContent = match[0];
+            output.appendChild(link);
+            last = match.index + match[0].length;
         }
+        output.appendChild(document.createTextNode(text.slice(last)));
+    },
+
+    handleOutputClick(event) {
+        const link = event.target?.closest?.('.output-file-link');
+        if (!link) return;
+        event.preventDefault();
+        this.openFileAtLine(link.dataset.file, Number(link.dataset.line));
     },
 
     outputLine(text, options = {}) {
@@ -18,12 +57,11 @@ export const consoleMethods = {
     outputHTML(html, options = {}) {
         const { autoScroll = true } = options;
         if (!this.elements.output) return;
+        const follow = autoScroll && this.isOutputAtBottom();
         const span = document.createElement('span');
         span.innerHTML = html;
         this.elements.output.appendChild(span);
-        if (autoScroll) {
-            this.elements.output.scrollTop = this.elements.output.scrollHeight;
-        }
+        if (follow) this.scrollOutputToBottom();
     },
 
     clearOutput() {
@@ -110,6 +148,8 @@ export const consoleMethods = {
 
     async sendReplCommand(code) {
         this.outputLine(`>> ${code}`);
+        // sending a command means wanting to see what it prints
+        this.scrollOutputToBottom();
         const isHelpShortcut = /^h$/i.test(code.trim());
         const isUploadShortcut = /^u$/i.test(code.trim());
         const isReUploadShortcut = /^r$/i.test(code.trim());

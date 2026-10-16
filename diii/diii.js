@@ -75,6 +75,7 @@ class diiiApp {
         this.renderFileList();
 
         this.outputLine('//// welcome. connect to an iii compatible grid or arc to begin.');
+        this.announceDraft();
     }
 
     cacheElements() {
@@ -176,6 +177,7 @@ class diiiApp {
         });
         on(this.elements.helpBtn, 'click', () => this.helpDevice());
         on(this.elements.clearBtn, 'click', () => this.clearOutput());
+        on(this.elements.output, 'click', (e) => this.handleOutputClick(e));
         on(this.elements.gridBtn, 'click', () => this.toggleGridPanel());
         on(this.elements.gridCells, 'pointerdown', (e) => this.handleGridPointerDown(e));
         on(window, 'pointerup', (e) => this.handleGridPointerUp(e));

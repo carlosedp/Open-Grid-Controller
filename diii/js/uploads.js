@@ -109,13 +109,18 @@ export const uploadMethods = {
     },
 
     async chooseLuaFileWithHandle() {
+        const picked = await this.chooseLuaFilesWithHandles({ multiple: false });
+        return picked[0] || null;
+    },
+
+    async chooseLuaFilesWithHandles({ multiple = true } = {}) {
         if (!this.supportsFileSystemPicker()) {
-            return null;
+            return [];
         }
 
         try {
             const handles = await window.showOpenFilePicker({
-                multiple: false,
+                multiple,
                 excludeAcceptAllOption: true,
                 types: [
                     {
@@ -128,26 +133,20 @@ export const uploadMethods = {
                 ]
             });
 
-            const handle = handles?.[0];
-            if (!handle) return null;
-
-            const file = await handle.getFile();
-            return { file, handle };
+            return Promise.all((handles || []).map(async (handle) => ({ file: await handle.getFile(), handle })));
         } catch (error) {
             if (error?.name === 'AbortError') {
-                return null;
+                return [];
             }
 
             this.outputLine(`File picker error: ${error.message}`);
-            return null;
+            return [];
         }
     },
 
     async openUploadPicker() {
         if (this.supportsFileSystemPicker()) {
-            const picked = await this.chooseLuaFileWithHandle();
-            if (!picked) return;
-            await this.uploadSelectedFile(picked.file, { fileHandle: picked.handle });
+            await this.uploadFiles(await this.chooseLuaFilesWithHandles());
             return;
         }
 
@@ -176,7 +175,7 @@ export const uploadMethods = {
         try {
             this.setExplorerCollapsed(false);
             const text = await file.text();
-            await this.uploadTextAsScript(file.name, text);
+            await this.uploadTextAsScript(file.name, text, { refreshList: options.refreshList !== false });
             this.cacheLastUploadedScript({
                 name: file.name,
                 text,
@@ -262,9 +261,23 @@ export const uploadMethods = {
     },
 
     async handleFileSelect(event) {
-        const file = event.target?.files?.[0];
-        if (!file) return;
-        await this.uploadSelectedFile(file);
+        await this.uploadFiles([...(event.target?.files || [])].map((file) => ({ file })));
+    },
+
+    // Uploads several scripts one after the other, then refreshes the list once.
+    // picked: [{ file, handle? }] (handle: the r shortcut can re-read the file)
+    async uploadFiles(picked) {
+        const lua = picked.filter(({ file }) => file.name.toLowerCase().endsWith('.lua'));
+        const skipped = picked.filter((entry) => !lua.includes(entry)).map(({ file }) => file.name);
+        if (skipped.length) this.outputLine(`skipped (only .lua files): ${skipped.join(', ')}`);
+        if (!lua.length) return;
+
+        let uploaded = 0;
+        for (const { file, handle } of lua) {
+            if (await this.uploadSelectedFile(file, { fileHandle: handle || null, refreshList: false })) uploaded++;
+        }
+        if (lua.length > 1) this.outputLine(`uploaded ${uploaded} of ${lua.length} files`);
+        await this.requestFileListRefresh();
     },
 
     setupDragAndDrop() {
@@ -282,9 +295,7 @@ export const uploadMethods = {
         document.body.addEventListener('drop', async (event) => {
             const files = event.dataTransfer?.files;
             if (!files || files.length === 0) return;
-
-            const file = files[0];
-            await this.uploadSelectedFile(file);
+            await this.uploadFiles([...files].map((file) => ({ file })));
         });
     }
 };

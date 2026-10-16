@@ -31,15 +31,76 @@ function saveSetting(key, value) {
     }
 }
 
+// Unsaved edits of the most recently edited file, kept in the browser so a
+// disconnect, a closed tab or a crash doesn't lose them.
+const DRAFT_KEY = 'webdiii.draft';
+
+function loadDraft() {
+    try {
+        const draft = JSON.parse(loadSetting(DRAFT_KEY) || 'null');
+        return draft && typeof draft.name === 'string' && typeof draft.text === 'string' ? draft : null;
+    } catch {
+        return null;
+    }
+}
+
+function clearDraft() {
+    try {
+        window.localStorage.removeItem(DRAFT_KEY);
+    } catch {
+        // storage blocked
+    }
+}
+
 export const editorUiMethods = {
     getScriptEditor() {
         if (!this.scriptEditor) {
             this.scriptEditor = new ScriptEditor(this.elements.editorHost, {
                 onChange: (dirty) => this.updateEditorTitle(dirty),
+                onInput: () => this.saveDraftSoon(),
                 onSave: () => this.editorSave()
             });
         }
         return this.scriptEditor;
+    },
+
+    saveDraftSoon() {
+        clearTimeout(this.draftTimer);
+        this.draftTimer = setTimeout(() => {
+            const editor = this.scriptEditor;
+            if (!editor?.name) return;
+            if (editor.dirty)
+                saveSetting(DRAFT_KEY, JSON.stringify({ name: editor.name, text: editor.text, time: Date.now() }));
+            else if (loadDraft()?.name === editor.name) clearDraft();
+        }, 400);
+    },
+
+    // After opening a file: if a draft of it differs from what was loaded, offer it.
+    offerDraftRestore(name, loadedText) {
+        const draft = loadDraft();
+        if (!draft || draft.name !== name || draft.text === loadedText) return;
+        const when = new Date(draft.time).toLocaleString();
+        if (window.confirm(`Restore your unsaved changes to ${name} from ${when}?`)) {
+            this.scriptEditor.setText(draft.text);
+            this.outputLine(`restored unsaved changes to ${name}`);
+        } else {
+            clearDraft();
+        }
+    },
+
+    // At startup: point at a draft left from an earlier session.
+    announceDraft() {
+        const draft = loadDraft();
+        if (draft) this.outputLine(`unsaved changes to ${draft.name} are kept; open it with edit to restore them`);
+    },
+
+    async openFileAtLine(fileName, line) {
+        if (this.scriptEditor?.name !== fileName || this.elements.editorPane?.hidden) {
+            await this.editFile(fileName);
+        }
+        if (this.scriptEditor?.name !== fileName) return;
+        this.setEditorCollapsed(false);
+        this.scriptEditor.goToLine(line);
     },
 
     // "foo" -> "foo.lua"; null (and a message) for names the device can't take
@@ -58,12 +119,20 @@ export const editorUiMethods = {
     confirmDiscardEdits(nextName = null) {
         const editor = this.scriptEditor;
         if (!editor?.dirty || editor.name === nextName) return true;
-        return window.confirm(`Discard unsaved changes to ${editor.name}?`);
+        if (!window.confirm(`Discard unsaved changes to ${editor.name}?`)) return false;
+        clearDraft();
+        return true;
     },
 
     async editFile(fileName) {
         if (!this.iiiDevice.isConnected) {
             this.outputLine('Error: Not connected to usb device');
+            return;
+        }
+        // already open with edits: show it, don't reload over them
+        const open = this.scriptEditor;
+        if (open?.name === fileName && open.dirty && !this.elements.editorPane?.hidden) {
+            this.setEditorCollapsed(false);
             return;
         }
         if (!this.confirmDiscardEdits(fileName)) return;
@@ -78,6 +147,7 @@ export const editorUiMethods = {
             this.showEditorPane(true);
             editor.open(fileName, text);
             this.updateEditorTitle(false);
+            this.offerDraftRestore(fileName, text);
             editor.focus();
         } catch (error) {
             this.outputLine(`Edit error: ${error.message}`);
@@ -102,6 +172,7 @@ export const editorUiMethods = {
         const editor = this.getScriptEditor();
         this.showEditorPane(true);
         editor.open(name, '', { isNew: true });
+        this.offerDraftRestore(name, '');
         editor.focus();
     },
 
@@ -119,6 +190,7 @@ export const editorUiMethods = {
 
         if (written) {
             editor.markSaved(fileName, text);
+            if (!editor.dirty) clearDraft();
             this.updateEditorTitle(editor.dirty);
             this.requestFileListRefresh();
         } else {
@@ -155,7 +227,10 @@ export const editorUiMethods = {
 
     closeEditor() {
         const editor = this.scriptEditor;
-        if (editor?.dirty && !window.confirm(`Close ${editor.name} without saving?`)) return;
+        if (editor?.dirty) {
+            if (!window.confirm(`Close ${editor.name} without saving?`)) return;
+            clearDraft();
+        }
         editor?.close();
         this.showEditorPane(false);
         this.elements.replInput?.focus();

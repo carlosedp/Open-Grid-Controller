@@ -471,6 +471,11 @@ body.is-resizing-explorer * {
     color: var(--accent-hover);
 }
 
+.repl-output .output-file-link {
+    text-decoration: underline dotted;
+    cursor: pointer;
+}
+
 .repl-actions {
     display: flex;
     align-items: center;

@@ -15,6 +15,8 @@ export interface EditorOptions {
 export interface PrismEditor {
     readonly container: HTMLDivElement;
     readonly textarea: HTMLTextAreaElement;
+    /** [0] holds overlays; [n] is line n */
+    readonly lines: HTMLCollectionOf<HTMLDivElement>;
     readonly value: string;
     readonly focused: boolean;
     setOptions(options: Partial<EditorOptions>): void;

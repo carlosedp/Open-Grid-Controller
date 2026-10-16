@@ -142,7 +142,9 @@ export const fileMethods = {
                         { label: 'edit', fn: () => this.editFile(entry.name) },
                         { label: 'rename', fn: () => this.renameFile(entry.name) },
                         { label: 'download', fn: () => this.downloadFile(entry.name) },
-                        { label: 'first', fn: () => this.configureFirst(entry.name) },
+                        this.firstBadgeFileNames.has(entry.name)
+                            ? { label: 'not first', fn: () => this.clearFirst(entry.name) }
+                            : { label: 'first', fn: () => this.configureFirst(entry.name) },
                         { label: 'read', fn: () => this.showFile(entry.name) },
                         { label: 'delete', fn: () => this.deleteFile(entry.name) }
                     ];
@@ -307,7 +309,19 @@ export const fileMethods = {
     async configureFirst(fileName) {
         try {
             await this.executeLuaCapture(`first(${this.luaQuote(fileName)})`);
-            this.outputLine(`${fileName} will now run at at startup`);
+            this.outputLine(`${fileName} will now run at startup`);
+            await this.requestFileListRefresh();
+        } catch (error) {
+            this.outputLine(`First error: ${error.message}`);
+        }
+    },
+
+    // first() with no name deletes init.lua, so nothing runs at startup.
+    async clearFirst(fileName) {
+        if (!window.confirm(`Stop running ${fileName} at startup? This deletes init.lua.`)) return;
+        try {
+            await this.executeLuaCapture('first()');
+            this.outputLine(`${fileName} no longer runs at startup`);
             await this.requestFileListRefresh();
         } catch (error) {
             this.outputLine(`First error: ${error.message}`);
