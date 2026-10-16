@@ -1,11 +1,102 @@
 // Console output, the REPL input and what arrives from the device.
 // Mixed into diiiApp (diii.js); `this` is the app.
 
+import { LUA_GLOBALS, LUA_KEYWORDS } from './iii-api.js';
+import { complete, formatMatches, wordBefore } from './repl-complete.js';
+
 // REPL commands kept across sessions (in this browser), newest last
 const HISTORY_KEY = 'webdiii.history';
 const HISTORY_MAX = 200;
 
+// the device's globals are asked for again when older than this
+const GLOBALS_MAX_AGE_MS = 5000;
+// lists a table's string keys, and those of its metatable (methods)
+const TABLE_KEYS_LUA = (path) =>
+    `do local t = ${path} if type(t) == "table" then for k in pairs(t) do if type(k) == "string" then print(k) end end local mt = getmetatable(t) if type(mt) == "table" then for k in pairs(mt) do if type(k) == "string" then print(k) end end end end end`;
+
 export const consoleMethods = {
+    // Tab in the REPL: completes the name before the cursor (iii API, Lua,
+    // and what's defined on the device); a second Tab lists the matches.
+    async completeReplInput() {
+        const input = this.elements.replInput;
+        if (!input) return;
+        const cursor = input.selectionStart;
+        const { start, word, base, sep, member } = wordBefore(input.value, cursor);
+        if (!word) return;
+
+        const candidates = base ? await this.replMemberNames(base, sep) : await this.replTopLevelNames();
+        const { completion, matches } = complete(base ? member : word, candidates);
+        const replacement = base ? `${base}${sep}${completion}` : completion;
+
+        if (replacement !== word) {
+            input.value = input.value.slice(0, start) + replacement + input.value.slice(cursor);
+            input.selectionStart = input.selectionEnd = start + replacement.length;
+            this.lastTabListed = null;
+            return;
+        }
+        // nothing to add: the second Tab in the same place shows the options
+        const here = `${input.value}|${cursor}`;
+        if (matches.length > 1 && this.lastTabListed === here) {
+            this.outputLine('');
+            for (const line of formatMatches(matches.map((m) => (base ? `${base}${sep}${m}` : m))))
+                this.outputLine(line);
+            this.scrollOutputToBottom();
+            this.lastTabListed = null;
+        } else {
+            this.lastTabListed = here;
+        }
+    },
+
+    async replTopLevelNames() {
+        const names = new Set([...LUA_KEYWORDS, ...LUA_GLOBALS]);
+        for (const entry of this.currentApi?.() || []) {
+            if (entry.kind !== 'method' && entry.kind !== 'property') names.add(entry.name);
+        }
+        for (const name of await this.deviceGlobals()) names.add(name);
+        return names;
+    },
+
+    async replMemberNames(base, sep) {
+        const names = new Set();
+        for (const entry of this.currentApi?.() || []) {
+            if (sep === ':' && entry.kind === 'method') names.add(entry.name);
+            if (sep === '.' && entry.name.startsWith(`${base}.`)) names.add(entry.name.slice(base.length + 1));
+        }
+        for (const name of LUA_GLOBALS) {
+            if (sep === '.' && name.startsWith(`${base}.`)) names.add(name.slice(base.length + 1));
+        }
+        // what the device's table really holds (and its metatable's methods)
+        if (this.iiiDevice.isConnected && !this.uploadInProgress && /^[A-Za-z_][\w.]*$/.test(base)) {
+            try {
+                for (const line of await this.executeLuaCapture(TABLE_KEYS_LUA(base))) {
+                    const key = line.trim();
+                    if (key && !key.startsWith('__')) names.add(key);
+                }
+            } catch {
+                // device busy: complete from the API list only
+            }
+        }
+        return names;
+    },
+
+    // The device's global names (cached a few seconds): the script's own
+    // functions and variables complete too.
+    async deviceGlobals() {
+        if (!this.iiiDevice.isConnected || this.uploadInProgress) return [];
+        const cache = this.deviceGlobalsCache;
+        if (cache && Date.now() - cache.time < GLOBALS_MAX_AGE_MS) return cache.names;
+        try {
+            const lines = await this.executeLuaCapture(
+                'for k in pairs(_G) do if type(k) == "string" then print(k) end end'
+            );
+            const names = lines.map((l) => l.trim()).filter((n) => /^[A-Za-z_]\w*$/.test(n) && !n.startsWith('__'));
+            this.deviceGlobalsCache = { time: Date.now(), names };
+            return names;
+        } catch {
+            return cache?.names || [];
+        }
+    },
+
     restoreHistory() {
         try {
             const saved = JSON.parse(window.localStorage.getItem(HISTORY_KEY) || '[]');
@@ -112,6 +203,12 @@ export const consoleMethods = {
         }
 
         const noModifiers = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
+
+        if (noModifiers && event.key === 'Tab') {
+            event.preventDefault();
+            this.completeReplInput();
+            return;
+        }
 
         if (noModifiers && event.key === 'ArrowUp') {
             event.preventDefault();
@@ -324,6 +421,7 @@ export const consoleMethods = {
         this.outputLine(' u            open file picker (same as upload button)');
         this.outputLine(' r            re-upload and run last uploaded script');
         this.outputLine(' hc           clear the command history (kept across sessions)');
+        this.outputLine(' Tab          complete a name (twice: list the options)');
         this.outputLine(' Cmd/Ctrl+Shift+C  connect/disconnect');
         if (this.gridSupported) {
             this.outputLine(' grid ▸       (top of the console) show the LEDs and press keys from here');
