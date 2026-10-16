@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.5"
+#define DEVICE_VERSION_BASE "og-0.3.6"
 
 #include <string.h>
 
@@ -30,6 +30,7 @@
 #include "util.h"
 #include "vm.h"
 
+#include "board.h"
 #include "file_dump.h"
 #include "grid.h"
 #include "heap_stats.h"
@@ -438,6 +439,12 @@ static int l_og_rename_file(lua_State *l) {
   return 2;
 }
 
+// og_board(): which board this build is for, e.g. "xiao_rp2040"
+static int l_og_board(lua_State *l) {
+  lua_pushstring(l, OG_BOARD_NAME);
+  return 1;
+}
+
 static const struct luaL_Reg device_lib[] = {
     {"grid_led", l_grid_led},
     {"grid_led_get", l_grid_led_get},
@@ -454,6 +461,7 @@ static const struct luaL_Reg device_lib[] = {
     {"og_led", l_og_led},
     {"og_dump_file", og_l_dump_file},
     {"og_rename_file", l_og_rename_file},
+    {"og_board", l_og_board},
     {NULL, NULL},
 };
 
@@ -477,6 +485,7 @@ static const char *device_help_str =
     "  og_led(r,g,b)   status LED color (0-255); og_led() = mode color\n"
     "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n"
     "  og_dump_file(f) print a file as base64, then size and CRC-32\n"
-    "  og_rename_file(old, new)  rename a file (replaces new)\n";
+    "  og_rename_file(old, new)  rename a file (replaces new)\n"
+    "  og_board()      board this firmware is built for\n";
 
 const char *device_help_txt() { return device_help_str; }
