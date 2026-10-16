@@ -83,7 +83,7 @@ Select the address jumpers as shown by the red circles in the image below:
 
 ## Firmware Build and Upload
 
-The firmware is built with PlatformIO. The target board is Raspberry Pi Pico.
+This section covers the original Arduino firmware in `sw/`, which only has the monome serial protocol. For the iii firmware, which has both modes, see [iii Firmware](#iii-firmware-experimental). The Arduino firmware is built with PlatformIO. The target board is Raspberry Pi Pico.
 
 1. Install VS Code and the PlatformIO extension.
 2. Open the `sw` directory in this repository.
@@ -97,7 +97,27 @@ pio run -t upload
 
 ## iii Firmware (experimental)
 
-`iii-open-grid/` is a second firmware based on monome's [iii](https://monome.org/docs/iii/): Lua scripts run on the grid itself, it shows up as a USB MIDI device, and scripts are written and uploaded from the browser with [diii](https://monome.org/diii). It also keeps a monome serial mode for norns and serialosc. Hold the top-left key while plugging in (or hold BOOT for 2 seconds while running) to switch between the two modes.
+`iii-open-grid/` is a second firmware based on monome's [iii](https://monome.org/docs/iii/): Lua scripts run on the grid itself, it shows up as a USB MIDI device, and scripts are written and uploaded from the browser with [diii](https://monome.org/diii). It also keeps a monome serial mode for norns and serialosc.
+
+### Two modes: iii and monome serial
+
+The iii firmware contains both modes. The grid stays in the last one you chose, even after unplugging.
+
+| Mode | Status LED | Shows up as | Use it with |
+| --- | --- | --- | --- |
+| **iii** (default) | green | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [diii](https://diii.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed |
+| **monome serial** | blue | a monome grid (`monome` / `grid`) | **norns** directly (plug into its USB port), and **Max/MSP, Pure Data, SuperCollider, VCV Rack, TouchDesigner**, etc. on a computer through monome's [serialosc](https://monome.org/docs/serialosc/setup/) |
+
+To switch modes, use any of these:
+
+- **Top-left key**: hold it while plugging in. This toggles iii ↔ serial. When switching to iii, keep holding for about 1 second (the top row fills up) to also skip `init.lua`.
+- **BOOT button**: hold it for 2 seconds while the grid is running (the LED turns magenta). This toggles the mode and restarts. It works without keypads.
+- **From diii**: type `og_set_mode(1)` for monome serial, or `og_set_mode(0)` for iii. Use this only while in iii mode, because serial mode has no REPL.
+- **Back to iii, skipping `init.lua`**: press BOOT while the LED is cyan, during the first second after plugging in. The LED turns amber. Use this to recover from a script that hangs at startup.
+
+Holding BOOT *while* plugging in does something else: it enters the RP2040's bootloader (an `RPI-RP2` drive) for flashing a firmware.
+
+Serial mode follows the command set of monome's own grid firmware. It hasn't been tested on norns or serialosc yet. Until it has, the Arduino firmware in `sw/` (see [Firmware Build and Upload](#firmware-build-and-upload)) is the known-good choice for norns.
 
 If the grid stops responding for 8 seconds (a script stuck in a loop, or a firmware hang), a watchdog resets it and it starts again with `init.lua`, so a performance setup comes back on its own. If it hangs again within 30 seconds of starting, the next start skips `init.lua` (status LED amber) so you can fix the script from diii. Either way diii shows a `watchdog:` line once it connects (og-0.3.10 or later).
 
@@ -154,7 +174,9 @@ Scripts are listed by link only. Their authors hold the copyright, and we only c
 
 ## Software Compatibility
 
-On the USB side, Open Grid uses a monome-style serial device descriptor and reports `OpenGrid` as the device ID. The firmware implements common commands such as grid size query, device ID handling, key event reporting, and single-pixel, region, and full-grid LED control. It is intended to work with music software, scripts, or custom toolchains that support monome grid devices.
+With the iii firmware, iii mode works with diii and anything that takes USB MIDI, and monome serial mode works with norns and serialosc (see [Two modes](#two-modes-iii-and-monome-serial)). The rest of this section describes the Arduino firmware in `sw/`.
+
+On the USB side, the Arduino firmware uses a monome-style serial device descriptor and reports `OpenGrid` as the device ID. The firmware implements common commands such as grid size query, device ID handling, key event reporting, and single-pixel, region, and full-grid LED control. It is intended to work with music software, scripts, or custom toolchains that support monome grid devices.
 
 The current firmware focuses on providing a stable 8x16 grid interaction layer. If your software depends on more complete monome protocol behavior, test it against your target application and extend `sw/src/MonomeSerialDevice.cpp` as needed.
 
