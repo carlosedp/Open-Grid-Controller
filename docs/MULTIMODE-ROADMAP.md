@@ -53,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.8)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.9)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -94,6 +94,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   | `og_rename_file(a, b)` | rename file `a` to `b` in one atomic step (replaces `b`); for diii's rename |
   | `og_board()`      | board the build is for (`xiao_rp2040`, `rp2040_zero`); for diii's update dialog |
   | `og_midi_monitor(on)` | report MIDI in/out as `^^midi(i|o,b1,b2,b3)` lines; for diii's MIDI monitor |
+  | `og_midi_counts(on)` | MIDI in/out totals and clock tempo as `^^midic(in,out,bpm x10)`, ≤ 2/s, when changed |
 
 - **Cores**: core 1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty) and
   runs from RAM; core 0 runs USB + Lua with 8 KB of stack (both scratch banks). Key events cross
@@ -416,7 +417,9 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
   5. ✅ MIDI monitor (og-0.3.8, verified on the XIAO 2026-10-16): a drawer above the button bar; the firmware
      reports MIDI in and out (`og_midi_monitor`, link-time wraps of `midi_tx`/`vm_handle_midi`)
      instead of diii opening the port, so both directions show and a DAW keeps the port on
-     Windows. Decoded rows, clock hidden but read as bpm, filters, pause.
+     Windows. Decoded rows, clock hidden but read as bpm, filters, pause. og-0.3.9: the device
+     counts MIDI and measures the clock tempo itself (`og_midi_counts`), so the bar shows activity
+     with the drawer closed.
   6. ✅ iii Lua command reference and help in diii, offline: `js/iii-api.js` feeds autocomplete
      (with parameter tab stops and event snippets), hover help, and a searchable "reference".
 
