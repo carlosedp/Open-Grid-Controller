@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.10"
+#define DEVICE_VERSION_BASE "og-0.3.11"
 
 #include <string.h>
 
@@ -158,7 +158,17 @@ static void bootsel_task(void) {
   held_ms = bootsel_pressed() ? held_ms + BOOTSEL_POLL_MS : 0;
   if (held_ms > 0) og_status_flash(OG_COLOR_MODE_SWITCH, 2 * BOOTSEL_POLL_MS);
   if (held_ms >= BOOTSEL_HOLD_MS) {
-    set_mode_and_reboot(mode == MODE_III ? MODE_SERIAL : MODE_III);
+    // The boot ROM checks BOOT on every reset, ours included: rebooting while
+    // it is still held lands in the USB bootloader. Show the new mode's color
+    // and wait for the release.
+    const uint8_t next = mode == MODE_III ? MODE_SERIAL : MODE_III;
+    og_status_flash(next == MODE_SERIAL ? OG_COLOR_SERIAL : OG_COLOR_III, UINT32_MAX / 1000);
+    og_status_task();
+    while (bootsel_pressed()) {
+      watchdog_update();
+      sleep_ms(BOOTSEL_POLL_MS);
+    }
+    set_mode_and_reboot(next);
   }
 }
 
