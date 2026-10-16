@@ -53,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.4)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.5)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -91,6 +91,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   | `og_led(r,g,b)`  | status LED color 0–255; `og_led()` returns it to the mode color                 |
   | `og_mirror(on)`  | stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii             |
   | `og_dump_file(f)` | print file `f` as base64 lines, then `size crc32`; for diii's backup           |
+  | `og_rename_file(a, b)` | rename file `a` to `b` in one atomic step (replaces `b`); for diii's rename |
 
 - **Cores**: core 1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty) and
   runs from RAM; core 0 runs USB + Lua with 8 KB of stack (both scratch banks). Key events cross
@@ -400,7 +401,8 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      dot. On Open Grid firmware a failed save keeps the device's file. Tooling: `diii/package.json`
      for dev tools, Node dev server, `make diii-check` / `diii-vendor`. Then: "+" for new files,
      editor beside or above the console (sizes remembered), "–" hides it to a strip, device actions
-     (reboot, bootloader, backup, restore, reformat) in a header menu next to connect. Later: tabs,
+     (reboot, bootloader, backup, restore, reformat) in a header menu next to connect; rename
+     (atomic with og-0.3.5's `og_rename_file`, copy + delete elsewhere). Later: tabs,
      iii API autocomplete (prism-code-editor's autocomplete extension).
   5. MIDI monitor like the Alloy Controller's, through the browser's Web MIDI (no firmware change).
   6. iii Lua command reference and help in diii, cached for offline use.
