@@ -474,7 +474,7 @@ level→RGB palette register, an RGB block write, and a documented way to update
 - **Windows descriptor caching**: different PIDs per mode avoid stale drivers.
 - **GPL-3.0**: firmware built from `iii-open-grid/` is GPL-3.0 (iii). The Arduino firmware in `sw/`
   and the repo's other files keep their own license — the repo has no top-level LICENSE yet; add one.
-- ✅ **Files after a firmware update** (fixed in og-0.3.7): iii placed the mode and filesystem right
+- ✅ **Files after a firmware update** (fixed in og-0.3.7, verified on the XIAO 2026-10-16: backup, update, restore, and a second update keeps the files): iii placed the mode and filesystem right
   after the program, so an update growing past a 64 KB boundary (og-0.3.6 had 7 KB left) would
   have left the device without its files. They are now pinned (status sector 0x80000, filesystem
   0x90000, ~1.4 MB); the program has 199 KB to grow, checked after each build. Going from og-0.3.6
