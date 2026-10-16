@@ -27,6 +27,12 @@ export class MidiMonitor {
         this.frame = 0;
         /** @type {ReturnType<typeof setTimeout> | 0} */
         this.statusTimer = 0;
+        /**
+         * Counts from the device (og_midi_counts, og-0.3.9+): totals since it
+         * booted, and the totals at the last clear. null: count our own rows.
+         * @type {{ in: number, out: number, bpm: number | null, base: { in: number, out: number } } | null}
+         */
+        this.device = null;
         this.startTime = 0;
         this.updateStatus();
     }
@@ -110,7 +116,31 @@ export class MidiMonitor {
         return perClock > 0 ? 60000 / (perClock * 24) : null;
     }
 
+    /**
+     * A "^^midic" summary: totals since the device booted, tempo x10 (0: no clock).
+     * @param {number} totalIn
+     * @param {number} totalOut
+     * @param {number} bpmX10
+     */
+    setDeviceCounts(totalIn, totalOut, bpmX10) {
+        // first summary, or the device restarted (its totals went back): count from here
+        const base =
+            !this.device || totalIn < this.device.base.in || totalOut < this.device.base.out
+                ? { in: totalIn, out: totalOut }
+                : this.device.base;
+        this.device = { in: totalIn, out: totalOut, bpm: bpmX10 ? bpmX10 / 10 : null, base };
+        this.updateStatus();
+    }
+
     updateStatus() {
+        if (this.device) {
+            const d = this.device;
+            const parts = [`in ${d.in - d.base.in}`, `out ${d.out - d.base.out}`];
+            if (d.bpm) parts.push(`clock ${d.bpm.toFixed(1)} bpm`);
+            if (this.paused) parts.push('paused');
+            this.elements.status.textContent = parts.join(' · ');
+            return;
+        }
         const bpm = this.bpm();
         const parts = [`in ${this.counts.in}`, `out ${this.counts.out}`];
         if (this.counts.clock) parts.push(bpm ? `clock ${bpm.toFixed(1)} bpm` : `clock ${this.counts.clock}`);
@@ -138,8 +168,19 @@ export class MidiMonitor {
         this.counts = { in: 0, out: 0, clock: 0 };
         this.clockTimes = [];
         this.startTime = 0;
+        if (this.device) this.device.base = { in: this.device.in, out: this.device.out };
         this.updateStatus();
     }
+}
+
+/**
+ * "^^midic(12,3,1200)" -> [12, 3, 1200]; null for other lines.
+ * @param {string} line
+ * @returns {[number, number, number] | null}
+ */
+export function parseMidiCountsLine(line) {
+    const match = line.match(/^\^\^midic\((\d+),(\d+),(\d+)\)/);
+    return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
 }
 
 /**

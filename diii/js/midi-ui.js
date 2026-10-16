@@ -3,7 +3,7 @@
 // receives; closed, the monitor is off again. The list itself is in
 // midi-monitor.js. Mixed into diiiApp (diii.js); `this` is the app.
 
-import { MidiMonitor, parseMidiLine } from './midi-monitor.js';
+import { MidiMonitor, parseMidiCountsLine, parseMidiLine } from './midi-monitor.js';
 
 const DRAWER_KEY = 'webdiii.midiDrawer';
 
@@ -70,10 +70,26 @@ export const midiUiMethods = {
         }
     },
 
-    // after (re)connecting: a new device may or may not have the monitor
+    // after (re)connecting: a new device may or may not have the monitor.
+    // Counts (og-0.3.9+) run whenever connected, so the bar shows activity
+    // with the list closed too.
     async resumeMidiMonitor() {
         this.midiMonitorSupported = undefined;
+        try {
+            const probe = await this.executeLuaCapture('print(og_midi_counts ~= nil)');
+            if (probe.some((line) => line.trim() === 'true')) {
+                this.getMidiMonitor();
+                await this.executeLua('og_midi_counts(true)');
+            }
+        } catch {
+            // device busy; the next connect tries again
+        }
         if (this.midiDrawerOpen) await this.setMidiMonitor(true);
+    },
+
+    handleMidiCountsLine(line) {
+        const parsed = parseMidiCountsLine(line);
+        if (parsed) this.getMidiMonitor().setDeviceCounts(...parsed);
     },
 
     handleMidiLine(line) {

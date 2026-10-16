@@ -254,6 +254,10 @@ export const consoleMethods = {
             this.handleMidiLine(cleaned);
             return;
         }
+        if (cleaned.startsWith('^^midic(')) {
+            this.handleMidiCountsLine(cleaned);
+            return;
+        }
 
         if (this.handleSuppressedOutputLine(cleaned)) {
             return;
