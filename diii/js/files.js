@@ -301,15 +301,15 @@ export const fileMethods = {
     },
 
     parseMemoryFooterFromMem(lines) {
-        const bytes = Number.parseInt(String(lines[0] || '').split('\t')[0], 10);
+        const bytes = Number.parseInt(lines[0], 10);
         return Number.isFinite(bytes) && bytes >= 0 ? bytes : null;
     },
 
-    // "flash\tlua\theapFree\theapTotal" (bytes; the heap fields are empty without og_mem)
+    // iii's print() puts each argument on its own line (not tab-separated like
+    // standard Lua): flash, lua, heapFree, heapTotal (bytes). Without og_mem the
+    // heap values are "" and their empty lines don't arrive.
     parseDeviceMemory(lines) {
-        const [, lua, heapFree, heapTotal] = String(lines[0] || '')
-            .split('\t')
-            .map((field) => Number.parseInt(field, 10));
+        const [, lua, heapFree, heapTotal] = lines.map((line) => Number.parseInt(line, 10));
         const valid = (n) => (Number.isFinite(n) && n >= 0 ? n : null);
         const free = valid(heapFree);
         const total = valid(heapTotal);

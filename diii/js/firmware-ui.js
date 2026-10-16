@@ -9,10 +9,11 @@ export const firmwareUiMethods = {
     // status pill, then one update check per session.
     async detectFirmware() {
         try {
-            const lines = await this.executeLuaCapture('print(device_version(), og_board and og_board() or "")');
-            const [version = '', board = ''] = String(lines[0] || '')
-                .split('\t')
-                .map((s) => s.trim());
+            // one print per value: iii's print() puts each argument on its own line
+            const lines = await this.executeLuaCapture(
+                'print(device_version())\nif og_board then print(og_board()) end'
+            );
+            const [version = '', board = ''] = lines.map((s) => String(s).trim());
             this.firmwareVersion = version || null;
             this.firmwareBoard = board || null;
         } catch {

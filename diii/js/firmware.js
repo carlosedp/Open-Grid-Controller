@@ -4,7 +4,9 @@
 // iii-open-grid-og-X.Y.Z-<board>.uf2.
 
 export const RELEASES_PAGE = 'https://github.com/carlosedp/Open-Grid-Controller/releases';
-const LATEST_RELEASE_API = 'https://api.github.com/repos/carlosedp/Open-Grid-Controller/releases/latest';
+// The list, not /releases/latest: with no release yet, /latest answers 404,
+// which the browser logs as an error; the list is just empty.
+const RELEASES_API = 'https://api.github.com/repos/carlosedp/Open-Grid-Controller/releases?per_page=10';
 
 /**
  * "og-0.3.6" (also "og-0.3.6-200mhz") -> [0, 3, 6]; null when it isn't an
@@ -63,8 +65,15 @@ export function parseRelease(json) {
  * @returns {Promise<Release | null>}
  */
 export async function fetchLatestRelease(fetchFn = fetch) {
-    const response = await fetchFn(LATEST_RELEASE_API, { headers: { Accept: 'application/vnd.github+json' } });
-    if (response.status === 404) return null;
+    const response = await fetchFn(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } });
     if (!response.ok) throw new Error(`GitHub answered ${response.status}`);
-    return parseRelease(await response.json());
+    const list = await response.json();
+    if (!Array.isArray(list)) return null;
+    // newest first; skip drafts and pre-releases, and releases without UF2s
+    for (const json of list) {
+        if (json.draft || json.prerelease) continue;
+        const release = parseRelease(json);
+        if (release) return release;
+    }
+    return null;
 }

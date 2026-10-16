@@ -127,6 +127,9 @@ iii is a git subtree so our changes can go upstream as patches.
 - **The filesystem starts right after the program** (iii's `flash_init`, 64 KB aligned): a build
   that grows past the next 64 KB boundary moves it and the device finds no files. og-0.3.6 has
   7 KB left before 0x50000; check `__flash_binary_end` in the ELF when firmware grows.
+- **iii's `print()` puts each argument on its own line** (standard Lua separates them with tabs),
+  and an empty string prints an empty line that diii drops. Code reading `print(a, b)` gets two
+  lines; better one value per `print`.
 - **Write files with `LFS_O_TRUNC`**, or a shorter new file keeps the old file's tail.
 - **Serial output**: 4 KB buffer, held until a host has had the port open for 200 ms (Chrome on
   Windows drops what arrives while opening), drained synchronously when full, dropped (after one
