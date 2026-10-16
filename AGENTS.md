@@ -124,9 +124,10 @@ iii is a git subtree so our changes can go upstream as patches.
 - **Memory:** ~223 KB of heap. Compiling a big script is the tightest moment (kria_iii peaks at
   ~155 KB, og-0.3.3). `og_mem()` shows the C heap; Lua's `mem()` only counts Lua's share.
 - **Files uploaded through the REPL end with a `\0`**; anything reading scripts must stop there.
-- **The filesystem starts right after the program** (iii's `flash_init`, 64 KB aligned): a build
-  that grows past the next 64 KB boundary moves it and the device finds no files. og-0.3.6 has
-  7 KB left before 0x50000; check `__flash_binary_end` in the ELF when firmware grows.
+- **The filesystem is pinned in flash** (og-0.3.7: status sector 0x80000, filesystem 0x90000 via
+  `III_FLASH_STATUS_OFFSET`); iii's default puts it right after the program, where it moves when an
+  update grows past 64 KB. The build fails if the program reaches it. Changing
+  `OG_FLASH_STATUS_OFFSET` moves the files once: say so in the release notes.
 - **iii's `print()` puts each argument on its own line** (standard Lua separates them with tabs),
   and an empty string prints an empty line that diii drops. Code reading `print(a, b)` gets two
   lines; better one value per `print`.

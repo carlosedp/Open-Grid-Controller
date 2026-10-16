@@ -53,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.6)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.7)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -474,12 +474,11 @@ level→RGB palette register, an RGB block write, and a documented way to update
 - **Windows descriptor caching**: different PIDs per mode avoid stale drivers.
 - **GPL-3.0**: firmware built from `iii-open-grid/` is GPL-3.0 (iii). The Arduino firmware in `sw/`
   and the repo's other files keep their own license — the repo has no top-level LICENSE yet; add one.
-- **Files after a firmware update**: iii puts the filesystem right after the program (64 KB
-  aligned). og-0.3.6 ends at 0x4e2d0, so the filesystem is at 0x60000 with 7 KB to spare; a build
-  that grows past 0x50000 moves it to 0x70000, and the device then finds no files (they're still
-  in flash, at the old place) and no saved mode. Before that happens: pin the filesystem to a fixed
-  offset in our firmware (one move, done with a backup/restore), or move it with a migration.
-  Until then diii's update dialog tells users to back up first.
+- ✅ **Files after a firmware update** (fixed in og-0.3.7): iii placed the mode and filesystem right
+  after the program, so an update growing past a 64 KB boundary (og-0.3.6 had 7 KB left) would
+  have left the device without its files. They are now pinned (status sector 0x80000, filesystem
+  0x90000, ~1.4 MB); the program has 199 KB to grow, checked after each build. Going from og-0.3.6
+  or older to og-0.3.7 moves them once (back up, update, restore; diii's dialog says so).
 - **Lua memory** (M4): compiling big scripts is still the peak (kria: 155 of 223 KB), with ~68 KB
   to spare.
 - **Behavior changes vs. stock iii**: out of memory is now a Lua error instead of a reboot (breaks
