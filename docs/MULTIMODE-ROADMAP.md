@@ -53,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.5)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.6)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -92,6 +92,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   | `og_mirror(on)`  | stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii             |
   | `og_dump_file(f)` | print file `f` as base64 lines, then `size crc32`; for diii's backup           |
   | `og_rename_file(a, b)` | rename file `a` to `b` in one atomic step (replaces `b`); for diii's rename |
+  | `og_board()`      | board the build is for (`xiao_rp2040`, `rp2040_zero`); for diii's update dialog |
 
 - **Cores**: core 1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty) and
   runs from RAM; core 0 runs USB + Lua with 8 KB of stack (both scratch banks). Key events cross
@@ -405,8 +406,10 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      (atomic with og-0.3.5's `og_rename_file`, copy + delete elsewhere). Later: tabs,
      iii API autocomplete (prism-code-editor's autocomplete extension).
      Round 1 of UX polish: clickable `file.lua:N:` errors open the editor at the line, console
-     scroll lock, unsaved drafts kept in the browser, "not first", multi-file upload. Next:
-     the MIDI monitor or firmware update helper; also tabs,
+     scroll lock, unsaved drafts kept in the browser, "not first", multi-file upload. ✅ Memory in the explorer
+     footer (Lua, and the C heap via og_mem). ✅ Firmware version in the status pill and an
+     update helper (device ▾ → firmware: latest GitHub release, download for this board, backup,
+     bootloader, steps); `make release` publishes the UF2s. Next: the MIDI monitor; also tabs,
      ✅ REPL history across sessions (`hc` clears it), memory in the footer, the virtual grid beside
      the editor, Tab completion in the REPL.
   5. MIDI monitor like the Alloy Controller's, through the browser's Web MIDI (no firmware change).
@@ -471,6 +474,12 @@ level→RGB palette register, an RGB block write, and a documented way to update
 - **Windows descriptor caching**: different PIDs per mode avoid stale drivers.
 - **GPL-3.0**: firmware built from `iii-open-grid/` is GPL-3.0 (iii). The Arduino firmware in `sw/`
   and the repo's other files keep their own license — the repo has no top-level LICENSE yet; add one.
+- **Files after a firmware update**: iii puts the filesystem right after the program (64 KB
+  aligned). og-0.3.6 ends at 0x4e2d0, so the filesystem is at 0x60000 with 7 KB to spare; a build
+  that grows past 0x50000 moves it to 0x70000, and the device then finds no files (they're still
+  in flash, at the old place) and no saved mode. Before that happens: pin the filesystem to a fixed
+  offset in our firmware (one move, done with a backup/restore), or move it with a migration.
+  Until then diii's update dialog tells users to back up first.
 - **Lua memory** (M4): compiling big scripts is still the peak (kria: 155 of 223 KB), with ~68 KB
   to spare.
 - **Behavior changes vs. stock iii**: out of memory is now a Lua error instead of a reboot (breaks

@@ -64,6 +64,8 @@ Agents can build but can't run anything on the device. The maintainer flashes an
 
 ## Conventions
 
+- **Releases**: `make release` (after pushing) creates the GitHub release `og-X.Y.Z` with both UF2s;
+  diii's firmware dialog offers it to devices on older versions. Ask the maintainer first.
 - **Version**: bump `DEVICE_VERSION_BASE` in `iii-open-grid/src/main.c` and
   `pico_set_program_version` in `iii-open-grid/CMakeLists.txt` together for every firmware
   build handed out for testing (`og-X.Y.Z`; optional builds add `-200mhz` / `-vmflash`).
@@ -122,6 +124,9 @@ iii is a git subtree so our changes can go upstream as patches.
 - **Memory:** ~223 KB of heap. Compiling a big script is the tightest moment (kria_iii peaks at
   ~155 KB, og-0.3.3). `og_mem()` shows the C heap; Lua's `mem()` only counts Lua's share.
 - **Files uploaded through the REPL end with a `\0`**; anything reading scripts must stop there.
+- **The filesystem starts right after the program** (iii's `flash_init`, 64 KB aligned): a build
+  that grows past the next 64 KB boundary moves it and the device finds no files. og-0.3.6 has
+  7 KB left before 0x50000; check `__flash_binary_end` in the ELF when firmware grows.
 - **Write files with `LFS_O_TRUNC`**, or a shorter new file keeps the old file's tail.
 - **Serial output**: 4 KB buffer, held until a host has had the port open for 200 ms (Chrome on
   Windows drops what arrives while opening), drained synchronously when full, dropped (after one
