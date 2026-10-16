@@ -34,7 +34,7 @@ Open Grid can be used alongside other hardware controllers. The photo above show
 
 ## Bill of Materials
 
-FREEPOET OpenGrid kit: https://github.com/FREEPOET-OFFICIAL/FREEPOET_Keypad
+FREEPOET OpenGrid kit: <https://github.com/FREEPOET-OFFICIAL/FREEPOET_Keypad>
 
 - RP2040-Zero main controller board.
 - Two 8x8 FREEPOET_Keypad key/LED boards.
@@ -44,9 +44,9 @@ Parts to prepare separately:
 
 - 3D-printed top cover and bottom shell.
 - 4 wires.
-- 24pcs M2*6 mm self-tapping screws.
-- 8pcs M2*10 mm self-tapping screws.
-- 6pcs M3*8 mm self-tapping screws.
+- 24pcs M2\*6 mm self-tapping screws.
+- 8pcs M2\*10 mm self-tapping screws.
+- 6pcs M3\*8 mm self-tapping screws.
 
 The firmware uses Pico I2C0 by default:
 
@@ -103,19 +103,19 @@ pio run -t upload
 
 The iii firmware contains both modes. The grid stays in the last one you chose, even after unplugging.
 
-| Mode | Status LED | Shows up as | Use it with |
-| --- | --- | --- | --- |
-| **iii** (default) | green | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [diii](https://diii.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed |
-| **monome serial** | blue | a monome grid (`monome` / `grid`) | **norns** directly (plug into its USB port), and **Max/MSP, Pure Data, SuperCollider, VCV Rack, TouchDesigner**, etc. on a computer through monome's [serialosc](https://monome.org/docs/serialosc/setup/) |
+| Mode              | Status LED | Shows up as                                            | Use it with                                                                                                                                                                                                |
+| ----------------- | ---------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **iii** (default) | green      | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [diii](https://diii.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed                                                              |
+| **monome serial** | blue       | a monome grid (`monome` / `grid`)                      | **norns** directly (plug into its USB port), and **Max/MSP, Pure Data, SuperCollider, VCV Rack, TouchDesigner**, etc. on a computer through monome's [serialosc](https://monome.org/docs/serialosc/setup/) |
 
 To switch modes, use any of these:
 
 - **Top-left key**: hold it while plugging in. This toggles iii ↔ serial. When switching to iii, keep holding for about 1 second (the top row fills up) to also skip `init.lua`.
-- **BOOT button**: hold it while the grid is running. The LED flashes magenta, and after 2 seconds it shows the new mode's color (blue or green). Release the button and the grid restarts in that mode. It works without keypads. Before og-0.3.11 the restart happened while the button was still held, which put the board into the bootloader. Unplugging and plugging it back in then started it in the new mode.
+- **BOOT button**: hold it for 2 seconds while the grid is running (the LED turns magenta). This toggles the mode and restarts. It works without keypads.
 - **From diii**: type `og_set_mode(1)` for monome serial, or `og_set_mode(0)` for iii. Use this only while in iii mode, because serial mode has no REPL.
 - **Back to iii, skipping `init.lua`**: press BOOT while the LED is cyan, during the first second after plugging in. The LED turns amber. Use this to recover from a script that hangs at startup.
 
-Holding BOOT *while* plugging in does something else: it enters the RP2040's bootloader (an `RPI-RP2` drive) for flashing a firmware.
+Holding BOOT _while_ plugging in does something else: it enters the RP2040's bootloader (an `RPI-RP2` drive) for flashing a firmware.
 
 Serial mode follows the command set of monome's own grid firmware. It hasn't been tested on norns or serialosc yet. Until it has, the Arduino firmware in `sw/` (see [Firmware Build and Upload](#firmware-build-and-upload)) is the known-good choice for norns.
 
@@ -142,19 +142,19 @@ The first build downloads pico-sdk 2.2.0, the Arm toolchain, CMake and Ninja thr
 
 diii works with any iii device (monome grids and arcs with their stock iii firmware, too). The extras that need the Open Grid firmware hide themselves or say so:
 
-| | Stock iii firmware | Open Grid firmware |
-| --- | --- | --- |
-| REPL, history, Tab completion, uploads (several at once), run, new, delete, first / not first | ✅ | ✅ |
-| Editor: autocomplete, hover help, reference, drafts, clickable errors, line wrap | ✅ | ✅ |
-| Read, edit, download, backup: files come back exactly (blank lines and all) | ✅ slower: read in 3 KB pieces | ✅ fast (`og_dump_file`, og-0.3.4+) |
-| Rename | ✅ copy, then delete | ✅ one atomic step (`og_rename_file`, og-0.3.5+) |
-| Save from the editor with a syntax error | ⚠ the device's copy is deleted (your text stays in the editor) | ✅ the device keeps the old file |
-| Scripts bigger than 32 KB | ❌ stock iii's upload limit | ✅ |
-| Memory in the explorer footer | Lua's share only | ✅ Lua and the C heap (`og_mem`) |
-| Virtual grid drawer (LEDs, press keys from the browser; not in monome's diii) | ❌ hidden | ✅ (`og_mirror`, `og_key`) |
-| MIDI monitor list | ❌ says it needs og-0.3.8 | ✅ og-0.3.8+ |
-| MIDI counts and clock tempo with the drawer closed | ❌ | ✅ og-0.3.9+ |
-| Firmware update dialog | shows the version; no Open Grid updates offered | ✅ newest release for your board |
+|                                                                                               | Stock iii firmware                                             | Open Grid firmware                               |
+| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------ |
+| REPL, history, Tab completion, uploads (several at once), run, new, delete, first / not first | ✅                                                             | ✅                                               |
+| Editor: autocomplete, hover help, reference, drafts, clickable errors, line wrap              | ✅                                                             | ✅                                               |
+| Read, edit, download, backup: files come back exactly (blank lines and all)                   | ✅ slower: read in 3 KB pieces                                 | ✅ fast (`og_dump_file`, og-0.3.4+)              |
+| Rename                                                                                        | ✅ copy, then delete                                           | ✅ one atomic step (`og_rename_file`, og-0.3.5+) |
+| Save from the editor with a syntax error                                                      | ⚠ the device's copy is deleted (your text stays in the editor) | ✅ the device keeps the old file                 |
+| Scripts bigger than 32 KB                                                                     | ❌ stock iii's upload limit                                    | ✅                                               |
+| Memory in the explorer footer                                                                 | Lua's share only                                               | ✅ Lua and the C heap (`og_mem`)                 |
+| Virtual grid drawer (LEDs, press keys from the browser)                                       | ❌ hidden                                                      | ✅ (`og_mirror`, `og_key`)                       |
+| MIDI monitor list                                                                             | ❌ says it needs og-0.3.8                                      | ✅ og-0.3.8+                                     |
+| MIDI counts and clock tempo with the drawer closed                                            | ❌                                                             | ✅ og-0.3.9+                                     |
+| Firmware update dialog                                                                        | shows the version; no Open Grid updates offered                | ✅ newest release for your board                 |
 
 The ⚠ and ❌ rows on stock firmware are limits of iii itself; the fixes are in our [iii pull requests](https://codeberg.org/tehn/iii/pulls) (#10–#12).
 
