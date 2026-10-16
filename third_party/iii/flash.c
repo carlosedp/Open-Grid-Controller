@@ -37,6 +37,18 @@ void flash_init() {
         FLASH_BLOCK_SIZE - (flash_status_offset % FLASH_BLOCK_SIZE);
   }
 
+#ifdef III_FLASH_STATUS_OFFSET
+  // A device can pin the status sector, and the filesystem after it, to a
+  // fixed offset: right after the program they move whenever an update grows
+  // past a 64 KB boundary, and the device then finds no files. If a program
+  // ever reaches the pinned offset, keep the computed one rather than put the
+  // filesystem on top of the program.
+  if (III_FLASH_STATUS_OFFSET % FLASH_BLOCK_SIZE == 0 &&
+      III_FLASH_STATUS_OFFSET >= flash_status_offset) {
+    flash_status_offset = III_FLASH_STATUS_OFFSET;
+  }
+#endif
+
   flash_fs_offset = flash_status_offset + FLASH_BLOCK_SIZE;
   flash_fs_start = XIP_BASE + flash_fs_offset;
 
