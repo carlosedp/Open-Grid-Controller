@@ -1,7 +1,38 @@
 // Console output, the REPL input and what arrives from the device.
 // Mixed into diiiApp (diii.js); `this` is the app.
 
+// REPL commands kept across sessions (in this browser), newest last
+const HISTORY_KEY = 'webdiii.history';
+const HISTORY_MAX = 200;
+
 export const consoleMethods = {
+    restoreHistory() {
+        try {
+            const saved = JSON.parse(window.localStorage.getItem(HISTORY_KEY) || '[]');
+            if (Array.isArray(saved))
+                this.commandHistory = saved.filter((c) => typeof c === 'string').slice(-HISTORY_MAX);
+        } catch {
+            // nothing saved, or storage blocked
+        }
+    },
+
+    saveHistory() {
+        if (this.commandHistory.length > HISTORY_MAX)
+            this.commandHistory.splice(0, this.commandHistory.length - HISTORY_MAX);
+        try {
+            window.localStorage.setItem(HISTORY_KEY, JSON.stringify(this.commandHistory));
+        } catch {
+            // storage blocked or full: history just isn't kept
+        }
+    },
+
+    clearHistory() {
+        this.commandHistory = [];
+        this.historyIndex = -1;
+        this.saveHistory();
+        this.outputLine('command history cleared');
+    },
+
     // Follows new output only while the view is at the bottom, so reading
     // further up isn't interrupted.
     isOutputAtBottom() {
@@ -154,8 +185,15 @@ export const consoleMethods = {
         const isUploadShortcut = /^u$/i.test(code.trim());
         const isReUploadShortcut = /^r$/i.test(code.trim());
 
+        if (/^hc$/i.test(code.trim())) {
+            this.clearHistory();
+            this.resetReplInput();
+            return;
+        }
+
         if (this.commandHistory.length === 0 || this.commandHistory[this.commandHistory.length - 1] !== code) {
             this.commandHistory.push(code);
+            this.saveHistory();
         }
 
         if (isHelpShortcut) {
@@ -276,6 +314,7 @@ export const consoleMethods = {
         this.outputLine(' h            show this help');
         this.outputLine(' u            open file picker (same as upload button)');
         this.outputLine(' r            re-upload and run last uploaded script');
+        this.outputLine(' hc           clear the command history (kept across sessions)');
         this.outputLine(' Cmd/Ctrl+Shift+C  connect/disconnect');
         if (this.gridSupported) {
             this.outputLine(' grid button  show the LEDs and press keys from the browser');

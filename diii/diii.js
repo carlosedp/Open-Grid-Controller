@@ -75,6 +75,7 @@ class diiiApp {
         this.renderFileList();
 
         this.outputLine('//// welcome. connect to an iii compatible grid or arc to begin.');
+        this.restoreHistory();
         this.announceDraft();
     }
 
