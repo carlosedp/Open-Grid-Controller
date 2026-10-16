@@ -407,7 +407,8 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      Round 1 of UX polish: clickable `file.lua:N:` errors open the editor at the line, console
      scroll lock, unsaved drafts kept in the browser, "not first", multi-file upload. Next:
      the MIDI monitor or firmware update helper; also tabs,
-     REPL history across sessions, memory in the footer, the virtual grid beside the editor.
+     ✅ REPL history across sessions (`hc` clears it), memory in the footer, the virtual grid beside
+     the editor, Tab completion in the REPL.
   5. MIDI monitor like the Alloy Controller's, through the browser's Web MIDI (no firmware change).
   6. ✅ iii Lua command reference and help in diii, offline: `js/iii-api.js` feeds autocomplete
      (with parameter tab stops and event snippets), hover help, and a searchable "reference".
