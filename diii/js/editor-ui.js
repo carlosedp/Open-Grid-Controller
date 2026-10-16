@@ -36,6 +36,7 @@ function saveSetting(key, value) {
 // Unsaved edits of the most recently edited file, kept in the browser so a
 // disconnect, a closed tab or a crash doesn't lose them.
 const DRAFT_KEY = 'webdiii.draft';
+const WRAP_KEY = 'webdiii.editorWrap';
 
 function loadDraft() {
     try {
@@ -62,8 +63,27 @@ export const editorUiMethods = {
                 onInput: () => this.saveDraftSoon(),
                 onSave: () => this.editorSave()
             });
+            this.applyEditorWrap(loadSetting(WRAP_KEY) === 'on');
         }
         return this.scriptEditor;
+    },
+
+    // the wrap button (↵): long lines wrap or scroll sideways; remembered
+    toggleEditorWrap() {
+        const on = !this.getScriptEditor().wordWrap;
+        saveSetting(WRAP_KEY, on ? 'on' : 'off');
+        this.applyEditorWrap(on);
+        this.scriptEditor.focus();
+    },
+
+    applyEditorWrap(on) {
+        this.scriptEditor?.setWordWrap(on);
+        const button = this.elements.editorWrapBtn;
+        if (button) {
+            button.classList.toggle('active', on);
+            button.setAttribute('aria-pressed', String(on));
+            button.title = on ? 'long lines wrap (click: scroll sideways)' : 'wrap long lines';
+        }
     },
 
     saveDraftSoon() {

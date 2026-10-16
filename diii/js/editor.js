@@ -84,6 +84,8 @@ export class ScriptEditor {
         /** @type {import('../vendor/prism-code-editor.js').PrismEditor | null} */
         this.editor = null;
         this.wasDirty = false;
+        /** long lines wrap instead of scrolling sideways (kept across files) */
+        this.wordWrap = false;
 
         host.addEventListener('keydown', (event) => {
             if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 's') {
@@ -109,6 +111,7 @@ export class ScriptEditor {
                 tabSize: 2,
                 insertSpaces: true,
                 lineNumbers: true,
+                wordWrap: this.wordWrap,
                 onUpdate: () => {
                     this.notifyIfChanged();
                     this.hooks.onInput?.();
@@ -182,6 +185,15 @@ export class ScriptEditor {
         textarea.setSelectionRange(start, start + lines[n - 1].length);
         // lines[0] is the editor's overlay; line n is lines[n]
         this.editor.lines[n]?.scrollIntoView({ block: 'center' });
+    }
+
+    /**
+     * Wraps long lines (or not) in the open file and the ones opened later.
+     * @param {boolean} on
+     */
+    setWordWrap(on) {
+        this.wordWrap = on;
+        this.editor?.setOptions({ wordWrap: on });
     }
 
     focus() {

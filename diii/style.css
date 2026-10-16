@@ -823,6 +823,11 @@ body.is-resizing-editor-rows * {
     background-color: var(--bg-surface);
 }
 
+/* the wrap toggle while wrapping is on */
+.editor-wrap-btn.active {
+    color: var(--accent-hover);
+}
+
 .editor-host {
     flex: 1;
     min-height: 0;

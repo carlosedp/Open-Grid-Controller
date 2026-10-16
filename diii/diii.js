@@ -139,6 +139,7 @@ class diiiApp {
             editorExpandBtn: document.getElementById('editorExpandBtn'),
             editorExpandTitle: document.getElementById('editorExpandTitle'),
             editorLayoutBtn: document.getElementById('editorLayoutBtn'),
+            editorWrapBtn: document.getElementById('editorWrapBtn'),
             editorMinimizeBtn: document.getElementById('editorMinimizeBtn'),
             editorResizer: document.getElementById('editorResizer'),
             editorHost: document.getElementById('editorHost'),
@@ -206,6 +207,7 @@ class diiiApp {
         on(this.elements.editorRunBtn, 'click', () => this.editorRun());
         on(this.elements.editorCloseBtn, 'click', () => this.closeEditor());
         on(this.elements.editorLayoutBtn, 'click', () => this.toggleEditorLayout());
+        on(this.elements.editorWrapBtn, 'click', () => this.toggleEditorWrap());
         on(this.elements.editorMinimizeBtn, 'click', () => this.setEditorCollapsed(true));
         on(this.elements.editorExpandBtn, 'click', () => this.setEditorCollapsed(false));
         on(this.elements.newFileBtn, 'click', () => this.newFile());
