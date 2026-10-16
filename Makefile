@@ -11,14 +11,17 @@ BOARD   ?= xiao_rp2040
 BOARDS  := xiao_rp2040 rp2040_zero
 PORT    ?= 8000
 
-# Formatters run at pinned versions through uvx/npx, so everyone gets the
-# same output with nothing to install beyond uv and node.
+# Formatters run at pinned versions (uvx here, diii/package.json for JS), so
+# everyone gets the same output with nothing to install beyond uv and node.
 CLANG_FORMAT ?= uvx clang-format@22.1.8
-PRETTIER     ?= npx -y prettier@3.6.2
 RUFF         ?= uvx ruff@0.14.0
 FORMAT_C     := $(wildcard iii-open-grid/src/*.c iii-open-grid/src/*.h)
-FORMAT_JS    := diii/diii.js diii/sw.js $(wildcard diii/js/*.js)
 FORMAT_PY    := tools iii-open-grid/tools
+
+# diii's development tools (Prettier, TypeScript, esbuild) come from
+# diii/package.json. The site itself needs no install or build.
+NODE     ?= node
+DIII_NPM := npm --prefix diii
 
 DIII_UPSTREAM ?= https://github.com/monome/web-diii
 DIII_FORK     ?= https://github.com/carlosedp/web-diii
@@ -29,8 +32,8 @@ DIII_BRANCH   ?= open-grid
 III_UPSTREAM ?= https://codeberg.org/tehn/iii
 III_BASE     := $(shell git log -1 --format=%H --grep="git-subtree-dir: third_party/iii")
 
-.PHONY: all help firmware firmware-all upload monitor diii dist clean format format-check \
-        diii-pull-upstream diii-push-fork iii-changes iii-patches iii-pull-upstream
+.PHONY: all help firmware firmware-all upload monitor diii diii-check diii-vendor dist clean \
+        format format-check diii-pull-upstream diii-push-fork iii-changes iii-patches iii-pull-upstream
 
 all: firmware
 
@@ -42,6 +45,8 @@ help:
 	@echo   make monitor         open the serial console
 	@echo diii web app:
 	@echo   make diii            serve diii at http://localhost:$(PORT)
+	@echo   make diii-check      type-check diii's standalone modules
+	@echo   make diii-vendor     rebuild diii/vendor/ (the code editor) from diii/package.json
 	@echo Release:
 	@echo   make dist            firmware for all boards + diii into dist/
 	@echo   make clean           remove build outputs and dist/
@@ -70,7 +75,18 @@ monitor:
 	$(PIO) device monitor -e $(BOARD)
 
 diii:
-	$(PYTHON) -m http.server $(PORT) --bind 127.0.0.1 --directory diii
+	$(NODE) diii/tools/serve.mjs $(PORT)
+
+# --ignore-scripts: esbuild works without its install script, and npm 11 would
+# otherwise stop to ask about it
+diii/node_modules: diii/package-lock.json
+	$(DIII_NPM) ci --ignore-scripts --no-audit --no-fund
+
+diii-check: diii/node_modules
+	$(DIII_NPM) run check
+
+diii-vendor: diii/node_modules
+	$(DIII_NPM) run vendor
 
 dist: firmware-all
 	$(PYTHON) tools/dist.py $(BOARDS)
@@ -79,14 +95,14 @@ clean:
 	$(PIO) run -t clean $(foreach b,$(BOARDS),-e $(b))
 	$(PYTHON) tools/dist.py --clean
 
-format:
+format: diii/node_modules
 	$(CLANG_FORMAT) -i $(FORMAT_C)
-	$(PRETTIER) --log-level warn --write $(FORMAT_JS)
+	$(DIII_NPM) run format
 	$(RUFF) format $(FORMAT_PY)
 
-format-check:
+format-check: diii/node_modules
 	$(CLANG_FORMAT) --dry-run --Werror $(FORMAT_C)
-	$(PRETTIER) --log-level warn --check $(FORMAT_JS)
+	$(DIII_NPM) run format:check
 	$(RUFF) format --check $(FORMAT_PY)
 
 diii-pull-upstream:

@@ -1,0 +1,20 @@
+{
+    "name": "diii",
+    "private": true,
+    "description": "diii web app (Open Grid fork of monome/web-diii). No build step: the browser loads the files as they are; npm is only for development tools and the vendored editor.",
+    "license": "GPL-3.0",
+    "type": "module",
+    "scripts": {
+        "serve": "node tools/serve.mjs",
+        "vendor": "node tools/vendor-editor.mjs",
+        "check": "tsc -p tsconfig.json",
+        "format": "prettier --log-level warn --write diii.js sw.js js tools",
+        "format:check": "prettier --log-level warn --check diii.js sw.js js tools"
+    },
+    "devDependencies": {
+        "esbuild": "0.25.10",
+        "prettier": "3.6.2",
+        "prism-code-editor": "5.4.0",
+        "typescript": "5.9.3"
+    }
+}

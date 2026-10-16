@@ -19,7 +19,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
-DIII_SKIP = {"docs", "README.md", "README-development.md", ".gitignore", ".github", ".clang-format"}
+# development files; the site itself is the files the browser loads
+DIII_SKIP = {
+    "docs",
+    "README.md",
+    "README-development.md",
+    ".gitignore",
+    ".github",
+    ".clang-format",
+    ".prettierrc.json",
+    "node_modules",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "tools",
+}
 
 
 def firmware_version() -> str:

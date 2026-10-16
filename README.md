@@ -104,7 +104,7 @@ Everything is driven from the root `Makefile` (needs `make`, `python` and Platfo
 ```bash
 make upload                    # build and flash the XIAO RP2040 (default BOARD)
 make upload BOARD=rp2040_zero  # build and flash the Open Grid kit (RP2040-Zero)
-make diii                      # serve the diii web app at http://localhost:8000
+make diii                      # serve the diii web app at http://localhost:8000 (needs Node)
 make dist                      # UF2s for all boards + the diii web app into dist/
 ```
 

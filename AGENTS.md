@@ -35,6 +35,10 @@ make dist                      # UF2s for all boards + the diii site into dist/
 - Measurement variants come from environment variables, not extra envs:
   `OG_FAST_CLOCK=1 pio run -e xiao_rp2040` (200 MHz), `OG_LUA_VM_IN_RAM=0` (interpreter in flash).
   They reuse the env's build directory, so build the default again afterwards.
+- diii has **no build step**: the browser loads `diii/` as it is. `diii/package.json` only holds
+  development tools (Prettier, TypeScript, esbuild) and the code editor, which `make diii-vendor`
+  bundles into the committed `diii/vendor/`. `make diii` (Node, no install needed) serves it;
+  `make diii-check` type-checks the standalone modules listed in `diii/tsconfig.json`.
 - Plain CMake also works: `cmake -S iii-open-grid -B build -DOG_BOARD=xiao_rp2040 -DPICO_SDK_PATH=...`.
 - Build options (CMake / PlatformIO `custom_og_*` / environment `OG_*`): `OG_BOARD`, `OG_I2C_HZ`, `OG_FAST_CLOCK`
   (200 MHz), `OG_LUA_VM_IN_RAM` (default ON).
@@ -70,7 +74,8 @@ Agents can build but can't run anything on the device. The maintainer flashes an
 - **Formatting**: run `make format` before committing; `make format-check` must pass. It runs
   clang-format (`.clang-format`: Google-based, 2 spaces, 100 columns, `char *p`) on
   `iii-open-grid/src`, Prettier (`diii/.prettierrc.json`: 4 spaces, single quotes, 120 columns) on
-  diii's JS, and ruff (`ruff.toml`) on the Python tools, all at pinned versions via uvx/npx.
+  diii's JS, and ruff (`ruff.toml`) on the Python tools, all at pinned versions (uvx, and
+  `diii/package.json` for the JS tools).
   `third_party/` and `sw/` keep upstream's style; `.editorconfig` covers the basics in editors.
   Reformatting goes in its own commit, never mixed with changes.
 - **Comments** explain why, not what; match the surrounding code's density.
