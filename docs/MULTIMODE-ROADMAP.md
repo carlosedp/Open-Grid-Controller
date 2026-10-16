@@ -53,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.10)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.11)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -75,7 +75,9 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
     switching to iii, keep holding ~1 s (row 1 fills up) to skip `init.lua` (clean boot);
   - press BOOT while the status LED is cyan (first second after power-up) → iii, clean boot
     (works without keypads; rescues a board whose `init.lua` hangs);
-  - hold BOOT for 2 s while running → toggle and reboot;
+  - hold BOOT for 2 s while running → the LED shows the new mode's color; releasing BOOT saves and
+    reboots (og-0.3.11; before, the reboot came while BOOT was held, and the boot ROM went into the
+    USB bootloader);
   - from Lua: `og_set_mode(0|1)`.
   - **watchdog** (og-0.3.10, untested): 8 s without core 0 returning to the main loop (a Lua
     loop that never ends, a hang in C or USB), or 1 s without core 1 looping, resets the board,
