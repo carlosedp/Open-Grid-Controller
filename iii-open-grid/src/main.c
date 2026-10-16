@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.9"
+#define DEVICE_VERSION_BASE "og-0.3.10"
 
 #include <string.h>
 
@@ -37,6 +37,7 @@
 #include "midi_monitor.h"
 #include "monome_serial.h"
 #include "status_led.h"
+#include "watchdog.h"
 
 // Optional builds say so, so benchmark output identifies itself.
 #if SYS_CLK_HZ == 200000000
@@ -186,6 +187,7 @@ static void boot_sweep(void) {
 }
 
 int main(void) {
+  const bool boot_loop = og_watchdog_boot();
   flash_init();
   og_status_init();
   og_grid_init();
@@ -193,7 +195,8 @@ int main(void) {
 
   // Same rules as monome's grids: holding the key at power-up toggles the
   // mode; when switching to iii, keep holding to also skip init.lua.
-  bool run_script = true;
+  // After repeated watchdog resets right after boot, skip init.lua.
+  bool run_script = !boot_loop;
   mode = flash_read_mode();
   if (boot_button_window()) {
     if (mode != MODE_III) flash_write_mode(MODE_III);
@@ -226,6 +229,7 @@ int main(void) {
 
   tud_init(BOARD_TUD_RHPORT);
   og_grid_start();
+  og_watchdog_start();
 
   if (mode == MODE_III) {
     boot_sweep();
@@ -282,6 +286,7 @@ static void mirror_task(void) {
 }
 
 void device_task() {
+  og_watchdog_task(mode == MODE_III);
   bootsel_task();
   og_heap_task();
   og_status_task();

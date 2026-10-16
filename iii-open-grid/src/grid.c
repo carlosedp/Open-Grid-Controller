@@ -19,6 +19,7 @@ static volatile uint8_t leds[OG_KEY_COUNT];
 static volatile uint8_t intensity = 15;
 static volatile bool dirty = true;
 static volatile bool changed = true;  // for og_grid_take_changed(), core 0 only
+static volatile uint32_t core1_beats = 0;
 static queue_t events;
 
 static void push_event(uint8_t x, uint8_t y, uint8_t z) {
@@ -48,6 +49,7 @@ static void __not_in_flash_func(core1_entry)(void) {
   absolute_time_t next_led = get_absolute_time();
 
   while (true) {
+    core1_beats++;
     if (time_reached(next_scan)) {
       next_scan = make_timeout_time_us(OG_SCAN_INTERVAL_US);
       og_keypad_scan(push_event);
@@ -80,6 +82,8 @@ static uint32_t core1_stack[CORE1_STACK_WORDS];
 void og_grid_start(void) {
   multicore_launch_core1_with_stack(core1_entry, core1_stack, sizeof(core1_stack));
 }
+
+uint32_t og_grid_core1_beat(void) { return core1_beats; }
 
 void og_grid_led(uint8_t x, uint8_t y, uint8_t z) {
   if (x >= OG_GRID_W || y >= OG_GRID_H) return;

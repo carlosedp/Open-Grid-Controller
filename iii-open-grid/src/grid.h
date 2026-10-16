@@ -25,6 +25,9 @@ void og_grid_init(void);
 // Start the core 1 scan/refresh loop.
 void og_grid_start(void);
 
+// Counts core 1 loop passes; stops changing if core 1 hangs (for the watchdog).
+uint32_t og_grid_core1_beat(void);
+
 void og_grid_led(uint8_t x, uint8_t y, uint8_t z);
 uint8_t og_grid_led_get(uint8_t x, uint8_t y);
 void og_grid_led_all(uint8_t z);

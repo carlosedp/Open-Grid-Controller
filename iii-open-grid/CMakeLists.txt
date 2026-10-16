@@ -96,6 +96,7 @@ add_executable(iii-open-grid
         src/newlib_locks.c
         src/status_led.c
         src/usb_descriptors.c
+        src/watchdog.c
         ${III_SOURCES}
         ${LIB_LUA_C}
 )
@@ -157,5 +158,5 @@ target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=midi_tx" "LINKER:--wrap
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.3.9")
+pico_set_program_version(iii-open-grid "og-0.3.10")
 pico_add_extra_outputs(iii-open-grid)
