@@ -2,3 +2,5 @@
 .pio/
 dist/
 diii/node_modules/
+# committed on purpose (diii has no build step); some global gitignores skip vendor/
+!diii/vendor/
