@@ -407,6 +407,9 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      (reboot, bootloader, backup, restore, reformat) in a header menu next to connect; rename
      (atomic with og-0.3.5's `og_rename_file`, copy + delete elsewhere). Later: tabs,
      iii API autocomplete (prism-code-editor's autocomplete extension).
+     On stock iii (no og_* functions) diii reads files exactly too: 3 KB per command as hex, inside
+     stock's 16 KB output buffer (edit, read, download, backup). Still stock limits there: uploads
+     over 32 KB, and a failed save deletes the device's copy (stock needs the delete first).
      Round 1 of UX polish: clickable `file.lua:N:` errors open the editor at the line, console
      scroll lock, unsaved drafts kept in the browser, "not first", multi-file upload. ✅ Memory in the explorer
      footer (Lua, and the C heap via og_mem). ✅ Firmware version in the status pill and an
