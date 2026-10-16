@@ -253,6 +253,8 @@ body.is-resizing-explorer * {
 }
 
 .file-space-footer {
+    white-space: pre-line;
+    cursor: pointer;
     border-top: 1px solid var(--neutral-trim);
     padding: 8px 10px;
     font-size: 0.78rem;

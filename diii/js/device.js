@@ -147,6 +147,7 @@ export const deviceMethods = {
         this.outputLine('disconnected');
         this.outputLine('');
         this.fileFreeSpaceBytes = null;
+        this.deviceMemory = null;
         this.fileEntries = [];
         this.updateFileSpaceFooter(null);
         this.renderFileList();

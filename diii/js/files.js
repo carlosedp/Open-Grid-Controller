@@ -10,16 +10,34 @@ export const fileMethods = {
         return `${Math.round(kb)}kb`;
     },
 
+    // Two lines: flash free for files, and RAM (what Lua holds, and on Open
+    // Grid firmware the C heap that Lua and everything else allocate from).
     updateFileSpaceFooter(bytes) {
-        if (!this.elements.fileSpaceFooter) return;
+        const footer = this.elements.fileSpaceFooter;
+        if (!footer) return;
 
-        if (!Number.isFinite(Number(bytes))) {
-            this.elements.fileSpaceFooter.textContent = 'free space: -- kb';
+        // (Number(null) is 0, so check for "no value" first)
+        if (bytes == null || !Number.isFinite(Number(bytes))) {
+            footer.textContent = 'free space: -- kb';
+            footer.title = '';
             return;
         }
 
-        const kb = Math.round(Number(bytes) / 1024);
-        this.elements.fileSpaceFooter.textContent = `free space: ${kb} kb`;
+        const kb = (n) => Math.round(Number(n) / 1024);
+        const lines = [`free space: ${kb(bytes)} kb`];
+        const mem = this.deviceMemory;
+        if (mem?.lua != null) {
+            lines.push(
+                mem.heapFree != null
+                    ? `ram: lua ${kb(mem.lua)} kb · ${kb(mem.heapFree)} of ${kb(mem.heapTotal)} kb free`
+                    : `ram: lua ${kb(mem.lua)} kb`
+            );
+        }
+        footer.textContent = lines.join('\n');
+        footer.title =
+            'flash free for files; RAM used by Lua (including garbage not yet collected)' +
+            (mem?.heapFree != null ? ' and C heap free of total' : '') +
+            '. Refreshed with the file list; click to refresh.';
     },
 
     isInitFile(name) {
@@ -191,10 +209,14 @@ export const fileMethods = {
             const lsLines = await this.executeLuaCapture(
                 'for _, __name in ipairs(fs_list_files()) do local __size = fs_file_size(__name) or 0; print("__webdiii_file\\t" .. __name .. "\\t" .. tostring(__size)) end'
             );
-            const memLines = await this.executeLuaCapture('print(fs_free_space())');
+            // free flash, Lua's memory and (Open Grid) the C heap, in one request
+            const memLines = await this.executeLuaCapture(
+                'do local f, t if og_mem then local a, _, _, _, b = og_mem(true) f, t = a, b end print(fs_free_space(), math.floor(collectgarbage("count") * 1024), f or "", t or "") end'
+            );
 
             const entries = this.parseFileEntriesFromLs(lsLines);
             this.fileFreeSpaceBytes = this.parseMemoryFooterFromMem(memLines);
+            this.deviceMemory = this.parseDeviceMemory(memLines);
 
             this.fileEntries = entries;
 
@@ -279,8 +301,19 @@ export const fileMethods = {
     },
 
     parseMemoryFooterFromMem(lines) {
-        const bytes = Number.parseInt(lines[0], 10);
+        const bytes = Number.parseInt(String(lines[0] || '').split('\t')[0], 10);
         return Number.isFinite(bytes) && bytes >= 0 ? bytes : null;
+    },
+
+    // "flash\tlua\theapFree\theapTotal" (bytes; the heap fields are empty without og_mem)
+    parseDeviceMemory(lines) {
+        const [, lua, heapFree, heapTotal] = String(lines[0] || '')
+            .split('\t')
+            .map((field) => Number.parseInt(field, 10));
+        const valid = (n) => (Number.isFinite(n) && n >= 0 ? n : null);
+        const free = valid(heapFree);
+        const total = valid(heapTotal);
+        return { lua: valid(lua), heapFree: free != null && total ? free : null, heapTotal: total };
     },
 
     async refreshFirstBadgeFileNames(entries) {

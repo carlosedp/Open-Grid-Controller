@@ -182,6 +182,7 @@ class diiiApp {
         });
         on(this.elements.helpBtn, 'click', () => this.helpDevice());
         on(this.elements.clearBtn, 'click', () => this.clearOutput());
+        on(this.elements.fileSpaceFooter, 'click', () => this.iiiDevice.isConnected && this.requestFileListRefresh());
         on(this.elements.output, 'click', (e) => this.handleOutputClick(e));
         on(this.elements.gridBtn, 'click', () => this.toggleGridPanel());
         on(this.elements.gridCells, 'pointerdown', (e) => this.handleGridPointerDown(e));
