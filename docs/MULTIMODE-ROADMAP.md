@@ -398,8 +398,10 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      console (which stays as is): prism-code-editor 5.4 (25 KB, vendored, Lua highlighting,
      search, bracket matching, indent guides), save (Ctrl+S) / save as / run / close, unsaved
      dot. On Open Grid firmware a failed save keeps the device's file. Tooling: `diii/package.json`
-     for dev tools, Node dev server, `make diii-check` / `diii-vendor`. Later: tabs, iii API
-     autocomplete (prism-code-editor's autocomplete extension).
+     for dev tools, Node dev server, `make diii-check` / `diii-vendor`. Then: "+" for new files,
+     editor beside or above the console (sizes remembered), "–" hides it to a strip, device actions
+     (reboot, bootloader, backup, restore, reformat) in a header menu next to connect. Later: tabs,
+     iii API autocomplete (prism-code-editor's autocomplete extension).
   5. MIDI monitor like the Alloy Controller's, through the browser's Web MIDI (no firmware change).
   6. iii Lua command reference and help in diii, cached for offline use.
 
