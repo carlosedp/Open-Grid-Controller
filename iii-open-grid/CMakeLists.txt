@@ -22,6 +22,9 @@ endif ()
 set(OG_I2C_HZ 100000 CACHE STRING "Keypad I2C clock in Hz")
 option(OG_LUA_VM_IN_RAM "Run the Lua interpreter loop (luaV_execute, ~11 KB) from RAM; costs that much heap" ON)
 option(OG_FAST_CLOCK "Run at 200 MHz (officially supported on RP2040 since pico-sdk 2.1) instead of 125 MHz" OFF)
+# Flash offset of iii's status sector (mode); the filesystem follows 64 KB later.
+# Fixed so updates keep the files. Changing it moves them once (back up first).
+set(OG_FLASH_STATUS_OFFSET 0x80000 CACHE STRING "Flash offset of the status sector, 64 KB aligned")
 
 #------------------------------------------------------------------------
 #--- pico-sdk (PICO_SDK_PATH, or -DPICO_SDK_FETCH_FROM_GIT=ON)
@@ -122,7 +125,15 @@ target_compile_definitions(iii-open-grid PRIVATE
         PICO_CORE1_STACK_SIZE=0
         # crystal startup margin, as in monome's iii ports
         PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
+        # mode and filesystem at a fixed place, so updates don't move the files
+        III_FLASH_STATUS_OFFSET=${OG_FLASH_STATUS_OFFSET}u
 )
+
+# The program has to end below the pinned status sector (checked after each build).
+add_custom_command(TARGET iii-open-grid POST_BUILD
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/tools/check_flash_layout.py
+                ${CMAKE_NM} $<TARGET_FILE:iii-open-grid> ${OG_FLASH_STATUS_OFFSET}
+        VERBATIM)
 
 target_link_libraries(iii-open-grid PRIVATE
         lua
@@ -143,5 +154,5 @@ target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=_sbrk")
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.3.6")
+pico_set_program_version(iii-open-grid "og-0.3.7")
 pico_add_extra_outputs(iii-open-grid)
