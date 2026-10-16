@@ -413,7 +413,7 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      bootloader, steps); `make release` publishes the UF2s. Next: the MIDI monitor; also tabs,
      ✅ REPL history across sessions (`hc` clears it), memory in the footer, the virtual grid beside
      the editor, Tab completion in the REPL.
-  5. ✅ MIDI monitor (og-0.3.8, untested on hardware): a drawer above the button bar; the firmware
+  5. ✅ MIDI monitor (og-0.3.8, verified on the XIAO 2026-10-16): a drawer above the button bar; the firmware
      reports MIDI in and out (`og_midi_monitor`, link-time wraps of `midi_tx`/`vm_handle_midi`)
      instead of diii opening the port, so both directions show and a DAW keeps the port on
      Windows. Decoded rows, clock hidden but read as bpm, filters, pause.
