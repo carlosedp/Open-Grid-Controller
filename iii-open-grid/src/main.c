@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.8"
+#define DEVICE_VERSION_BASE "og-0.3.9"
 
 #include <string.h>
 
@@ -34,6 +34,7 @@
 #include "file_dump.h"
 #include "grid.h"
 #include "heap_stats.h"
+#include "midi_monitor.h"
 #include "monome_serial.h"
 #include "status_led.h"
 
@@ -295,6 +296,7 @@ void device_task() {
     vm_handle_grid_key(e.x, e.y, e.z);
   }
   mirror_task();
+  og_midi_monitor_task();
 }
 
 const char *device_id() { return "grid"; }
@@ -445,8 +447,6 @@ static int l_og_board(lua_State *l) {
   return 1;
 }
 
-int og_l_midi_monitor(lua_State *l);  // midi_monitor.c
-
 static const struct luaL_Reg device_lib[] = {
     {"grid_led", l_grid_led},
     {"grid_led_get", l_grid_led_get},
@@ -465,6 +465,7 @@ static const struct luaL_Reg device_lib[] = {
     {"og_rename_file", l_og_rename_file},
     {"og_board", l_og_board},
     {"og_midi_monitor", og_l_midi_monitor},
+    {"og_midi_counts", og_l_midi_counts},
     {NULL, NULL},
 };
 
@@ -490,6 +491,7 @@ static const char *device_help_str =
     "  og_dump_file(f) print a file as base64, then size and CRC-32\n"
     "  og_rename_file(old, new)  rename a file (replaces new)\n"
     "  og_board()      board this firmware is built for\n"
-    "  og_midi_monitor(on) report MIDI in/out as ^^midi(...) for diii\n";
+    "  og_midi_monitor(on) report MIDI in/out as ^^midi(...) for diii\n"
+    "  og_midi_counts(on)  MIDI counts and clock tempo as ^^midic(...)\n";
 
 const char *device_help_txt() { return device_help_str; }
