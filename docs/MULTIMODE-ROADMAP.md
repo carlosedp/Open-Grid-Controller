@@ -365,9 +365,9 @@ Next:
     `monome` / `grid`, **or** whose serial number matches `m%d`;
   - serialosc on macOS and Windows (`iokitlib.c`, `windows.c`): every USB serial port, then
     libmonome asks the device over the protocol.
-- Candidate PIDs (free on pid.codes on 2026-10-16): `1608` / `1609` (16×8; iii / serial),
-  `0616`/`0617`, `06C0`/`06C1`, `0128`/`0129`, `1101`/`1110`. pid.codes needs a license in the
-  repository first (see §4).
+- Candidate PIDs (free on pid.codes on 2026-10-16; `0xxx`/`1xxx` can't be requested):
+  `6128` / `6129` ("G128"; iii / serial), `6816`/`6817`, `6111`/`6112`, `6D16`/`6D17`,
+  `CAF1`/`CAF2`, `F168`/`F169`. pid.codes needs a license in the repository first (see §4).
 
 ### M7 — Ableton Live integration
 
