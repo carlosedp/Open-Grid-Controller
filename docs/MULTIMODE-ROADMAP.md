@@ -79,7 +79,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
     reboots (og-0.3.11; before, the reboot came while BOOT was held, and the boot ROM went into the
     USB bootloader);
   - from Lua: `og_set_mode(0|1)`.
-  - **watchdog** (og-0.3.10, untested): 8 s without core 0 returning to the main loop (a Lua
+  - ✅ **watchdog** (og-0.3.10, untested): 8 s without core 0 returning to the main loop (a Lua
     loop that never ends, a hang in C or USB), or 1 s without core 1 looping, resets the board,
     which boots normally (`init.lua` runs). A second reset within 30 s of booting means a boot
     loop: the next boot skips `init.lua` (amber). The count lives in watchdog scratch register 0
@@ -90,19 +90,19 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   scripts run unchanged. `device_id()` returns `"grid"` for the same reason.
 - **Open Grid Lua extras** (listed by `help()`):
 
-  | Call             | What it does                                                                    |
-  | ---------------- | ------------------------------------------------------------------------------- |
-  | `og_set_mode(m)` | 0 = iii, 1 = monome serial; saves and reboots                                   |
-  | `og_keypads()`   | bitmask of keypad boards online                                                 |
-  | `og_mem(quiet)`  | C heap: prints KB, returns bytes `free, largest, used, peak, total, high_water` |
-  | `og_key(x,y,z)`  | inject a key event through the same queue as real keys                          |
-  | `og_led(r,g,b)`  | status LED color 0–255; `og_led()` returns it to the mode color                 |
-  | `og_mirror(on)`  | stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii             |
-  | `og_dump_file(f)` | print file `f` as base64 lines, then `size crc32`; for diii's backup           |
-  | `og_rename_file(a, b)` | rename file `a` to `b` in one atomic step (replaces `b`); for diii's rename |
-  | `og_board()`      | board the build is for (`xiao_rp2040`, `rp2040_zero`); for diii's update dialog |
-  | `og_midi_monitor(on)` | report MIDI in/out as `^^midi(i|o,b1,b2,b3)` lines; for diii's MIDI monitor |
-  | `og_midi_counts(on)` | MIDI in/out totals and clock tempo as `^^midic(in,out,bpm x10)`, ≤ 2/s, when changed |
+  | Call                   | What it does                                                                         |
+  | ---------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------- |
+  | `og_set_mode(m)`       | 0 = iii, 1 = monome serial; saves and reboots                                        |
+  | `og_keypads()`         | bitmask of keypad boards online                                                      |
+  | `og_mem(quiet)`        | C heap: prints KB, returns bytes `free, largest, used, peak, total, high_water`      |
+  | `og_key(x,y,z)`        | inject a key event through the same queue as real keys                               |
+  | `og_led(r,g,b)`        | status LED color 0–255; `og_led()` returns it to the mode color                      |
+  | `og_mirror(on)`        | stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii                  |
+  | `og_dump_file(f)`      | print file `f` as base64 lines, then `size crc32`; for diii's backup                 |
+  | `og_rename_file(a, b)` | rename file `a` to `b` in one atomic step (replaces `b`); for diii's rename          |
+  | `og_board()`           | board the build is for (`xiao_rp2040`, `rp2040_zero`); for diii's update dialog      |
+  | `og_midi_monitor(on)`  | report MIDI in/out as `^^midi(i                                                      | o,b1,b2,b3)` lines; for diii's MIDI monitor |
+  | `og_midi_counts(on)`   | MIDI in/out totals and clock tempo as `^^midic(in,out,bpm x10)`, ≤ 2/s, when changed |
 
 - **Cores**: core 1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty) and
   runs from RAM; core 0 runs USB + Lua with 8 KB of stack (both scratch banks). Key events cross
@@ -357,8 +357,17 @@ Next:
 - Request a USB PID from [pid.codes](https://pid.codes) (VID `0x1209`, free for open hardware)
   for iii mode, keep `cafe:1101` as a build option for stock-diii compatibility until our diii fork
   (or upstream) accepts the new ID.
-- Serial mode keeps monome-style strings (`monome` / `m…` serial): that is how serialosc finds
-  grids. Verify which fields serialosc actually requires and document it.
+- Serial mode keeps monome-style strings: that is how hosts find grids, so its VID:PID can change
+  freely. Checked in the sources (2026-10-16), none of them looks at VID:PID:
+  - norns (`matron/src/device/device_monitor.cc`, `is_dev_monome_grid`): udev `ID_VENDOR` ==
+    `monome` and `ID_MODEL` == `grid` (or `arc`, or starting with `monome` for clones);
+  - serialosc on Linux (`serialosc-detector/libudev.c`): a USB serial/CDC tty whose strings are
+    `monome` / `grid`, **or** whose serial number matches `m%d`;
+  - serialosc on macOS and Windows (`iokitlib.c`, `windows.c`): every USB serial port, then
+    libmonome asks the device over the protocol.
+- Candidate PIDs (free on pid.codes on 2026-10-16): `1608` / `1609` (16×8; iii / serial),
+  `0616`/`0617`, `06C0`/`06C1`, `0128`/`0129`, `1101`/`1110`. pid.codes needs a license in the
+  repository first (see §4).
 
 ### M7 — Ableton Live integration
 
@@ -395,7 +404,7 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      methods verified identical). Still no build step.
   2. ~~Type checking the existing code~~: tried `tsc --noEmit` with JSDoc (2026-10-15). The
      methods mixed into one class make `App` a circular type (TS2456), with `@satisfies
-     ThisType<App>` and with per-method `@this`; typing it would need a hand-kept interface or a
+ThisType<App>` and with per-method `@this`; typing it would need a hand-kept interface or a
      composition refactor, not worth it for working code. Instead, new features (zip writer, MIDI
      monitor) are standalone modules with explicit inputs, `// @ts-check`ed one by one (Web Serial
      and File System Access types need `@types/w3c-web-serial` etc.).
@@ -415,7 +424,7 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
      (reboot, bootloader, backup, restore, reformat) in a header menu next to connect; rename
      (atomic with og-0.3.5's `og_rename_file`, copy + delete elsewhere). Later: tabs,
      iii API autocomplete (prism-code-editor's autocomplete extension).
-     On stock iii (no og_* functions) diii reads files exactly too: 3 KB per command as hex, inside
+     On stock iii (no og\_\* functions) diii reads files exactly too: 3 KB per command as hex, inside
      stock's 16 KB output buffer (edit, read, download, backup). Still stock limits there: uploads
      over 32 KB, and a failed save deletes the device's copy (stock needs the delete first).
      Round 1 of UX polish: clickable `file.lua:N:` errors open the editor at the line, console
@@ -437,6 +446,7 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
 
   Revisit a framework (Preact/Lit) only if diii grows past ~5,000 lines with several views sharing
   state, or we stop following upstream.
+
 - **Visual refresh**, done separately from the items above so it can be evaluated on its own
   (kept, changed or dropped): a more modern, user-friendly interface.
 
