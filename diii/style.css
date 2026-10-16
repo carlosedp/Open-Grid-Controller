@@ -850,6 +850,61 @@ body.is-resizing-editor-rows * {
     line-height: 1.4;
 }
 
+/* firmware version and updates */
+.firmware-content {
+    display: flex;
+    flex-direction: column;
+    width: min(620px, 100%);
+    padding: 0;
+}
+
+.firmware-title {
+    font-size: 0.95rem;
+    font-weight: 400;
+    margin: 0 !important;
+}
+
+.firmware-body {
+    padding: 8px 16px 16px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.firmware-body p {
+    color: var(--neutral-heavy) !important;
+    margin: 6px 0 !important;
+}
+
+.firmware-update {
+    color: var(--accent-hover) !important;
+}
+
+.firmware-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 4px;
+}
+
+.firmware-steps {
+    padding-left: 20px;
+    color: var(--neutral-heavy);
+}
+
+.firmware-steps li {
+    margin: 6px 0;
+}
+
+.firmware-steps .repl-action-btn {
+    padding: 2px 8px;
+}
+
+/* a newer firmware release exists */
+.has-update::after {
+    content: ' ●';
+    color: var(--accent-hover);
+}
+
 /* offline iii reference */
 .reference-content {
     display: flex;

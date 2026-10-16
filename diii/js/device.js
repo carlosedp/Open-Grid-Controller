@@ -78,6 +78,7 @@ export const deviceMethods = {
                 }
 
                 await this.detectVirtualGrid();
+                await this.detectFirmware();
                 await this.requestFileListRefresh();
                 return true;
             }

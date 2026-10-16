@@ -1,5 +1,5 @@
 // Bump CACHE when the list below changes; old caches are deleted on activate.
-const CACHE = 'diii-v13';
+const CACHE = 'diii-v14';
 
 // Relative to this file, so the app works from any path (e.g. GitHub Pages
 // project sites), not only from the site root.
@@ -17,6 +17,8 @@ const APP_SHELL_FILES = [
     './js/editor.js',
     './js/editor-ui.js',
     './js/files.js',
+    './js/firmware.js',
+    './js/firmware-ui.js',
     './js/grid.js',
     './js/iii-api.js',
     './js/init-lua.js',

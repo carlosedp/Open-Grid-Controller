@@ -31,6 +31,7 @@
                         <button type="button" id="backupBtn" class="file-menu-item" role="menuitem" title="download every file on the device as one zip">backup</button>
                         <button type="button" id="restoreBtn" class="file-menu-item" role="menuitem" title="upload the files of a backup zip">restore</button>
                         <button type="button" id="reformatBtn" class="file-menu-item" role="menuitem" title="erase every file on the device">reformat</button>
+                        <button type="button" id="firmwareBtn" class="file-menu-item" role="menuitem" title="firmware version and updates">firmware</button>
                     </div>
                 </div>
             </div>
@@ -114,6 +115,17 @@
 
         <label for="fileInput" style="display: none;">load a lua file</label>
         <input type="file" id="fileInput" accept=".lua" multiple aria-describedby="fileInput" style="display: none;">
+    </div>
+
+    <div role="dialog" aria-modal="true" aria-label="firmware" id="firmwareModal" class="modal" style="display: none;">
+        <div class="modal-content firmware-content">
+            <div class="reference-header">
+                <h2 class="firmware-title">firmware</h2>
+                <div class="repl-actions-spacer"></div>
+                <button type="button" id="firmwareCloseBtn" class="editor-close-btn" aria-label="close" title="close (Esc)">✕</button>
+            </div>
+            <div id="firmwareBody" class="firmware-body"></div>
+        </div>
     </div>
 
     <div role="dialog" aria-modal="true" aria-label="iii reference" id="referenceModal" class="modal" style="display: none;">

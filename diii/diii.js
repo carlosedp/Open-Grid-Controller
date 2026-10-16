@@ -16,6 +16,7 @@ import { fileMethods } from './js/files.js';
 import { gridMethods } from './js/grid.js';
 import { backupUiMethods } from './js/backup-ui.js';
 import { editorUiMethods } from './js/editor-ui.js';
+import { firmwareUiMethods } from './js/firmware-ui.js';
 
 class diiiApp {
     constructor() {
@@ -106,6 +107,10 @@ class diiiApp {
             replPane: document.getElementById('replPane'),
             uploadBtn: document.getElementById('uploadBtn'),
             reinitBtn: document.getElementById('reinitBtn'),
+            firmwareBtn: document.getElementById('firmwareBtn'),
+            firmwareModal: document.getElementById('firmwareModal'),
+            firmwareBody: document.getElementById('firmwareBody'),
+            firmwareCloseBtn: document.getElementById('firmwareCloseBtn'),
             restartBtn: document.getElementById('restartBtn'),
             bootloaderBtn: document.getElementById('bootloaderBtn'),
             reformatBtn: document.getElementById('reformatBtn'),
@@ -158,6 +163,14 @@ class diiiApp {
         on(this.elements.explorerResizer, 'keydown', (e) => this.handleExplorerResizerKeydown(e));
         on(this.elements.uploadBtn, 'click', () => this.openUploadPicker());
         on(this.elements.reinitBtn, 'click', () => this.reinitDevice());
+        on(this.elements.firmwareBtn, 'click', () => this.openFirmwareDialog());
+        on(this.elements.firmwareCloseBtn, 'click', () => this.closeFirmwareDialog());
+        on(this.elements.firmwareModal, 'click', (e) => {
+            if (e.target === this.elements.firmwareModal) this.closeFirmwareDialog();
+        });
+        on(document, 'keydown', (e) => {
+            if (e.key === 'Escape' && this.elements.firmwareModal?.style.display === 'flex') this.closeFirmwareDialog();
+        });
         on(this.elements.restartBtn, 'click', () => this.restartDevice());
         on(this.elements.bootloaderBtn, 'click', () => this.bootloaderDevice());
         on(this.elements.reformatBtn, 'click', () => this.reformatFs());
@@ -240,7 +253,8 @@ Object.assign(
     fileMethods,
     gridMethods,
     backupUiMethods,
-    editorUiMethods
+    editorUiMethods,
+    firmwareUiMethods
 );
 
 document.addEventListener('DOMContentLoaded', () => {
