@@ -417,9 +417,9 @@ collectgarbage() print(collectgarbage("count"))` should stay flat.
   5. ✅ MIDI monitor (og-0.3.8, verified on the XIAO 2026-10-16): a drawer above the button bar; the firmware
      reports MIDI in and out (`og_midi_monitor`, link-time wraps of `midi_tx`/`vm_handle_midi`)
      instead of diii opening the port, so both directions show and a DAW keeps the port on
-     Windows. Decoded rows, clock hidden but read as bpm, filters, pause. og-0.3.9: the device
-     counts MIDI and measures the clock tempo itself (`og_midi_counts`), so the bar shows activity
-     with the drawer closed.
+     Windows. Decoded rows, clock hidden but read as bpm, filters, pause. og-0.3.9 (verified on the XIAO):
+     the device counts MIDI and measures the clock tempo itself (`og_midi_counts`), so the bar shows
+     activity with the drawer closed.
   6. ✅ iii Lua command reference and help in diii, offline: `js/iii-api.js` feeds autocomplete
      (with parameter tab stops and event snippets), hover help, and a searchable "reference".
 
