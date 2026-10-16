@@ -99,6 +99,8 @@ pio run -t upload
 
 `iii-open-grid/` is a second firmware based on monome's [iii](https://monome.org/docs/iii/): Lua scripts run on the grid itself, it shows up as a USB MIDI device, and scripts are written and uploaded from the browser with [diii](https://monome.org/diii). It also keeps a monome serial mode for norns and serialosc. Hold the top-left key while plugging in (or hold BOOT for 2 seconds while running) to switch between the two modes.
 
+If the grid stops responding for 8 seconds (a script stuck in a loop, or a firmware hang), a watchdog resets it and it starts again with `init.lua`, so a performance setup comes back on its own. If it hangs again within 30 seconds of starting, the next start skips `init.lua` (status LED amber) so you can fix the script from diii. Either way diii shows a `watchdog:` line once it connects (og-0.3.10 or later).
+
 Everything is driven from the root `Makefile` (needs `make`, `python` and PlatformIO's `pio`). Run `make help` for the full list:
 
 ```bash

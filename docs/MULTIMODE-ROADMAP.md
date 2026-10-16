@@ -53,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.9)
+### 1.3 Firmware status (`iii-open-grid`, og-0.3.10)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -77,6 +77,12 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
     (works without keypads; rescues a board whose `init.lua` hangs);
   - hold BOOT for 2 s while running → toggle and reboot;
   - from Lua: `og_set_mode(0|1)`.
+  - **watchdog** (og-0.3.10, untested): 8 s without core 0 returning to the main loop (a Lua
+    loop that never ends, a hang in C or USB), or 1 s without core 1 looping, resets the board,
+    which boots normally (`init.lua` runs). A second reset within 30 s of booting means a boot
+    loop: the next boot skips `init.lua` (amber). The count lives in watchdog scratch register 0
+    and is cleared 30 s after boot. After a reset, iii mode prints a `watchdog:` line (held until
+    a host connects). `src/watchdog.c`.
 - **Lua grid API** identical to monome's iii grids (`event_grid`, `grid_led`, `grid_led_all`,
   `grid_led_get`, `grid_intensity`, `grid_refresh`, `grid_size_x/y`), so existing iii grid
   scripts run unchanged. `device_id()` returns `"grid"` for the same reason.
