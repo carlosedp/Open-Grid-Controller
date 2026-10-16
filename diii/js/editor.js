@@ -32,6 +32,8 @@ export class ScriptEditor {
         this.hooks = hooks;
         /** @type {string | null} */
         this.name = null;
+        /** text on the device; null for a new file that isn't there yet
+         * @type {string | null} */
         this.savedText = '';
         /** @type {import('../vendor/prism-code-editor.js').PrismEditor | null} */
         this.editor = null;
@@ -49,8 +51,9 @@ export class ScriptEditor {
      * Shows a file; a new editor each time, so undo history doesn't cross files.
      * @param {string} name
      * @param {string} text
+     * @param {{ isNew?: boolean }} [options] isNew: not on the device yet (unsaved until saved)
      */
-    open(name, text) {
+    open(name, text, { isNew = false } = {}) {
         this.editor?.remove();
         this.editor = createEditor(
             this.host,
@@ -72,9 +75,9 @@ export class ScriptEditor {
             cursorPosition()
         );
         this.name = name;
-        this.savedText = text;
-        this.wasDirty = false;
-        this.hooks.onChange?.(false);
+        this.savedText = isNew ? null : text;
+        this.wasDirty = isNew;
+        this.hooks.onChange?.(isNew);
     }
 
     close() {
@@ -90,7 +93,7 @@ export class ScriptEditor {
     }
 
     get dirty() {
-        return this.editor !== null && this.text !== this.savedText;
+        return this.editor !== null && (this.savedText === null || this.text !== this.savedText);
     }
 
     /**

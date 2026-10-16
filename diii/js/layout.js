@@ -181,5 +181,23 @@ export const layoutMethods = {
             window.removeEventListener('pointerup', this.boundExplorerResizeEnd);
             window.removeEventListener('pointercancel', this.boundExplorerResizeEnd);
         }
+    },
+
+    // "device ▾" in the header: reboot, bootloader, backup, restore, reformat
+    setDeviceMenuOpen(open) {
+        this.elements.deviceMenu?.classList.toggle('open', open);
+        this.elements.deviceMenuBtn?.setAttribute('aria-expanded', String(open));
+    },
+
+    handleDeviceMenuDocumentEvent(event) {
+        if (!this.elements.deviceMenu?.classList.contains('open')) return;
+        if (event.type === 'keydown') {
+            if (event.key === 'Escape') this.setDeviceMenuOpen(false);
+            return;
+        }
+        // an item was chosen, or the click was elsewhere
+        if (!event.target?.closest?.('.device-menu-wrap') || event.target.closest('.file-menu-item')) {
+            this.setDeviceMenuOpen(false);
+        }
     }
 };

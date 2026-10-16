@@ -105,7 +105,16 @@ class diiiApp {
             backupBtn: document.getElementById('backupBtn'),
             restoreBtn: document.getElementById('restoreBtn'),
 
+            deviceMenuBtn: document.getElementById('deviceMenuBtn'),
+            deviceMenu: document.getElementById('deviceMenu'),
+            newFileBtn: document.getElementById('newFileBtn'),
+
+            workArea: document.getElementById('workArea'),
             editorPane: document.getElementById('editorPane'),
+            editorExpandBtn: document.getElementById('editorExpandBtn'),
+            editorExpandTitle: document.getElementById('editorExpandTitle'),
+            editorLayoutBtn: document.getElementById('editorLayoutBtn'),
+            editorMinimizeBtn: document.getElementById('editorMinimizeBtn'),
             editorResizer: document.getElementById('editorResizer'),
             editorHost: document.getElementById('editorHost'),
             editorTitle: document.getElementById('editorTitle'),
@@ -150,6 +159,15 @@ class diiiApp {
         on(this.elements.editorSaveAsBtn, 'click', () => this.editorSaveAs());
         on(this.elements.editorRunBtn, 'click', () => this.editorRun());
         on(this.elements.editorCloseBtn, 'click', () => this.closeEditor());
+        on(this.elements.editorLayoutBtn, 'click', () => this.toggleEditorLayout());
+        on(this.elements.editorMinimizeBtn, 'click', () => this.setEditorCollapsed(true));
+        on(this.elements.editorExpandBtn, 'click', () => this.setEditorCollapsed(false));
+        on(this.elements.newFileBtn, 'click', () => this.newFile());
+        on(this.elements.deviceMenuBtn, 'click', () =>
+            this.setDeviceMenuOpen(!this.elements.deviceMenu?.classList.contains('open'))
+        );
+        on(document, 'click', (e) => this.handleDeviceMenuDocumentEvent(e));
+        on(document, 'keydown', (e) => this.handleDeviceMenuDocumentEvent(e));
         on(this.elements.editorResizer, 'pointerdown', (e) => this.startEditorResize(e));
         on(window, 'beforeunload', (e) => {
             if (this.scriptEditor?.dirty) e.preventDefault();

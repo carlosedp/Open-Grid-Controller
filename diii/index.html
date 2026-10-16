@@ -21,6 +21,17 @@
                     <span id="replStatusIndicator" class="repl-status-indicator"></span>
                     <span id="replStatusText" class="repl-status-text">not connected</span>
                 </div>
+                <button type="button" id="replConnectionBtn" class="repl-connection-btn" title="connect/disconnect (Cmd/Ctrl+Shift+C)">connect</button>
+                <div class="device-menu-wrap">
+                    <button type="button" id="deviceMenuBtn" class="repl-connection-btn" aria-haspopup="menu" aria-expanded="false">device ▾</button>
+                    <div id="deviceMenu" class="file-menu device-menu" role="menu">
+                        <button type="button" id="restartBtn" class="file-menu-item" role="menuitem">reboot</button>
+                        <button type="button" id="bootloaderBtn" class="file-menu-item" role="menuitem">bootloader</button>
+                        <button type="button" id="backupBtn" class="file-menu-item" role="menuitem" title="download every file on the device as one zip">backup</button>
+                        <button type="button" id="restoreBtn" class="file-menu-item" role="menuitem" title="upload the files of a backup zip">restore</button>
+                        <button type="button" id="reformatBtn" class="file-menu-item" role="menuitem" title="erase every file on the device">reformat</button>
+                    </div>
+                </div>
             </div>
             <div class="header-right">
                 <button id="scriptReferenceBtn" class="repl-connection-btn">documentation</button>
@@ -40,6 +51,8 @@
                             </span>
                             <span id="explorerChevron" class="file-explorer-chevron" aria-hidden="true">›</span>
                         </button>
+                        <div class="repl-actions-spacer"></div>
+                        <button type="button" id="newFileBtn" class="file-explorer-refresh file-explorer-new" aria-label="new file" title="new file">+</button>
                         <button type="button" id="refreshExplorerBtn" class="file-explorer-refresh" type="button" aria-label="refresh file view" title="refresh file view">
                             <!-- License: MIT. Made by elusiveicons: https://elusiveicons.com -->
                             <svg viewBox="0 0 1200 1200" role="img" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
@@ -51,6 +64,7 @@
                     <div id="fileSpaceFooter" class="file-space-footer">free space: -- kb</div>
                 </aside>
                 <div id="explorerResizer" class="explorer-resizer" role="separator" tabindex="0" aria-orientation="vertical" aria-label="resize explorer" aria-controls="fileExplorerPane"></div>
+                <div id="workArea" class="work-area">
                 <div class="repl-pane full-width" id="replPane">
                     <div class="repl-content">
                         <div id="gridPanel" class="grid-panel" hidden>
@@ -61,13 +75,7 @@
                             <button type="button" id="clearBtn" class="repl-action-btn output-cleanup-btn">clean</button>
                         </div>
                         <div class="repl-actions">
-                            <button type="button" id="replConnectionBtn" class="repl-connection-btn" title="connect/disconnect (Cmd/Ctrl+Shift+C)">connect</button>
                             <button type="button" id="uploadBtn" class="repl-action-btn">upload</button>
-                            <button type="button" id="restartBtn" class="repl-action-btn">reboot</button>
-                            <button type="button" id="bootloaderBtn" class="repl-action-btn">bootloader</button>
-                            <button type="button" id="reformatBtn" class="repl-action-btn">reformat</button>
-                            <button type="button" id="backupBtn" class="repl-action-btn" title="download every file on the device as one zip">backup</button>
-                            <button type="button" id="restoreBtn" class="repl-action-btn" title="upload the files of a backup zip">restore</button>
                             <button type="button" id="gridBtn" class="repl-action-btn" title="show the grid's LEDs and press keys from here" hidden>grid</button>
                             <div class="repl-actions-spacer"></div>
                             <button type="button" id="helpBtn" class="repl-action-btn">help</button>
@@ -83,6 +91,9 @@
                 </div>
                 <div id="editorResizer" class="explorer-resizer editor-resizer" role="separator" aria-orientation="vertical" aria-label="resize editor" hidden></div>
                 <section id="editorPane" class="editor-pane" aria-label="script editor" hidden>
+                    <button type="button" id="editorExpandBtn" class="editor-expand" title="show the editor">
+                        <span id="editorExpandTitle"></span>
+                    </button>
                     <div class="editor-header">
                         <span id="editorTitle" class="editor-title"></span>
                         <span id="editorDirty" class="editor-dirty" title="unsaved changes" hidden>●</span>
@@ -90,10 +101,13 @@
                         <button type="button" id="editorSaveBtn" class="repl-action-btn" title="save to the device (Ctrl+S)">save</button>
                         <button type="button" id="editorSaveAsBtn" class="repl-action-btn" title="save under another name">save as</button>
                         <button type="button" id="editorRunBtn" class="repl-action-btn" title="save and run">run</button>
+                        <button type="button" id="editorLayoutBtn" class="editor-close-btn" aria-label="switch layout" title="editor below the console / beside it">⇅</button>
+                        <button type="button" id="editorMinimizeBtn" class="editor-close-btn" aria-label="hide editor" title="hide the editor (keeps the file open)">–</button>
                         <button type="button" id="editorCloseBtn" class="editor-close-btn" aria-label="close editor" title="close">✕</button>
                     </div>
                     <div id="editorHost" class="editor-host"></div>
                 </section>
+                </div>
             </div>
         </div>
 

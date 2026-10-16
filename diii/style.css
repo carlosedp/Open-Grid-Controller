@@ -592,8 +592,115 @@ body.is-resizing-explorer * {
     position: relative;
 }
 
+/* console + editor, side by side or stacked (editor on top) */
+.work-area {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    position: relative;
+}
+
+.work-area.stacked {
+    flex-direction: column;
+}
+
+.work-area.stacked .editor-pane {
+    order: 0;
+    min-width: 0;
+    min-height: 120px;
+}
+
+.work-area.stacked .editor-resizer {
+    order: 1;
+    width: auto;
+    height: 6px;
+    flex: 0 0 6px;
+    cursor: row-resize;
+    border-left: 0;
+    border-top: 1px solid var(--neutral-trim);
+}
+
+.work-area.stacked .repl-pane {
+    order: 2;
+    min-width: 0;
+    min-height: 160px;
+}
+
+body.is-resizing-editor-rows,
+body.is-resizing-editor-rows * {
+    cursor: row-resize !important;
+    user-select: none;
+}
+
 .editor-resizer[hidden],
 .editor-pane[hidden] {
+    display: none;
+}
+
+/* hidden editor: a strip with the file name; click to bring it back */
+.editor-expand {
+    display: none;
+}
+
+.editor-pane.collapsed,
+.work-area.stacked .editor-pane.collapsed {
+    flex: 0 0 36px !important;
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.editor-pane.collapsed .editor-header,
+.editor-pane.collapsed .editor-host {
+    display: none;
+}
+
+.editor-pane.collapsed .editor-expand {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    padding: 12px 8px;
+    border: 0;
+    border-left: 1px solid var(--neutral-trim);
+    background-color: var(--bg-default);
+    color: var(--interactive-medium);
+    font-family: monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    writing-mode: vertical-rl;
+}
+
+.work-area.stacked .editor-pane.collapsed .editor-expand {
+    writing-mode: horizontal-tb;
+    padding: 8px 12px;
+    border-left: 0;
+    border-bottom: 1px solid var(--neutral-trim);
+}
+
+.editor-pane.collapsed .editor-expand:hover {
+    color: var(--interactive-selected);
+}
+
+/* device actions next to the connection status */
+.device-menu-wrap {
+    position: relative;
+}
+
+.device-menu {
+    top: 36px;
+    left: 0;
+    right: auto;
+}
+
+.file-explorer-new {
+    font-family: monospace;
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.file-explorer-pane.collapsed .file-explorer-header .repl-actions-spacer {
     display: none;
 }
 
@@ -821,8 +928,8 @@ body.is-resizing-explorer * {
         min-width: 180px;
     }
 
-    /* no room for two panes: the editor covers the console until closed */
-    .editor-pane {
+    /* no room for two panes: the editor covers the console until hidden */
+    .editor-pane:not(.collapsed) {
         position: absolute;
         inset: 0;
         z-index: 30;
