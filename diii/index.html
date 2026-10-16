@@ -76,6 +76,24 @@
                             <div id="output" class="repl-output"></div>
                             <button type="button" id="clearBtn" class="repl-action-btn output-cleanup-btn">clean</button>
                         </div>
+                        <section id="midiDrawer" class="midi-drawer" aria-label="MIDI monitor">
+                            <div class="midi-drawer-bar">
+                                <button type="button" id="midiToggleBtn" class="midi-toggle" aria-expanded="false" aria-controls="midiBody" title="show the MIDI the device sends and receives">midi ▸</button>
+                                <span id="midiStatus" class="midi-status"></span>
+                                <div class="repl-actions-spacer"></div>
+                                <div class="midi-controls">
+                                    <label><input type="checkbox" id="midiShowIn" checked> in</label>
+                                    <label><input type="checkbox" id="midiShowOut" checked> out</label>
+                                    <label title="clock and active sensing (frequent)"><input type="checkbox" id="midiShowClock"> clock</label>
+                                    <button type="button" id="midiPauseBtn" class="repl-action-btn">pause</button>
+                                    <button type="button" id="midiClearBtn" class="repl-action-btn">clear</button>
+                                </div>
+                            </div>
+                            <div id="midiBody" class="midi-body">
+                                <p id="midiNote" class="midi-note" hidden></p>
+                                <div id="midiList" class="midi-list" role="log" aria-label="MIDI messages"></div>
+                            </div>
+                        </section>
                         <div class="repl-actions">
                             <button type="button" id="uploadBtn" class="repl-action-btn">upload</button>
                             <button type="button" id="gridBtn" class="repl-action-btn" title="show the grid's LEDs and press keys from here" hidden>grid</button>

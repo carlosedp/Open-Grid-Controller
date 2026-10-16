@@ -850,6 +850,113 @@ body.is-resizing-editor-rows * {
     line-height: 1.4;
 }
 
+/* MIDI monitor: a drawer above the button bar */
+.midi-drawer {
+    border-top: 1px solid var(--neutral-trim);
+    background-color: var(--bg-default);
+}
+
+.midi-drawer-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    color: var(--neutral-medium);
+}
+
+.midi-toggle {
+    border: 0;
+    background: transparent;
+    color: var(--interactive-medium);
+    font-family: monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 2px 0;
+}
+
+.midi-toggle:hover {
+    color: var(--interactive-selected);
+}
+
+.midi-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.midi-controls label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.midi-controls .repl-action-btn {
+    padding: 2px 8px;
+    font-size: 0.78rem;
+}
+
+.midi-drawer:not(.open) .midi-controls,
+.midi-drawer:not(.open) .midi-body {
+    display: none;
+}
+
+.midi-note {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    color: var(--neutral-medium);
+}
+
+.midi-note[hidden] {
+    display: none;
+}
+
+/* resizable from its bottom-right corner */
+.midi-list {
+    height: 160px;
+    min-height: 60px;
+    max-height: 60vh;
+    resize: vertical;
+    overflow-y: auto;
+    padding: 2px 12px 6px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    border-top: 1px solid var(--bg-subdued);
+}
+
+.midi-row {
+    display: grid;
+    grid-template-columns: 5.5em 4.5em 3.5em 1fr auto;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.midi-time,
+.midi-raw {
+    color: var(--neutral-medium);
+}
+
+.midi-in .midi-dir {
+    color: #9cdcfe;
+}
+
+.midi-out .midi-dir {
+    color: #ce9178;
+}
+
+.midi-text {
+    color: var(--neutral-heavy);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.midi-kind-clock .midi-text,
+.midi-kind-active_sensing .midi-text {
+    color: var(--neutral-medium);
+}
+
 /* firmware version and updates */
 .firmware-content {
     display: flex;

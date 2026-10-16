@@ -12,5 +12,5 @@
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "skipLibCheck": true
     },
-    "files": ["js/zip.js", "js/backup.js", "js/editor.js", "js/init-lua.js", "js/iii-api.js", "js/completions.js", "js/reference.js", "js/firmware.js"]
+    "files": ["js/zip.js", "js/backup.js", "js/editor.js", "js/init-lua.js", "js/iii-api.js", "js/completions.js", "js/reference.js", "js/firmware.js", "js/midi-decode.js", "js/midi-monitor.js"]
 }

@@ -249,6 +249,11 @@ export const consoleMethods = {
             this.handleGridFrame(cleaned);
             return;
         }
+        // MIDI monitor reports: same, they can arrive in the middle of anything
+        if (cleaned.startsWith('^^midi(')) {
+            this.handleMidiLine(cleaned);
+            return;
+        }
 
         if (this.handleSuppressedOutputLine(cleaned)) {
             return;

@@ -17,6 +17,7 @@ import { gridMethods } from './js/grid.js';
 import { backupUiMethods } from './js/backup-ui.js';
 import { editorUiMethods } from './js/editor-ui.js';
 import { firmwareUiMethods } from './js/firmware-ui.js';
+import { midiUiMethods } from './js/midi-ui.js';
 
 class diiiApp {
     constructor() {
@@ -77,6 +78,7 @@ class diiiApp {
 
         this.outputLine('//// welcome. connect to an iii compatible grid or arc to begin.');
         this.restoreHistory();
+        this.restoreMidiDrawer();
         this.announceDraft();
     }
 
@@ -108,6 +110,16 @@ class diiiApp {
             uploadBtn: document.getElementById('uploadBtn'),
             reinitBtn: document.getElementById('reinitBtn'),
             firmwareBtn: document.getElementById('firmwareBtn'),
+            midiDrawer: document.getElementById('midiDrawer'),
+            midiToggleBtn: document.getElementById('midiToggleBtn'),
+            midiStatus: document.getElementById('midiStatus'),
+            midiNote: document.getElementById('midiNote'),
+            midiList: document.getElementById('midiList'),
+            midiShowIn: document.getElementById('midiShowIn'),
+            midiShowOut: document.getElementById('midiShowOut'),
+            midiShowClock: document.getElementById('midiShowClock'),
+            midiPauseBtn: document.getElementById('midiPauseBtn'),
+            midiClearBtn: document.getElementById('midiClearBtn'),
             firmwareModal: document.getElementById('firmwareModal'),
             firmwareBody: document.getElementById('firmwareBody'),
             firmwareCloseBtn: document.getElementById('firmwareCloseBtn'),
@@ -164,6 +176,17 @@ class diiiApp {
         on(this.elements.uploadBtn, 'click', () => this.openUploadPicker());
         on(this.elements.reinitBtn, 'click', () => this.reinitDevice());
         on(this.elements.firmwareBtn, 'click', () => this.openFirmwareDialog());
+        on(this.elements.midiToggleBtn, 'click', () => this.setMidiDrawerOpen(!this.midiDrawerOpen));
+        on(this.elements.midiShowIn, 'change', (e) => this.getMidiMonitor().setFilter('in', e.target.checked));
+        on(this.elements.midiShowOut, 'change', (e) => this.getMidiMonitor().setFilter('out', e.target.checked));
+        on(this.elements.midiShowClock, 'change', (e) => this.getMidiMonitor().setFilter('clock', e.target.checked));
+        on(this.elements.midiClearBtn, 'click', () => this.getMidiMonitor().clear());
+        on(this.elements.midiPauseBtn, 'click', () => {
+            const monitor = this.getMidiMonitor();
+            monitor.setPaused(!monitor.paused);
+            this.elements.midiPauseBtn.textContent = monitor.paused ? 'resume' : 'pause';
+            this.elements.midiPauseBtn.classList.toggle('active', monitor.paused);
+        });
         on(this.elements.firmwareCloseBtn, 'click', () => this.closeFirmwareDialog());
         on(this.elements.firmwareModal, 'click', (e) => {
             if (e.target === this.elements.firmwareModal) this.closeFirmwareDialog();
@@ -254,7 +277,8 @@ Object.assign(
     gridMethods,
     backupUiMethods,
     editorUiMethods,
-    firmwareUiMethods
+    firmwareUiMethods,
+    midiUiMethods
 );
 
 document.addEventListener('DOMContentLoaded', () => {

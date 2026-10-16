@@ -79,6 +79,7 @@ export const deviceMethods = {
 
                 await this.detectVirtualGrid();
                 await this.detectFirmware();
+                await this.resumeMidiMonitor();
                 await this.requestFileListRefresh();
                 return true;
             }
