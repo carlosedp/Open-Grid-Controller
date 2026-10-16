@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.4"
+#define DEVICE_VERSION_BASE "og-0.3.5"
 
 #include <string.h>
 
@@ -24,6 +24,7 @@
 
 #include "device.h"
 #include "flash.h"
+#include "fs.h"
 #include "iii.h"
 #include "serial.h"
 #include "util.h"
@@ -421,6 +422,22 @@ static int l_og_led(lua_State *l) {
   return 0;
 }
 
+// og_rename_file(old, new): true, or nil and a message. Replaces `new` if it
+// exists. One littlefs operation, so a power cut leaves either name, never
+// both or neither (diii's copy + delete fallback can't promise that).
+static int l_og_rename_file(lua_State *l) {
+  const char *from = luaL_checkstring(l, 1);
+  const char *to = luaL_checkstring(l, 2);
+  const int err = fs_rename(from, to);
+  if (err == 0) {
+    lua_pushboolean(l, 1);
+    return 1;
+  }
+  lua_pushnil(l);
+  lua_pushfstring(l, "rename %s -> %s failed (%d)", from, to, err);
+  return 2;
+}
+
 static const struct luaL_Reg device_lib[] = {
     {"grid_led", l_grid_led},
     {"grid_led_get", l_grid_led_get},
@@ -436,6 +453,7 @@ static const struct luaL_Reg device_lib[] = {
     {"og_key", l_og_key},
     {"og_led", l_og_led},
     {"og_dump_file", og_l_dump_file},
+    {"og_rename_file", l_og_rename_file},
     {NULL, NULL},
 };
 
@@ -458,6 +476,7 @@ static const char *device_help_str =
     "  og_key(x,y,z)   inject a key event, as if pressed on the grid\n"
     "  og_led(r,g,b)   status LED color (0-255); og_led() = mode color\n"
     "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n"
-    "  og_dump_file(f) print a file as base64, then size and CRC-32\n";
+    "  og_dump_file(f) print a file as base64, then size and CRC-32\n"
+    "  og_rename_file(old, new)  rename a file (replaces new)\n";
 
 const char *device_help_txt() { return device_help_str; }
