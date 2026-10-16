@@ -9,6 +9,9 @@
     <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="vendor/prism-code-editor.css">
     <link rel="stylesheet" href="style.css">
+    <!-- visual refresh (experimental); ?classic shows the current look -->
+    <link rel="stylesheet" href="refresh.css" id="refreshCss">
+    <script>if (/[?&]classic\b/.test(location.search)) document.getElementById('refreshCss').remove();</script>
 </head>
 <body>
     <div class="app-container">
