@@ -114,21 +114,8 @@ export const editorUiMethods = {
         }
         const editor = this.getScriptEditor();
         const text = editor.text;
-        let written = false;
-        const observe = (line) => {
-            if (line === `-- file written: ${fileName}`) written = true;
-        };
-        this.outputObservers = this.outputObservers || new Set();
-        this.outputObservers.add(observe);
-
-        try {
-            this.outputLine(`saving ${fileName}...`);
-            await this.sendScriptTextToiii(fileName, text, { keepOld: Boolean(this.editorExactFiles) });
-        } catch (error) {
-            this.outputLine(`Save error: ${error.message}`);
-        } finally {
-            this.outputObservers.delete(observe);
-        }
+        this.outputLine(`saving ${fileName}...`);
+        const written = await this.uploadChecked(fileName, text, { keepOld: Boolean(this.editorExactFiles) });
 
         if (written) {
             editor.markSaved(fileName, text);

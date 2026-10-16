@@ -1,6 +1,8 @@
 // File explorer contents and the per-file actions.
 // Mixed into diiiApp (diii.js); `this` is the app.
 
+import { hasExactFiles, readDeviceFile } from './backup.js';
+
 export const fileMethods = {
     formatSizeKb(bytes) {
         const kb = (Number(bytes) || 0) / 1024;
@@ -138,6 +140,7 @@ export const fileMethods = {
                   : [
                         { label: 'run', fn: () => this.enqueueRunFile(entry.name) },
                         { label: 'edit', fn: () => this.editFile(entry.name) },
+                        { label: 'rename', fn: () => this.renameFile(entry.name) },
                         { label: 'download', fn: () => this.downloadFile(entry.name) },
                         { label: 'first', fn: () => this.configureFirst(entry.name) },
                         { label: 'read', fn: () => this.showFile(entry.name) },
@@ -374,6 +377,53 @@ export const fileMethods = {
         await this.executeLua(`fs_run_file("lib.lua")`);
         await this.delay(500);
         await this.executeLua(`fs_run_file(${this.luaQuote(fileName)})`);
+    },
+
+    // og_rename_file() (Open Grid firmware) renames in one step; elsewhere the
+    // file is copied (compile-checked) and the old one deleted. A "first"
+    // script stays first, and an open editor follows the new name.
+    async renameFile(fileName) {
+        const newName = this.normalizeScriptName(window.prompt(`Rename ${fileName} to:`, fileName));
+        if (!newName || newName === fileName) return;
+        if (newName === 'init.lua' || newName === 'lib.lua') {
+            this.outputLine(`Rename error: ${newName} is reserved`);
+            return;
+        }
+        if (this.fileEntries.some((entry) => entry.name === newName)) {
+            if (!window.confirm(`${newName} exists. Replace it?`)) return;
+        }
+
+        try {
+            const quoted = `${this.luaQuote(fileName)}, ${this.luaQuote(newName)}`;
+            const probe = await this.executeLuaCapture('print(og_rename_file ~= nil)');
+            if (probe.some((line) => line.trim() === 'true')) {
+                const result = await this.executeLuaCapture(`print(og_rename_file(${quoted}))`);
+                if (!result.some((line) => line.trim() === 'true')) {
+                    throw new Error(result.join(' ').trim() || 'no answer');
+                }
+            } else {
+                const api = this.backupApi();
+                const data = await readDeviceFile(api, fileName, await hasExactFiles(api));
+                const text = new TextDecoder().decode(data).replace(/\0+$/, '');
+                if (!(await this.uploadChecked(newName, text))) {
+                    throw new Error(`${newName} not written; ${fileName} kept`);
+                }
+                await this.executeLuaCapture(`fs_remove_file(${this.luaQuote(fileName)})`);
+            }
+
+            if (this.firstBadgeFileNames.has(fileName)) {
+                await this.executeLuaCapture(`first(${this.luaQuote(newName)})`);
+            }
+            const editor = this.scriptEditor;
+            if (editor?.name === fileName) {
+                editor.name = newName;
+                this.updateEditorTitle(editor.dirty);
+            }
+            this.outputLine(`renamed ${fileName} to ${newName}`);
+        } catch (error) {
+            this.outputLine(`Rename error: ${error.message}`);
+        }
+        await this.requestFileListRefresh();
     },
 
     async deleteFile(fileName) {

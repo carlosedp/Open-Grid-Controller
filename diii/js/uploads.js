@@ -38,6 +38,25 @@ export const uploadMethods = {
         }
     },
 
+    // Uploads a script and reports whether the device wrote it ("-- file
+    // written: <name>"; a compile error doesn't print that).
+    async uploadChecked(fileName, text, options = {}) {
+        let written = false;
+        const observe = (line) => {
+            if (line === `-- file written: ${fileName}`) written = true;
+        };
+        this.outputObservers = this.outputObservers || new Set();
+        this.outputObservers.add(observe);
+        try {
+            await this.sendScriptTextToiii(fileName, text, options);
+        } catch (error) {
+            this.outputLine(`Upload error: ${error.message}`);
+        } finally {
+            this.outputObservers.delete(observe);
+        }
+        return written;
+    },
+
     // keepOld: the firmware replaces the file only once the new one compiles
     // (Open Grid), so don't delete it first; stock iii writes without
     // truncating, so a shorter file would keep the old one's tail.
