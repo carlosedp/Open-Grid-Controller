@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZNH89624GC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-ZNH89624GC');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#101010">
@@ -13,6 +24,7 @@
     <link rel="stylesheet" href="refresh.css" id="refreshCss">
     <script>if (/[?&]classic\b/.test(location.search)) document.getElementById('refreshCss').remove();</script>
 </head>
+
 <body>
     <div class="app-container">
         <header class="app-header">
@@ -24,26 +36,40 @@
                     <span id="replStatusIndicator" class="repl-status-indicator"></span>
                     <span id="replStatusText" class="repl-status-text">not connected</span>
                 </div>
-                <button type="button" id="replConnectionBtn" class="repl-connection-btn" title="connect/disconnect (Cmd/Ctrl+Shift+C)">connect</button>
+                <button type="button" id="replConnectionBtn" class="repl-connection-btn"
+                    title="connect/disconnect (Cmd/Ctrl+Shift+C)">connect</button>
                 <div class="device-menu-wrap">
-                    <button type="button" id="deviceMenuBtn" class="repl-connection-btn" aria-haspopup="menu" aria-expanded="false">device ▾</button>
+                    <button type="button" id="deviceMenuBtn" class="repl-connection-btn" aria-haspopup="menu"
+                        aria-expanded="false">device ▾</button>
                     <div id="deviceMenu" class="file-menu device-menu" role="menu">
-                        <button type="button" id="reinitBtn" class="file-menu-item" role="menuitem" title="restart Lua and run the first script again, without rebooting (^^i)">re-init</button>
+                        <button type="button" id="reinitBtn" class="file-menu-item" role="menuitem"
+                            title="restart Lua and run the first script again, without rebooting (^^i)">re-init</button>
                         <button type="button" id="restartBtn" class="file-menu-item" role="menuitem">reboot</button>
-                        <button type="button" id="bootloaderBtn" class="file-menu-item" role="menuitem">bootloader</button>
-                        <button type="button" id="backupBtn" class="file-menu-item" role="menuitem" title="download every file on the device as one zip">backup</button>
-                        <button type="button" id="restoreBtn" class="file-menu-item" role="menuitem" title="upload the files of a backup zip">restore</button>
-                        <button type="button" id="reformatBtn" class="file-menu-item" role="menuitem" title="erase every file on the device">reformat</button>
-                        <button type="button" id="firmwareBtn" class="file-menu-item" role="menuitem" title="firmware version and updates">firmware</button>
+                        <button type="button" id="bootloaderBtn" class="file-menu-item"
+                            role="menuitem">bootloader</button>
+                        <button type="button" id="backupBtn" class="file-menu-item" role="menuitem"
+                            title="download every file on the device as one zip">backup</button>
+                        <button type="button" id="restoreBtn" class="file-menu-item" role="menuitem"
+                            title="upload the files of a backup zip">restore</button>
+                        <button type="button" id="reformatBtn" class="file-menu-item" role="menuitem"
+                            title="erase every file on the device">reformat</button>
+                        <button type="button" id="firmwareBtn" class="file-menu-item" role="menuitem"
+                            title="firmware version and updates">firmware</button>
                     </div>
                 </div>
-                <button type="button" id="uploadBtn" class="repl-connection-btn" title="upload .lua files (or drop them anywhere)">upload</button>
-                <button type="button" id="helpBtn" class="repl-connection-btn" title="diii shortcuts and the device's help()">help</button>
+                <button type="button" id="uploadBtn" class="repl-connection-btn"
+                    title="upload .lua files (or drop them anywhere)">upload</button>
+                <button type="button" id="helpBtn" class="repl-connection-btn"
+                    title="diii shortcuts and the device's help()">help</button>
             </div>
             <div class="header-right">
-                <button type="button" id="appUpdateBtn" class="repl-connection-btn app-update-btn" title="a newer diii was published: reload to use it" hidden>update ready ↻</button>
-                <a id="repoLink" class="repl-connection-btn" href="https://github.com/carlosedp/Open-Grid-Controller" target="_blank" rel="noopener noreferrer" title="Open Grid Controller on GitHub: firmware, diii, docs">github</a>
-                <button id="scriptReferenceBtn" class="repl-connection-btn" title="iii reference (works offline)">reference</button>
+                <button type="button" id="appUpdateBtn" class="repl-connection-btn app-update-btn"
+                    title="a newer diii was published: reload to use it" hidden>update ready ↻</button>
+                <a id="repoLink" class="repl-connection-btn" href="https://github.com/carlosedp/Open-Grid-Controller"
+                    target="_blank" rel="noopener noreferrer"
+                    title="Open Grid Controller on GitHub: firmware, diii, docs">github</a>
+                <button id="scriptReferenceBtn" class="repl-connection-btn"
+                    title="iii reference (works offline)">reference</button>
             </div>
         </header>
 
@@ -51,90 +77,115 @@
             <div class="split-container" id="splitContainer">
                 <aside class="file-explorer-pane" id="fileExplorerPane">
                     <div class="file-explorer-header">
-                        <button type="button" id="toggleExplorerBtn" class="file-explorer-toggle" aria-label="toggle file explorer" aria-expanded="false">
+                        <button type="button" id="toggleExplorerBtn" class="file-explorer-toggle"
+                            aria-label="toggle file explorer" aria-expanded="false">
                             <span class="file-explorer-icon" aria-hidden="true">
                                 <svg viewBox="0 0 16 16" role="img" aria-hidden="true" focusable="false">
-                                    <path d="M4 1.75h5.2l3.05 3.05V14.25H4z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-                                    <path d="M9.2 1.75v3.05h3.05" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                                    <path d="M4 1.75h5.2l3.05 3.05V14.25H4z" fill="none" stroke="currentColor"
+                                        stroke-width="1.1" stroke-linejoin="round" />
+                                    <path d="M9.2 1.75v3.05h3.05" fill="none" stroke="currentColor" stroke-width="1.1"
+                                        stroke-linejoin="round" />
                                 </svg>
                             </span>
                             <span id="explorerChevron" class="file-explorer-chevron" aria-hidden="true">›</span>
                         </button>
                         <div class="repl-actions-spacer"></div>
-                        <button type="button" id="newFileBtn" class="file-explorer-refresh file-explorer-new" aria-label="new file" title="new file">+</button>
-                        <button type="button" id="refreshExplorerBtn" class="file-explorer-refresh" type="button" aria-label="refresh file view" title="refresh file view">
+                        <button type="button" id="newFileBtn" class="file-explorer-refresh file-explorer-new"
+                            aria-label="new file" title="new file">+</button>
+                        <button type="button" id="refreshExplorerBtn" class="file-explorer-refresh" type="button"
+                            aria-label="refresh file view" title="refresh file view">
                             <!-- License: MIT. Made by elusiveicons: https://elusiveicons.com -->
-                            <svg viewBox="0 0 1200 1200" role="img" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M600,0C308.74,0,66.009,207.555,11.499,482.812h166.553C229.37,297.756,398.603,161.719,600,161.719c121.069,0,230.474,49.195,309.668,128.613l-192.48,192.48h304.762H1200V0l-175.781,175.781C915.653,67.181,765.698,0,600,0z M0,717.188V1200l175.781-175.781C284.346,1132.819,434.302,1200,600,1200c291.26,0,533.991-207.555,588.501-482.812h-166.553C970.631,902.243,801.396,1038.281,600,1038.281c-121.069,0-230.474-49.195-309.668-128.613l192.48-192.48H0z" fill="currentColor"/>
+                            <svg viewBox="0 0 1200 1200" role="img" aria-hidden="true" focusable="false"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M600,0C308.74,0,66.009,207.555,11.499,482.812h166.553C229.37,297.756,398.603,161.719,600,161.719c121.069,0,230.474,49.195,309.668,128.613l-192.48,192.48h304.762H1200V0l-175.781,175.781C915.653,67.181,765.698,0,600,0z M0,717.188V1200l175.781-175.781C284.346,1132.819,434.302,1200,600,1200c291.26,0,533.991-207.555,588.501-482.812h-166.553C970.631,902.243,801.396,1038.281,600,1038.281c-121.069,0-230.474-49.195-309.668-128.613l192.48-192.48H0z"
+                                    fill="currentColor" />
                             </svg>
                         </button>
                     </div>
                     <div id="fileList" class="file-list" aria-label="file list"></div>
                     <div id="fileSpaceFooter" class="file-space-footer">free space: -- kb</div>
                 </aside>
-                <div id="explorerResizer" class="explorer-resizer" role="separator" tabindex="0" aria-orientation="vertical" aria-label="resize explorer" aria-controls="fileExplorerPane"></div>
+                <div id="explorerResizer" class="explorer-resizer" role="separator" tabindex="0"
+                    aria-orientation="vertical" aria-label="resize explorer" aria-controls="fileExplorerPane"></div>
                 <div id="workArea" class="work-area">
-                <div class="repl-pane full-width" id="replPane">
-                    <div class="repl-content">
-                        <section id="gridDrawer" class="grid-drawer" aria-label="virtual grid" hidden>
-                            <div class="midi-drawer-bar">
-                                <button type="button" id="gridToggleBtn" class="midi-toggle" aria-expanded="false" aria-controls="gridBody" title="show the grid's LEDs and press keys from here">grid ▸</button>
-                                <span id="gridStatus" class="midi-status"></span>
+                    <div class="repl-pane full-width" id="replPane">
+                        <div class="repl-content">
+                            <section id="gridDrawer" class="grid-drawer" aria-label="virtual grid" hidden>
+                                <div class="midi-drawer-bar">
+                                    <button type="button" id="gridToggleBtn" class="midi-toggle" aria-expanded="false"
+                                        aria-controls="gridBody"
+                                        title="show the grid's LEDs and press keys from here">grid ▸</button>
+                                    <span id="gridStatus" class="midi-status"></span>
+                                </div>
+                                <div id="gridBody" class="grid-body">
+                                    <div id="gridCells" class="grid-cells" role="grid" aria-label="virtual grid"></div>
+                                </div>
+                            </section>
+                            <div class="repl-output-area">
+                                <div id="output" class="repl-output"></div>
+                                <button type="button" id="clearBtn"
+                                    class="repl-action-btn output-cleanup-btn">clean</button>
                             </div>
-                            <div id="gridBody" class="grid-body">
-                                <div id="gridCells" class="grid-cells" role="grid" aria-label="virtual grid"></div>
-                            </div>
-                        </section>
-                        <div class="repl-output-area">
-                            <div id="output" class="repl-output"></div>
-                            <button type="button" id="clearBtn" class="repl-action-btn output-cleanup-btn">clean</button>
-                        </div>
-                        <section id="midiDrawer" class="midi-drawer" aria-label="MIDI monitor">
-                            <div class="midi-drawer-bar">
-                                <button type="button" id="midiToggleBtn" class="midi-toggle" aria-expanded="false" aria-controls="midiBody" title="show the MIDI the device sends and receives">midi ▸</button>
-                                <span id="midiStatus" class="midi-status"></span>
-                                <div class="repl-actions-spacer"></div>
-                                <div class="midi-controls">
-                                    <label><input type="checkbox" id="midiShowIn" checked> in</label>
-                                    <label><input type="checkbox" id="midiShowOut" checked> out</label>
-                                    <label title="clock and active sensing (frequent)"><input type="checkbox" id="midiShowClock"> clock</label>
-                                    <button type="button" id="midiPauseBtn" class="repl-action-btn">pause</button>
-                                    <button type="button" id="midiClearBtn" class="repl-action-btn">clear</button>
+                            <section id="midiDrawer" class="midi-drawer" aria-label="MIDI monitor">
+                                <div class="midi-drawer-bar">
+                                    <button type="button" id="midiToggleBtn" class="midi-toggle" aria-expanded="false"
+                                        aria-controls="midiBody"
+                                        title="show the MIDI the device sends and receives">midi ▸</button>
+                                    <span id="midiStatus" class="midi-status"></span>
+                                    <div class="repl-actions-spacer"></div>
+                                    <div class="midi-controls">
+                                        <label><input type="checkbox" id="midiShowIn" checked> in</label>
+                                        <label><input type="checkbox" id="midiShowOut" checked> out</label>
+                                        <label title="clock and active sensing (frequent)"><input type="checkbox"
+                                                id="midiShowClock"> clock</label>
+                                        <button type="button" id="midiPauseBtn" class="repl-action-btn">pause</button>
+                                        <button type="button" id="midiClearBtn" class="repl-action-btn">clear</button>
+                                    </div>
+                                </div>
+                                <div id="midiBody" class="midi-body">
+                                    <p id="midiNote" class="midi-note" hidden></p>
+                                    <div id="midiList" class="midi-list" role="log" aria-label="MIDI messages"></div>
+                                </div>
+                            </section>
+                            <div class="repl-input-container">
+                                <div class="repl-input-row">
+                                    <span class="repl-input-prompt" aria-hidden="true">&gt;&gt;</span>
+                                    <label for="replInput" style="display: none;">type iii commands here</label>
+                                    <textarea id="replInput" class="repl-input"
+                                        placeholder="send iii commands live here"
+                                        aria-describedby="replInput"></textarea>
                                 </div>
                             </div>
-                            <div id="midiBody" class="midi-body">
-                                <p id="midiNote" class="midi-note" hidden></p>
-                                <div id="midiList" class="midi-list" role="log" aria-label="MIDI messages"></div>
-                            </div>
-                        </section>
-                        <div class="repl-input-container">
-                            <div class="repl-input-row">
-                                <span class="repl-input-prompt" aria-hidden="true">&gt;&gt;</span>
-                                <label for="replInput" style="display: none;">type iii commands here</label>
-                                <textarea id="replInput" class="repl-input" placeholder="send iii commands live here" aria-describedby="replInput"></textarea>
-                            </div>
                         </div>
                     </div>
-                </div>
-                <div id="editorResizer" class="explorer-resizer editor-resizer" role="separator" aria-orientation="vertical" aria-label="resize editor" hidden></div>
-                <section id="editorPane" class="editor-pane" aria-label="script editor" hidden>
-                    <button type="button" id="editorExpandBtn" class="editor-expand" title="show the editor">
-                        <span id="editorExpandTitle"></span>
-                    </button>
-                    <div class="editor-header">
-                        <span id="editorTitle" class="editor-title"></span>
-                        <span id="editorDirty" class="editor-dirty" title="unsaved changes" hidden>●</span>
-                        <div class="repl-actions-spacer"></div>
-                        <button type="button" id="editorSaveBtn" class="repl-action-btn" title="save to the device (Ctrl+S)">save</button>
-                        <button type="button" id="editorSaveAsBtn" class="repl-action-btn" title="save under another name">save as</button>
-                        <button type="button" id="editorRunBtn" class="repl-action-btn" title="save and run">run</button>
-                        <button type="button" id="editorWrapBtn" class="editor-close-btn editor-wrap-btn" aria-label="wrap long lines" aria-pressed="false" title="wrap long lines">↵</button>
-                        <button type="button" id="editorLayoutBtn" class="editor-close-btn" aria-label="switch layout" title="editor below the console / beside it">⇅</button>
-                        <button type="button" id="editorMinimizeBtn" class="editor-close-btn" aria-label="hide editor" title="hide the editor (keeps the file open)">–</button>
-                        <button type="button" id="editorCloseBtn" class="editor-close-btn" aria-label="close editor" title="close">✕</button>
-                    </div>
-                    <div id="editorHost" class="editor-host"></div>
-                </section>
+                    <div id="editorResizer" class="explorer-resizer editor-resizer" role="separator"
+                        aria-orientation="vertical" aria-label="resize editor" hidden></div>
+                    <section id="editorPane" class="editor-pane" aria-label="script editor" hidden>
+                        <button type="button" id="editorExpandBtn" class="editor-expand" title="show the editor">
+                            <span id="editorExpandTitle"></span>
+                        </button>
+                        <div class="editor-header">
+                            <span id="editorTitle" class="editor-title"></span>
+                            <span id="editorDirty" class="editor-dirty" title="unsaved changes" hidden>●</span>
+                            <div class="repl-actions-spacer"></div>
+                            <button type="button" id="editorSaveBtn" class="repl-action-btn"
+                                title="save to the device (Ctrl+S)">save</button>
+                            <button type="button" id="editorSaveAsBtn" class="repl-action-btn"
+                                title="save under another name">save as</button>
+                            <button type="button" id="editorRunBtn" class="repl-action-btn"
+                                title="save and run">run</button>
+                            <button type="button" id="editorWrapBtn" class="editor-close-btn editor-wrap-btn"
+                                aria-label="wrap long lines" aria-pressed="false" title="wrap long lines">↵</button>
+                            <button type="button" id="editorLayoutBtn" class="editor-close-btn"
+                                aria-label="switch layout" title="editor below the console / beside it">⇅</button>
+                            <button type="button" id="editorMinimizeBtn" class="editor-close-btn"
+                                aria-label="hide editor" title="hide the editor (keeps the file open)">–</button>
+                            <button type="button" id="editorCloseBtn" class="editor-close-btn" aria-label="close editor"
+                                title="close">✕</button>
+                        </div>
+                        <div id="editorHost" class="editor-host"></div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -148,18 +199,23 @@
             <div class="reference-header">
                 <h2 class="firmware-title">firmware</h2>
                 <div class="repl-actions-spacer"></div>
-                <button type="button" id="firmwareCloseBtn" class="editor-close-btn" aria-label="close" title="close (Esc)">✕</button>
+                <button type="button" id="firmwareCloseBtn" class="editor-close-btn" aria-label="close"
+                    title="close (Esc)">✕</button>
             </div>
             <div id="firmwareBody" class="firmware-body"></div>
         </div>
     </div>
 
-    <div role="dialog" aria-modal="true" aria-label="iii reference" id="referenceModal" class="modal" style="display: none;">
+    <div role="dialog" aria-modal="true" aria-label="iii reference" id="referenceModal" class="modal"
+        style="display: none;">
         <div class="modal-content reference-content">
             <div class="reference-header">
-                <input type="search" id="referenceSearch" class="reference-search" placeholder="search, e.g. grid_led or metro" aria-label="search the reference">
-                <a href="https://monome.org/docs/iii/code" target="_blank" rel="noopener noreferrer" class="repl-connection-btn" title="monome's iii documentation">online docs ↗</a>
-                <button type="button" id="referenceCloseBtn" class="editor-close-btn" aria-label="close reference" title="close (Esc)">✕</button>
+                <input type="search" id="referenceSearch" class="reference-search"
+                    placeholder="search, e.g. grid_led or metro" aria-label="search the reference">
+                <a href="https://monome.org/docs/iii/code" target="_blank" rel="noopener noreferrer"
+                    class="repl-connection-btn" title="monome's iii documentation">online docs ↗</a>
+                <button type="button" id="referenceCloseBtn" class="editor-close-btn" aria-label="close reference"
+                    title="close (Esc)">✕</button>
             </div>
             <div id="referenceList" class="reference-list"></div>
         </div>
@@ -176,4 +232,5 @@
 
     <script type="module" src="diii.js"></script>
 </body>
+
 </html>
