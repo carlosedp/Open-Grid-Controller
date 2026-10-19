@@ -117,6 +117,12 @@
                                         aria-controls="gridBody"
                                         title="show the grid's LEDs and press keys from here">grid ▸</button>
                                     <span id="gridStatus" class="midi-status"></span>
+                                    <div class="repl-actions-spacer"></div>
+                                    <div class="midi-controls grid-controls">
+                                        <span class="grid-hint">shift-click or right-click holds a key</span>
+                                        <button type="button" id="gridReleaseBtn" class="repl-action-btn" hidden
+                                            title="release the keys held with shift-click or right-click">release</button>
+                                    </div>
                                 </div>
                                 <div id="gridBody" class="grid-body">
                                     <div id="gridCells" class="grid-cells" role="grid" aria-label="virtual grid"></div>

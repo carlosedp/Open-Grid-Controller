@@ -68,6 +68,7 @@ class diiiApp {
         this.gridCells = [];
         this.gridLevels = [];
         this.gridPointers = new Map();
+        this.gridHeld = new Set();
         this.uploadInProgress = false;
 
         this.cacheElements();
@@ -156,6 +157,7 @@ class diiiApp {
             gridDrawer: document.getElementById('gridDrawer'),
             gridToggleBtn: document.getElementById('gridToggleBtn'),
             gridStatus: document.getElementById('gridStatus'),
+            gridReleaseBtn: document.getElementById('gridReleaseBtn'),
             gridCells: document.getElementById('gridCells'),
 
             fileInput: document.getElementById('fileInput'),
@@ -228,6 +230,9 @@ class diiiApp {
         on(this.elements.output, 'click', (e) => this.handleOutputClick(e));
         on(this.elements.gridToggleBtn, 'click', () => this.toggleGridPanel());
         on(this.elements.gridCells, 'pointerdown', (e) => this.handleGridPointerDown(e));
+        // right-click holds a key (handleGridPointerDown), so no menu over the grid
+        on(this.elements.gridCells, 'contextmenu', (e) => e.preventDefault());
+        on(this.elements.gridReleaseBtn, 'click', () => this.releaseAllGridKeys());
         on(window, 'pointerup', (e) => this.handleGridPointerUp(e));
         on(window, 'pointercancel', (e) => this.handleGridPointerUp(e));
         on(this.elements.fileInput, 'change', (e) => this.handleFileSelect(e));

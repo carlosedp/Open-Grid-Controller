@@ -487,6 +487,29 @@ body.is-resizing-explorer * {
     border-color: var(--accent-hover);
 }
 
+/* latched with shift-click or right-click: stays down until clicked again */
+.grid-cell.held {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.grid-hint {
+    font-size: 0.75rem;
+    color: var(--neutral-medium);
+}
+
+.grid-controls [hidden],
+.grid-drawer:not(.open) .grid-controls {
+    display: none;
+}
+
+/* phones: multi-touch already holds keys, and the bar has no room */
+@media (max-width: 600px) {
+    .grid-hint {
+        display: none;
+    }
+}
+
 .repl-action-btn.active {
     color: var(--interactive-selected);
     border-color: var(--accent);

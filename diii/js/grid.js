@@ -128,8 +128,15 @@ export const gridMethods = {
 
     handleGridPointerDown(event) {
         const cell = event.target.closest?.('.grid-cell');
-        if (!cell) return;
+        if (!cell || (event.button !== 0 && event.button !== 2)) return;
         event.preventDefault();
+        // A mouse holds one key at a time; scripts like meadowphysics want a
+        // key held while others are pressed. Shift-click or right-click
+        // latches a key down, and any click on it lets it go.
+        if (event.shiftKey || event.button === 2 || this.gridHeld.has(cell)) {
+            this.toggleGridHold(cell);
+            return;
+        }
         this.gridPointers.set(event.pointerId, cell);
         cell.classList.add('pressed');
         this.sendGridKey(cell, 1);
@@ -139,20 +146,50 @@ export const gridMethods = {
         const cell = this.gridPointers.get(event.pointerId);
         if (!cell) return;
         this.gridPointers.delete(event.pointerId);
-        // another finger may still hold the same key
-        if (![...this.gridPointers.values()].includes(cell)) {
+        // another finger may still hold the same key, or it was latched meanwhile
+        if (!this.isGridKeyDown(cell)) {
             cell.classList.remove('pressed');
             this.sendGridKey(cell, 0);
         }
     },
 
+    isGridKeyDown(cell) {
+        return this.gridHeld.has(cell) || [...this.gridPointers.values()].includes(cell);
+    },
+
+    toggleGridHold(cell) {
+        if (this.gridHeld.delete(cell)) {
+            cell.classList.remove('held');
+            if (!this.isGridKeyDown(cell)) {
+                cell.classList.remove('pressed');
+                this.sendGridKey(cell, 0);
+            }
+        } else {
+            const wasDown = this.isGridKeyDown(cell);
+            this.gridHeld.add(cell);
+            cell.classList.add('held', 'pressed');
+            if (!wasDown) this.sendGridKey(cell, 1);
+        }
+        this.updateGridHeld();
+    },
+
+    updateGridHeld() {
+        const button = this.elements.gridReleaseBtn;
+        if (!button) return;
+        const count = this.gridHeld.size;
+        button.hidden = count === 0;
+        button.textContent = count > 1 ? `release ${count}` : 'release';
+    },
+
     releaseAllGridKeys({ send = true } = {}) {
-        const cells = new Set(this.gridPointers.values());
+        const cells = new Set([...this.gridPointers.values(), ...this.gridHeld]);
         this.gridPointers.clear();
+        this.gridHeld.clear();
         for (const cell of cells) {
-            cell.classList.remove('pressed');
+            cell.classList.remove('pressed', 'held');
             if (send) this.sendGridKey(cell, 0);
         }
+        this.updateGridHeld();
     },
 
     sendGridKey(cell, z) {
