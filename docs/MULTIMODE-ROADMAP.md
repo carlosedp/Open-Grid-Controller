@@ -356,7 +356,7 @@ Next:
 
 - Request a USB PID from [pid.codes](https://pid.codes) (VID `0x1209`, free for open hardware)
   for iii mode, keep `cafe:1101` as a build option for stock-diii compatibility until our diii fork
-  (or upstream) accepts the new ID.
+  (or upstream) accepts the new ID. - Requested PID on <https://github.com/pidcodes/pidcodes.github.com/pull/1318>.
 - Serial mode keeps monome-style strings: that is how hosts find grids, so its VID:PID can change
   freely. Checked in the sources (2026-10-16), none of them looks at VID:PID:
   - norns (`matron/src/device/device_monitor.cc`, `is_dev_monome_grid`): udev `ID_VENDOR` ==
