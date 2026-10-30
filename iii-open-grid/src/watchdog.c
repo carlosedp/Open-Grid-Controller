@@ -28,6 +28,15 @@ static bool settled = false;
 static bool reported = false;
 static uint32_t core1_beat = 0;
 static absolute_time_t core1_seen;
+static volatile bool rebooting = false;
+
+// iii's ^^r arms a reboot with watchdog_reboot() and goes back to the main
+// loop, where feeding the watchdog would reload that countdown forever.
+void __real_watchdog_reboot(uint32_t pc, uint32_t sp, uint32_t delay_ms);
+void __wrap_watchdog_reboot(uint32_t pc, uint32_t sp, uint32_t delay_ms) {
+  rebooting = true;
+  __real_watchdog_reboot(pc, sp, delay_ms);
+}
 
 bool og_watchdog_boot(void) {
   const uint32_t saved = watchdog_hw->scratch[SCRATCH_STRIKES];
@@ -48,6 +57,7 @@ void og_watchdog_start(void) {
 }
 
 void og_watchdog_task(bool report) {
+  if (rebooting) return;
   const absolute_time_t now = get_absolute_time();
   const uint32_t beat = og_grid_core1_beat();
   if (beat != core1_beat) {

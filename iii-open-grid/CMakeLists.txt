@@ -154,9 +154,11 @@ target_link_libraries(iii-open-grid PRIVATE
 target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=_sbrk")
 # midi_monitor.c sees every MIDI message sent and received
 target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=midi_tx" "LINKER:--wrap=vm_handle_midi")
+# watchdog.c stops feeding the watchdog once a reboot is armed (iii's ^^r)
+target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=watchdog_reboot")
 
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.3.11")
+pico_set_program_version(iii-open-grid "og-0.3.12")
 pico_add_extra_outputs(iii-open-grid)
