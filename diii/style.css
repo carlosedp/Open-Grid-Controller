@@ -1271,6 +1271,48 @@ body.is-resizing-editor-rows * {
     margin-bottom: 8px;
 }
 
+/* drag files over the page, then upload progress */
+.upload-modal {
+    pointer-events: none; /* drag events keep reaching the body */
+}
+
+.upload-content {
+    width: min(420px, 100%);
+    text-align: center;
+    padding: 24px;
+}
+
+.upload-modal.dragging .upload-content {
+    border: 2px dashed var(--accent);
+}
+
+.upload-modal.dragging .upload-progress {
+    display: none;
+}
+
+.upload-content p {
+    overflow-wrap: anywhere;
+}
+
+.upload-progress {
+    height: 6px;
+    margin-top: 12px;
+    border-radius: 3px;
+    background-color: var(--bg-subdued);
+    overflow: hidden;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    width: 0;
+    background-color: var(--accent);
+    transition: width 0.1s linear;
+}
+
+.upload-modal.failed .upload-progress-bar {
+    background-color: #d9534f;
+}
+
 .modal-btn {
     border: 1px solid var(--neutral-trim);
     background-color: var(--bg-default);

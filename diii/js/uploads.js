@@ -60,7 +60,8 @@ export const uploadMethods = {
     // keepOld: the firmware replaces the file only once the new one compiles
     // (Open Grid), so don't delete it first; stock iii writes without
     // truncating, so a shorter file would keep the old one's tail.
-    async sendScriptLinesToiii(fileName, text, { keepOld = false } = {}) {
+    // onProgress(fraction) follows the lines sent.
+    async sendScriptLinesToiii(fileName, text, { keepOld = false, onProgress = null } = {}) {
         const lines = this.getUploadLines(text);
 
         if (!keepOld) await this.executeLuaCapture(`fs_remove_file(${this.luaQuote(fileName)})`);
@@ -70,9 +71,10 @@ export const uploadMethods = {
         await this.iiiDevice.writeLine('^^s');
         await this.delay(100);
 
-        for (const line of lines) {
+        for (const [i, line] of lines.entries()) {
             await this.iiiDevice.writeLine(line);
             await this.delay(1);
+            onProgress?.((i + 1) / lines.length);
         }
 
         await this.delay(100);
@@ -85,23 +87,23 @@ export const uploadMethods = {
         await this.executeLuaCapture('print(1)');
     },
 
+    // Returns whether the device wrote the file.
     async uploadTextAsScript(name, text, options = {}) {
-        const { refreshList = true } = options;
+        const { refreshList = true, onProgress = null } = options;
 
         if (!this.iiiDevice.isConnected) {
             this.outputLine('Error: Not connected to usb device (click connect in the header)');
-            return;
+            return false;
         }
 
-        try {
-            this.outputLine(`Uploading ${name}...`);
-            await this.sendScriptTextToiii(name, text);
-            if (refreshList) {
-                await this.requestFileListRefresh();
-            }
-        } catch (error) {
-            this.outputLine(`Upload error: ${error.message}`);
+        this.outputLine(`Uploading ${name}...`);
+        const written = await this.uploadChecked(name, text, { onProgress });
+        if (refreshList) {
+            await this.requestFileListRefresh().catch((error) => {
+                this.outputLine(`File list error: ${error.message}`);
+            });
         }
+        return written;
     },
 
     supportsFileSystemPicker() {
@@ -175,13 +177,16 @@ export const uploadMethods = {
         try {
             this.setExplorerCollapsed(false);
             const text = await file.text();
-            await this.uploadTextAsScript(file.name, text, { refreshList: options.refreshList !== false });
+            const written = await this.uploadTextAsScript(file.name, text, {
+                refreshList: options.refreshList !== false,
+                onProgress: options.onProgress
+            });
             this.cacheLastUploadedScript({
                 name: file.name,
                 text,
                 fileHandle: options.fileHandle || null
             });
-            return true;
+            return written;
         } catch (error) {
             this.outputLine(`Upload error: ${error.message}`);
             return false;
@@ -270,17 +275,70 @@ export const uploadMethods = {
         const lua = picked.filter(({ file }) => file.name.toLowerCase().endsWith('.lua'));
         const skipped = picked.filter((entry) => !lua.includes(entry)).map(({ file }) => file.name);
         if (skipped.length) this.outputLine(`skipped (only .lua files): ${skipped.join(', ')}`);
-        if (!lua.length) return;
+        if (!lua.length) {
+            if (skipped.length) this.flashUploadBox('nothing uploaded', 'only .lua files can be uploaded', true);
+            return;
+        }
+        if (!this.iiiDevice.isConnected) {
+            this.outputLine('Error: Not connected to usb device (click connect in the header)');
+            this.flashUploadBox('not connected', 'connect a device first, then drop the files again', true);
+            return;
+        }
 
         let uploaded = 0;
-        for (const { file, handle } of lua) {
-            if (await this.uploadSelectedFile(file, { fileHandle: handle || null, refreshList: false })) uploaded++;
+        for (const [i, { file, handle }] of lua.entries()) {
+            const count = lua.length > 1 ? ` (${i + 1} of ${lua.length})` : '';
+            this.showUploadBox({ title: `uploading${count}`, detail: file.name, progress: i / lua.length });
+            const onProgress = (fraction) => this.setUploadProgress((i + fraction) / lua.length);
+            if (await this.uploadSelectedFile(file, { fileHandle: handle || null, refreshList: false, onProgress })) {
+                uploaded++;
+            }
         }
         if (lua.length > 1) this.outputLine(`uploaded ${uploaded} of ${lua.length} files`);
+        const failed = lua.length - uploaded;
+        if (failed) {
+            this.flashUploadBox(`${failed} of ${lua.length} not uploaded`, 'see the console for the error', true);
+        } else {
+            this.flashUploadBox(
+                lua.length > 1 ? `uploaded ${uploaded} files` : 'uploaded',
+                lua.length > 1 ? '' : lua[0].file.name
+            );
+        }
         await this.requestFileListRefresh();
     },
 
+    // The box over the page while files are dragged in and uploaded.
+    showUploadBox({ title, detail = '', progress = null, dragging = false, failed = false }) {
+        const { uploadModal, uploadTitle, uploadDetail } = this.elements;
+        if (!uploadModal) return;
+        clearTimeout(this.uploadBoxTimer);
+        uploadTitle.textContent = title;
+        uploadDetail.textContent = detail;
+        uploadModal.classList.toggle('dragging', dragging);
+        uploadModal.classList.toggle('failed', failed);
+        if (progress !== null) this.setUploadProgress(progress);
+        uploadModal.style.display = 'flex';
+    },
+
+    setUploadProgress(fraction) {
+        const bar = this.elements.uploadProgressBar;
+        if (bar) bar.style.width = `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%`;
+    },
+
+    hideUploadBox() {
+        clearTimeout(this.uploadBoxTimer);
+        if (this.elements.uploadModal) this.elements.uploadModal.style.display = 'none';
+    },
+
+    // A result that goes away on its own.
+    flashUploadBox(title, detail, failed = false) {
+        this.showUploadBox({ title, detail, progress: 1, failed });
+        this.uploadBoxTimer = setTimeout(() => this.hideUploadBox(), failed ? 3000 : 1200);
+    },
+
     setupDragAndDrop() {
+        const hasFiles = (event) => [...(event.dataTransfer?.types || [])].includes('Files');
+
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
             document.body.addEventListener(
                 eventName,
@@ -292,7 +350,24 @@ export const uploadMethods = {
             );
         });
 
+        document.body.addEventListener('dragenter', (event) => {
+            if (!hasFiles(event) || this.uploadInProgress) return;
+            this.showUploadBox({
+                title: 'drop to upload',
+                detail: this.iiiDevice.isConnected ? '.lua files go to the device' : 'no device connected',
+                dragging: true
+            });
+        });
+
+        // relatedTarget is null only when the pointer leaves the window
+        document.body.addEventListener('dragleave', (event) => {
+            if (!event.relatedTarget && this.elements.uploadModal?.classList.contains('dragging')) {
+                this.hideUploadBox();
+            }
+        });
+
         document.body.addEventListener('drop', async (event) => {
+            if (this.elements.uploadModal?.classList.contains('dragging')) this.hideUploadBox();
             const files = event.dataTransfer?.files;
             if (!files || files.length === 0) return;
             await this.uploadFiles([...files].map((file) => ({ file })));

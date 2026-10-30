@@ -161,6 +161,10 @@ class diiiApp {
             gridCells: document.getElementById('gridCells'),
 
             fileInput: document.getElementById('fileInput'),
+            uploadModal: document.getElementById('uploadModal'),
+            uploadTitle: document.getElementById('uploadTitle'),
+            uploadDetail: document.getElementById('uploadDetail'),
+            uploadProgressBar: document.getElementById('uploadProgressBar'),
 
             browserWarning: document.getElementById('browserWarning'),
             closeWarning: document.getElementById('closeWarning')
