@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.12"
+#define DEVICE_VERSION_BASE "og-0.3.13"
 
 #include <string.h>
 
@@ -35,6 +35,7 @@
 #include "grid.h"
 #include "heap_stats.h"
 #include "midi_monitor.h"
+#include "midi_uart.h"
 #include "monome_serial.h"
 #include "status_led.h"
 #include "watchdog.h"
@@ -242,6 +243,7 @@ int main(void) {
   og_watchdog_start();
 
   if (mode == MODE_III) {
+    og_midi_uart_init();
     boot_sweep();
     iii_loop(run_script);  // never returns; calls device_task()
   }

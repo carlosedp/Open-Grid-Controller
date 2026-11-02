@@ -18,6 +18,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "midi_uart.h"
 #include "pico/time.h"
 #include "serial.h"
 
@@ -51,6 +52,8 @@ static void report(char dir, uint8_t b1, uint8_t b2, uint8_t b3) {
 void __real_midi_tx(uint8_t data1, uint8_t data2, uint8_t data3);
 void __wrap_midi_tx(uint8_t data1, uint8_t data2, uint8_t data3) {
   __real_midi_tx(data1, data2, data3);
+  // one wrap per symbol, so the TRS copy hooks in here too
+  og_midi_uart_tx(data1, data2, data3);
   count_out++;
   if (monitor_on) report('o', data1, data2, data3);
 }

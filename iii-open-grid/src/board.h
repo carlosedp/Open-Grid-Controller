@@ -24,6 +24,13 @@
 #error "no board selected: configure with -DOG_BOARD=rp2040_zero or -DOG_BOARD=xiao_rp2040"
 #endif
 
+// TRS MIDI out (midi_uart.c), GPIO0 on both boards (XIAO: D6). Wired as TRS
+// type B, like Polyend's gear, so a plain stereo cable connects them:
+// tip <- 33 ohm <- 3V3, ring <- 10 ohm <- GPIO0, sleeve to GND.
+// (Type A swaps tip and ring.)
+#define OG_MIDI_UART uart0
+#define OG_MIDI_TX_PIN 0
+
 #ifndef OG_I2C_HZ
 #define OG_I2C_HZ 100000
 #endif
