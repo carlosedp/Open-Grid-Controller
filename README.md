@@ -134,6 +134,16 @@ You can also open the repository root in VS Code with the PlatformIO extension a
 
 The first build downloads pico-sdk 2.2.0, the Arm toolchain, CMake and Ninja through PlatformIO (about 300 MB).
 
+### TRS MIDI out (DIY, og-0.3.13 or later)
+
+In iii mode, every MIDI message a script sends over USB also goes out GPIO0 (XIAO pin D6) at MIDI speed, so the grid can play hardware with only a USB power bank. Add a 3.5 mm stereo jack and two resistors, wired as TRS type B (Polyend's gear, such as the Tracker Mini, uses type B, so a plain stereo cable connects them):
+
+- tip ← 33 Ω ← 3V3
+- ring ← 10 Ω ← GPIO0
+- sleeve → GND
+
+For type A gear, swap tip and ring, or use an A/B adapter. In the printed enclosure, a low jack (about 5 mm tall) fits on the USB end next to the RP2040-Zero, with its hole centered on the seam between the top and bottom parts. It's out only; MIDI in stays on USB. This hasn't been tested with hardware yet.
+
 ### diii
 
 `diii/` is our fork of monome's [web-diii](https://github.com/monome/web-diii) (GPL-3.0), kept as a git subtree of [carlosedp/web-diii](https://github.com/carlosedp/web-diii). On top of upstream, it fixes installing diii as an app (PWA) from any path. It also adds a **grid** drawer at the top of the console for the Open Grid firmware: it shows the grid's LEDs live and lets you press keys from the browser, so scripts can be tried without keypads attached. Shift-click or right-click holds a key down (click it again to let go), for scripts that use held keys, such as meadowphysics' row setup. **edit** in a file's menu opens it in a code editor next to the console (save with Ctrl+S, save as, run, with autocomplete and help for iii functions); Tab completes names in the REPL; **+** creates a new script and **rename** renames one. **backup** downloads every file on the device as one zip, and **restore** uploads a backup's files again (byte-exact backups need og-0.3.4 or later). The **midi** drawer above the buttons shows the MIDI the device sends and receives (og-0.3.8 or later). The status shows the firmware version, and **device ▾ → firmware** checks for a newer release and walks through updating. When a newer diii is published at [diii.vfmod.com](https://diii.vfmod.com), an **update ready** button appears in the header to load it. `make diii-pull-upstream` merges monome's latest changes into `diii/`, and `make diii-push-fork` pushes `diii/` history to the fork, which is useful for pull requests to monome.

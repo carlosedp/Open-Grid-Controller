@@ -112,6 +112,8 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
 - **iii itself** carries our fixes and memory/speed changes, tracked commit by commit in
   [third_party/README.md](../third_party/README.md) and exportable as upstream patches (M4).
 - **1200-baud touch** reboots into the UF2 bootloader (PlatformIO upload works without BOOT).
+- **TRS MIDI out** (og-0.3.13, untested): every message sent over USB MIDI also goes out GPIO0
+  at 31250 baud, for a DIY 3.5 mm jack (M8).
 - serial mode mirrors monome's iii-grid-2022 command set (and fixes three small bugs found there).
 
 ### 1.4 Building
@@ -377,12 +379,21 @@ Next:
   15×8 + scene column) sending clip state as note velocities → LED levels.
 - **Accept:** the session "red box" follows the grid; clip states show as brightness.
 
-### M8 — Hardware MIDI out (DIY)
+### M8 — Hardware MIDI out (DIY) (code done in og-0.3.13, untested)
 
-- TRS MIDI (Type A) from a spare GPIO: UART TX @ 31250 baud, 3.3 V wiring (33 Ω on TX, 10 Ω on
-  3.3 V); optional opto-isolated MIDI in (6N138/H11L1) for clock sync.
-- Expose as a second MIDI port to Lua (`midi_tx` with a port argument — needs an iii change, see M4
-  item 5).
+- ✅ TRS MIDI out on GPIO0 (UART0 TX, free on both boards; XIAO pin D6) at 31250 baud.
+  `src/midi_uart.c` gets every `midi_tx` through the existing link-time wrap, keeps only the bytes
+  that belong to a message (iii pads short messages with zeros: a clock is `F8 00 00`), and sends
+  them from a 512-byte ring drained by the UART interrupt. A script waits only when the ring is full.
+- Wiring, MIDI 3.3 V spec, **TRS type B** (Polyend's gear, e.g. the Tracker Mini, so a plain
+  stereo cable connects them): tip ← 33 Ω ← 3V3, ring ← 10 Ω ← GPIO0, sleeve → GND. Type A swaps
+  tip and ring.
+- In the enclosure: one 3.5 mm jack on the USB short wall next to the RP2040-Zero cradle, hole
+  centered on the top/bottom seam (3 mm above the floor); a low jack (~5 mm tall) clears the keypad
+  boards.
+- Out only, by choice (a controller); MIDI in stays USB.
+- Not done: a separate TRS port in Lua (`midi_tx` with a port argument, needs an iii change, see
+  M4 item 5). Today USB and TRS get the same messages.
 - **Accept:** Open Grid on a USB power bank plays a hardware synth directly.
 
 ### M9 — Diii improvements
