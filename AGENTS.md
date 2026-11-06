@@ -7,15 +7,14 @@ Guide for coding agents (and humans) working on this repository. Read this first
 
 Open Grid Controller: a 16×8 grid (two FREEPOET 8×8 I2C keypad boards + an RP2040) that runs
 **monome iii** (Lua on the device, USB MIDI + serial REPL), plus a monome-serial mode for
-norns/serialosc. Scripts are managed from **diii**, a browser app (our fork lives in `diii/`,
-published at https://diii.vfmod.com).
+norns/serialosc. Scripts are managed from **diii**, a browser app (our fork lives in its own repo,
+`github.com/carlosedp/web-diii`, locally `../web-diii`, published at https://diii.vfmod.com).
 
 | Path                                             | What                                                                     | Rules                                     |
 | ------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------- |
 | `iii-open-grid/`                                 | our firmware (Pico SDK + CMake): device glue, keypad driver, serial mode | ours; GPL-3.0 (links iii)                 |
 | `third_party/iii/`                               | monome iii, **git subtree** of codeberg.org/tehn/iii + our commits       | see "Changing iii" below                  |
 | `third_party/lua`, `littlefs`, `FREEPOET_Keypad` | vendored exports                                                         | don't edit; re-export to update           |
-| `diii/`                                          | web-diii fork, **git subtree** of monome/web-diii                        | plain JS (ES modules in `js/`), no build  |
 | `scripts/og_bench.lua`                           | on-device benchmark                                                      | results go to `docs/BENCHMARKS.md`        |
 | `sw/`                                            | original Arduino firmware (monome serial only)                           | keep as-is; known-good fallback for norns |
 | `docs/`                                          | roadmap, benchmark history                                               | keep current when behavior changes        |
@@ -26,8 +25,8 @@ published at https://diii.vfmod.com).
 make help                      # all targets
 make                           # firmware for the XIAO RP2040 (default BOARD)
 make upload BOARD=rp2040_zero  # build + flash over USB (1200-baud touch, no BOOT button needed)
-make diii                      # serve diii at http://localhost:8000 (Web Serial works on localhost)
-make dist                      # UF2s for all boards + the diii site into dist/
+make diii                      # serve ../web-diii (DIII_DIR) at http://localhost:8000 (Web Serial works on localhost)
+make dist                      # UF2s for all boards into dist/
 ```
 
 - PlatformIO envs: `xiao_rp2040` and `rp2040_zero`. The first build downloads pico-sdk 2.2.0,
@@ -35,10 +34,10 @@ make dist                      # UF2s for all boards + the diii site into dist/
 - Measurement variants come from environment variables, not extra envs:
   `OG_FAST_CLOCK=1 pio run -e xiao_rp2040` (200 MHz), `OG_LUA_VM_IN_RAM=0` (interpreter in flash).
   They reuse the env's build directory, so build the default again afterwards.
-- diii has **no build step**: the browser loads `diii/` as it is. `diii/package.json` only holds
-  development tools (Prettier, TypeScript, esbuild) and the code editor, which `make diii-vendor`
-  bundles into the committed `diii/vendor/`. `make diii` (Node, no install needed) serves it;
-  `make diii-check` type-checks the standalone modules listed in `diii/tsconfig.json`.
+- diii is a separate repo with its own AGENTS.md. Changes to the virtual grid, the firmware
+  dialog or other Open Grid features in diii are made there; this repo's firmware and diii only
+  meet through the serial protocol (`og_*` calls in, `^^...` lines out) and this repo's GitHub
+  releases, which diii's firmware dialog reads (UF2 names `iii-open-grid-og-X.Y.Z-<board>.uf2`).
 - Plain CMake also works: `cmake -S iii-open-grid -B build -DOG_BOARD=xiao_rp2040 -DPICO_SDK_PATH=...`.
 - Build options (CMake / PlatformIO `custom_og_*` / environment `OG_*`): `OG_BOARD`, `OG_I2C_HZ`, `OG_FAST_CLOCK`
   (200 MHz), `OG_LUA_VM_IN_RAM` (default ON).
@@ -70,14 +69,12 @@ Agents can build but can't run anything on the device. The maintainer flashes an
   `pico_set_program_version` in `iii-open-grid/CMakeLists.txt` together for every firmware
   build handed out for testing (`og-X.Y.Z`; optional builds add `-200mhz` / `-vmflash`).
 - **Commits**: small, one topic, imperative subject with a scope prefix (`iii:`,
-  `iii-open-grid:`, `diii:`, `docs:`, `build:`, `tools:`, `scripts:`, `third_party:`). The body
+  `iii-open-grid:`, `docs:`, `build:`, `tools:`, `scripts:`, `third_party:`). The body
   says what was wrong and why the change fixes it; include measurements when relevant. Never
   mix `third_party/iii` changes with other paths in one commit.
 - **Formatting**: run `make format` before committing; `make format-check` must pass. It runs
   clang-format (`.clang-format`: Google-based, 2 spaces, 100 columns, `char *p`) on
-  `iii-open-grid/src`, Prettier (`diii/.prettierrc.json`: 4 spaces, single quotes, 120 columns) on
-  diii's JS, and ruff (`ruff.toml`) on the Python tools, all at pinned versions (uvx, and
-  `diii/package.json` for the JS tools).
+  `iii-open-grid/src` and ruff (`ruff.toml`) on the Python tools, at pinned versions (uvx).
   `third_party/` and `sw/` keep upstream's style; `.editorconfig` covers the basics in editors.
   Reformatting goes in its own commit, never mixed with changes.
 - **Comments** explain why, not what; match the surrounding code's density.
@@ -144,7 +141,7 @@ iii is a git subtree so our changes can go upstream as patches.
 
 ## Licensing
 
-Firmware built from `iii-open-grid/` is GPL-3.0 (iii); `diii/` is GPL-3.0 (web-diii). Vendored
+Firmware built from `iii-open-grid/` is GPL-3.0 (iii); diii (its own repo) is GPL-3.0. Vendored
 libraries keep their own licenses (see `third_party/README.md`). Scripts without a license (e.g.
 many-roads) are linked from the README, not copied into the repo. The repo has no top-level
 LICENSE yet.

@@ -3,64 +3,28 @@
 
 dist/
   firmware/iii-open-grid-<version>-<board>.uf2   from the PlatformIO builds
-  diii/                                          the web app, ready to host
+
+diii, the web app, lives in its own repo (github.com/carlosedp/web-diii),
+which publishes itself.
 
 usage: dist.py BOARD...
-       dist.py --diii-only
        dist.py --clean
 """
 
 import argparse
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
-# development files; the site itself is the files the browser loads
-DIII_SKIP = {
-    "docs",
-    "README.md",
-    "README-development.md",
-    ".gitignore",
-    ".github",
-    ".clang-format",
-    ".prettierrc.json",
-    "node_modules",
-    "package.json",
-    "package-lock.json",
-    "tsconfig.json",
-    "tools",
-}
 
 
 def firmware_version() -> str:
     main_c = (ROOT / "iii-open-grid" / "src" / "main.c").read_text(encoding="utf-8")
     match = re.search(r'#define DEVICE_VERSION_BASE "([^"]+)"', main_c)
     return match.group(1) if match else "unknown"
-
-
-def git_revision() -> str:
-    try:
-        rev = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-        dirty = subprocess.run(
-            ["git", "status", "--porcelain", "--", "diii"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-        return rev + ("-dirty" if dirty else "")
-    except (OSError, subprocess.CalledProcessError):
-        return "dev"
 
 
 def copy_firmware(boards) -> None:
@@ -76,34 +40,10 @@ def copy_firmware(boards) -> None:
         print(f"  {target.relative_to(ROOT)}")
 
 
-def copy_diii() -> None:
-    out = DIST / "diii"
-    shutil.rmtree(out, ignore_errors=True)
-    shutil.copytree(
-        ROOT / "diii", out, ignore=lambda _dir, names: [n for n in names if n in DIII_SKIP]
-    )
-
-    # A new cache name per build makes installed copies pick up the release.
-    sw = out / "sw.js"
-    text = sw.read_text(encoding="utf-8")
-    text, count = re.subn(
-        r"const CACHE = '[^']*';", f"const CACHE = 'diii-{git_revision()}';", text
-    )
-    if count != 1:
-        sys.exit("could not stamp the cache name in diii/sw.js")
-    sw.write_text(text, encoding="utf-8", newline="\n")
-    print(f"  {out.relative_to(ROOT)}/ (cache diii-{git_revision()})")
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("boards", nargs="*")
     parser.add_argument("--clean", action="store_true")
-    parser.add_argument(
-        "--diii-only",
-        action="store_true",
-        help="only build dist/diii (the GitHub Pages workflow uses this)",
-    )
     parser.add_argument(
         "--version", action="store_true", help="print the firmware version (make release)"
     )
@@ -116,9 +56,7 @@ def main() -> None:
         shutil.rmtree(DIST, ignore_errors=True)
         return
     print("dist:")
-    if not args.diii_only:
-        copy_firmware(args.boards)
-    copy_diii()
+    copy_firmware(args.boards)
 
 
 if __name__ == "__main__":

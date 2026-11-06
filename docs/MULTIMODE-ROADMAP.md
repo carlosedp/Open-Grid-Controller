@@ -30,7 +30,6 @@ iii-open-grid/          iii firmware (Pico SDK + CMake)           ← new, GPL-3
   src/lua_vm_in_ram.h   puts the Lua interpreter loop in RAM (force-included)
   src/generated/        pre-generated PIO program (WS2812)
   tools/pio_cmake.py    PlatformIO → CMake bridge
-diii/                   diii web app: fork of monome/web-diii as a git subtree (GPL-3.0)
 scripts/og_bench.lua    memory/speed benchmark run on the device (results: docs/BENCHMARKS.md)
 Makefile                firmware, upload, diii server, dist/ packaging, iii/diii subtrees (make help)
 tools/dist.py           collects UF2s and the diii site into dist/
@@ -324,6 +323,12 @@ Loading kria peaks at 155 of 223 KB, so compiling big scripts no longer needs wo
 speedups are under §5; sending the patches upstream is M11.
 
 ### M5 — diii fork (PWA + Open Grid features)
+
+> **November 2026:** diii moved out of this repo into its own,
+> [carlosedp/web-diii](https://github.com/carlosedp/web-diii) (locally `../web-diii`), with its
+> history (`git subtree split --prefix=diii`). It publishes diii.vfmod.com itself; `diii/`,
+> `make diii-*` and `tools/dist.py --diii-only` are gone. The notes below are the history up
+> to the split.
 
 Fork of [monome/web-diii](https://github.com/monome/web-diii) (GPL-3.0, static site):
 [carlosedp/web-diii](https://github.com/carlosedp/web-diii), imported into this repo as a **git

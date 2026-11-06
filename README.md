@@ -68,7 +68,6 @@ Select the address jumpers as shown by the red circles in the image below:
 ├── enclosure/              # 3D enclosure STEP files
 │   ├── OpenGrid-Bot.step
 │   └── OpenGrid-Top.step
-├── diii/                   # diii web app (fork of monome/web-diii, git subtree)
 ├── docs/                   # Roadmap and design notes
 ├── iii-open-grid/          # iii (Lua) firmware, built from the root platformio.ini
 ├── pics/                   # README and assembly reference images
@@ -126,8 +125,8 @@ Everything is driven from the root `Makefile` (needs `make`, `python` and Platfo
 ```bash
 make upload                    # build and flash the XIAO RP2040 (default BOARD)
 make upload BOARD=rp2040_zero  # build and flash the Open Grid kit (RP2040-Zero)
-make diii                      # serve the diii web app at http://localhost:8000 (needs Node)
-make dist                      # UF2s for all boards + the diii web app into dist/
+make diii                      # serve a diii checkout (DIII_DIR, default ../web-diii) at http://localhost:8000
+make dist                      # UF2s for all boards into dist/
 ```
 
 You can also open the repository root in VS Code with the PlatformIO extension and use its Build/Upload buttons.
@@ -146,27 +145,7 @@ For type A gear, swap tip and ring, or use an A/B adapter. In the printed enclos
 
 ### diii
 
-`diii/` is our fork of monome's [web-diii](https://github.com/monome/web-diii) (GPL-3.0), kept as a git subtree of [carlosedp/web-diii](https://github.com/carlosedp/web-diii). On top of upstream, it fixes installing diii as an app (PWA) from any path. It also adds a **grid** drawer at the top of the console for the Open Grid firmware: it shows the grid's LEDs live and lets you press keys from the browser, so scripts can be tried without keypads attached. Shift-click or right-click holds a key down (click it again to let go), for scripts that use held keys, such as meadowphysics' row setup. **edit** in a file's menu opens it in a code editor next to the console (save with Ctrl+S, save as, run, with autocomplete and help for iii functions); Tab completes names in the REPL; **+** creates a new script and **rename** renames one. **backup** downloads every file on the device as one zip, and **restore** uploads a backup's files again (byte-exact backups need og-0.3.4 or later). The **midi** drawer above the buttons shows the MIDI the device sends and receives (og-0.3.8 or later). The status shows the firmware version, and **device ▾ → firmware** checks for a newer release and walks through updating. When a newer diii is published at [diii.vfmod.com](https://diii.vfmod.com), an **update ready** button appears in the header to load it. `make diii-pull-upstream` merges monome's latest changes into `diii/`, and `make diii-push-fork` pushes `diii/` history to the fork, which is useful for pull requests to monome.
-
-#### diii with monome's own firmware
-
-diii works with any iii device (monome grids and arcs with their stock iii firmware, too). The extras that need the Open Grid firmware hide themselves or say so:
-
-|                                                                                               | Stock iii firmware                                             | Open Grid firmware                               |
-| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------ |
-| REPL, history, Tab completion, uploads (several at once), run, new, delete, first / not first | ✅                                                             | ✅                                               |
-| Editor: autocomplete, hover help, reference, drafts, clickable errors, line wrap              | ✅                                                             | ✅                                               |
-| Read, edit, download, backup: files come back exactly (blank lines and all)                   | ✅ slower: read in 3 KB pieces                                 | ✅ fast (`og_dump_file`, og-0.3.4+)              |
-| Rename                                                                                        | ✅ copy, then delete                                           | ✅ one atomic step (`og_rename_file`, og-0.3.5+) |
-| Save from the editor with a syntax error                                                      | ⚠ the device's copy is deleted (your text stays in the editor) | ✅ the device keeps the old file                 |
-| Scripts bigger than 32 KB                                                                     | ❌ stock iii's upload limit                                    | ✅                                               |
-| Memory in the explorer footer                                                                 | Lua's share only                                               | ✅ Lua and the C heap (`og_mem`)                 |
-| Virtual grid drawer (LEDs, press keys from the browser)                                       | ❌ hidden                                                      | ✅ (`og_mirror`, `og_key`)                       |
-| MIDI monitor list                                                                             | ❌ says it needs og-0.3.8                                      | ✅ og-0.3.8+                                     |
-| MIDI counts and clock tempo with the drawer closed                                            | ❌                                                             | ✅ og-0.3.9+                                     |
-| Firmware update dialog                                                                        | shows the version; no Open Grid updates offered                | ✅ newest release for your board                 |
-
-The ⚠ and ❌ rows on stock firmware are limits of iii itself; the fixes are in our [iii pull requests](https://codeberg.org/tehn/iii/pulls) (#10–#12).
+[diii](https://diii.vfmod.com) is our fork of monome's [web-diii](https://github.com/monome/web-diii) (GPL-3.0), in its own repo: [carlosedp/web-diii](https://github.com/carlosedp/web-diii). Until November 2026 it lived here as a git subtree at `diii/`; it was split out with its history. It works with any iii device, and adds a **grid** drawer for the Open Grid firmware that shows the grid's LEDs live and lets you press keys from the browser, so scripts can be tried without keypads attached. It also has a code editor, backup and restore, a MIDI monitor and a firmware update dialog that offers this repo's releases. Its README lists what works with stock iii firmware and what needs the Open Grid firmware's `og_*` tools.
 
 The iii firmware is GPL-3.0 (inherited from iii). So far it has been tested on a Seeed XIAO RP2040 without keypads: diii, USB MIDI, and switching modes. It has not yet been tested with the keypad boards or on norns. See [docs/MULTIMODE-ROADMAP.md](docs/MULTIMODE-ROADMAP.md) for status and plans, and [third_party/README.md](third_party/README.md) for the vendored libraries.
 
