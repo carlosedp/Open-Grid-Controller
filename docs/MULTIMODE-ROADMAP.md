@@ -30,9 +30,8 @@ iii-open-grid/          iii firmware (Pico SDK + CMake)           ← new, GPL-3
   src/lua_vm_in_ram.h   puts the Lua interpreter loop in RAM (force-included)
   src/generated/        pre-generated PIO program (WS2812)
   tools/pio_cmake.py    PlatformIO → CMake bridge
-scripts/og_bench.lua    memory/speed benchmark run on the device (results: docs/BENCHMARKS.md)
-Makefile                firmware, upload, diii server, dist/ packaging, iii/diii subtrees (make help)
-tools/dist.py           collects UF2s and the diii site into dist/
+Makefile                firmware, upload, diii server (../web-diii), dist/ packaging, iii subtree (make help)
+tools/dist.py           collects the UF2s into dist/
 platformio.ini          PlatformIO project for iii-open-grid (installs the whole toolchain)
 third_party/            vendored lua, littlefs, FREEPOET_Keypad; iii as a git subtree with our
                         changes on top (see third_party/README.md)

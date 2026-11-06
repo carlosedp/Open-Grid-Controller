@@ -26,7 +26,7 @@ are GPL-3.0 as a whole.
 - **Nothing Open Grid-specific** inside iii; that lives in `iii-open-grid/`.
   Changes here should make sense on every iii device (grids, arc, Pico).
 - **Measure** memory/speed changes before and after with
-  `scripts/og_bench.lua`, and record the numbers in the table below.
+  `og_bench.lua` (in `iii-scripts`), and record the numbers in the table below.
 
 | Make target              | What it does                                                        |
 | ------------------------ | ------------------------------------------------------------------- |

@@ -1,6 +1,6 @@
 # og_bench history
 
-Results of [`scripts/og_bench.lua`](../scripts/og_bench.lua) on a Seeed XIAO RP2040 without keypads,
+Results of `og_bench.lua` (in the `iii-scripts` repo since November 2026; earlier in `scripts/`) on a Seeed XIAO RP2040 without keypads,
 newest first. Each run: fresh boot, `og_bench()` then `og_bench("kria_iii.lua")` (kria_iii v1.6.3,
 29 KB). Memory in KB, times per call.
 
