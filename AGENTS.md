@@ -7,8 +7,9 @@ Guide for coding agents (and humans) working on this repository. Read this first
 
 Open Grid Controller: a 16×8 grid (two FREEPOET 8×8 I2C keypad boards + an RP2040) that runs
 **monome iii** (Lua on the device, USB MIDI + serial REPL), plus a monome-serial mode for
-norns/serialosc. Scripts are managed from **diii**, a browser app (our fork lives in its own repo,
-`github.com/carlosedp/web-diii`, locally `../web-diii`, published at https://diii.vfmod.com).
+norns/serialosc. Scripts are managed from **diii**, a browser app (our fork, renamed **greenhouse** in November
+2026, lives in its own repo, `github.com/carlosedp/greenhouse`, locally `../web-diii`, published at
+https://greenhouse.vfmod.com).
 
 | Path                                             | What                                                                     | Rules                                     |
 | ------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------- |

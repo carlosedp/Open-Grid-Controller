@@ -324,8 +324,9 @@ speedups are under §5; sending the patches upstream is M11.
 ### M5 — diii fork (PWA + Open Grid features)
 
 > **November 2026:** diii moved out of this repo into its own,
-> [carlosedp/web-diii](https://github.com/carlosedp/web-diii) (locally `../web-diii`), with its
-> history (`git subtree split --prefix=diii`). It publishes diii.vfmod.com itself; `diii/`,
+> [carlosedp/web-diii](https://github.com/carlosedp/greenhouse) (locally `../web-diii`), with its
+> history (`git subtree split --prefix=diii`). It publishes diii.vfmod.com itself (later renamed
+> greenhouse, at greenhouse.vfmod.com); `diii/`,
 > `make diii-*` and `tools/dist.py --diii-only` are gone. The notes below are the history up
 > to the split.
 

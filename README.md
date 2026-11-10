@@ -104,7 +104,7 @@ The iii firmware contains both modes. The grid stays in the last one you chose, 
 
 | Mode              | Status LED | Shows up as                                            | Use it with                                                                                                                                                                                                |
 | ----------------- | ---------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **iii** (default) | green      | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [diii](https://diii.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed                                                              |
+| **iii** (default) | green      | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed                                                              |
 | **monome serial** | blue       | a monome grid (`monome` / `grid`)                      | **norns** directly (plug into its USB port), and **Max/MSP, Pure Data, SuperCollider, VCV Rack, TouchDesigner**, etc. on a computer through monome's [serialosc](https://monome.org/docs/serialosc/setup/) |
 
 To switch modes, use any of these:
@@ -143,9 +143,9 @@ In iii mode, every MIDI message a script sends over USB also goes out GPIO0 (XIA
 
 For type A gear, swap tip and ring, or use an A/B adapter. In the printed enclosure, a low jack (about 5 mm tall) fits on the USB end next to the RP2040-Zero, with its hole centered on the seam between the top and bottom parts. It's out only; MIDI in stays on USB. This hasn't been tested with hardware yet.
 
-### diii
+### greenhouse (our diii fork)
 
-[diii](https://diii.vfmod.com) is our fork of monome's [web-diii](https://github.com/monome/web-diii) (GPL-3.0), in its own repo: [carlosedp/web-diii](https://github.com/carlosedp/web-diii). Until November 2026 it lived here as a git subtree at `diii/`; it was split out with its history. It works with any iii device, and adds a **grid** drawer for the Open Grid firmware that shows the grid's LEDs live and lets you press keys from the browser, so scripts can be tried without keypads attached. It also has a code editor, backup and restore, a MIDI monitor and a firmware update dialog that offers this repo's releases. Its README lists what works with stock iii firmware and what needs the Open Grid firmware's `og_*` tools.
+[greenhouse](https://greenhouse.vfmod.com) (diii until November 2026) is our fork of monome's [web-diii](https://github.com/monome/web-diii) (GPL-3.0), in its own repo: [carlosedp/greenhouse](https://github.com/carlosedp/greenhouse). Until November 2026 it lived here as a git subtree at `diii/`; it was split out with its history. It works with any iii device, and adds a **grid** drawer for the Open Grid firmware that shows the grid's LEDs live and lets you press keys from the browser, so scripts can be tried without keypads attached. It also has a code editor, backup and restore, a MIDI monitor and a firmware update dialog that offers this repo's releases. Its README lists what works with stock iii firmware and what needs the Open Grid firmware's `og_*` tools.
 
 The iii firmware is GPL-3.0 (inherited from iii). So far it has been tested on a Seeed XIAO RP2040 without keypads: diii, USB MIDI, and switching modes. It has not yet been tested with the keypad boards or on norns. See [docs/MULTIMODE-ROADMAP.md](docs/MULTIMODE-ROADMAP.md) for status and plans, and [third_party/README.md](third_party/README.md) for the vendored libraries.
 
