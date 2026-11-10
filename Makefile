@@ -21,7 +21,7 @@ FORMAT_PY    := tools iii-open-grid/tools
 
 # A checkout of github.com/carlosedp/web-diii, for `make diii`
 NODE     ?= node
-DIII_DIR ?= ../web-diii
+DIII_DIR ?= ../greenhouse
 
 # third_party/iii is a git subtree of tehn/iii; our changes are commits on top.
 III_UPSTREAM ?= https://codeberg.org/tehn/iii
@@ -51,7 +51,7 @@ help:
 	@echo   make iii-changes          list our iii commits
 	@echo   make iii-patches          export them as patches for tehn/iii into dist/patches/iii
 	@echo   make iii-pull-upstream    merge the latest tehn/iii main into third_party/iii
-	@echo Options: BOARD=rp2040_zero  PORT=8080  DIII_DIR=../web-diii
+	@echo Options: BOARD=rp2040_zero  PORT=8080  DIII_DIR=../greenhouse
 
 firmware:
 	$(PIO) run -e $(BOARD)

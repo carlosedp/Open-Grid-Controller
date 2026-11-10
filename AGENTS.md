@@ -10,7 +10,7 @@ page vfmod.com/parterre/, manual `docs/manual/Manual.md`, icons in `docs/brand/`
 such as `og_*` and `iii-open-grid/` stay): a 16×8 grid (two FREEPOET 8×8 I2C keypad boards + an RP2040) that runs
 **monome iii** (Lua on the device, USB MIDI + serial REPL), plus a monome-serial mode for
 norns/serialosc. Scripts are managed from **diii**, a browser app (our fork, renamed **greenhouse** in November
-2026, lives in its own repo, `github.com/carlosedp/greenhouse`, locally `../web-diii`, published at
+2026, lives in its own repo, `github.com/VoltageFoundryMod/greenhouse`, locally `../greenhouse`, published at
 https://greenhouse.vfmod.com).
 
 | Path                                             | What                                                                     | Rules                                     |
@@ -27,7 +27,7 @@ https://greenhouse.vfmod.com).
 make help                      # all targets
 make                           # firmware for the XIAO RP2040 (default BOARD)
 make upload BOARD=rp2040_zero  # build + flash over USB (1200-baud touch, no BOOT button needed)
-make diii                      # serve ../web-diii (DIII_DIR) at http://localhost:8000 (Web Serial works on localhost)
+make diii                      # serve ../greenhouse (DIII_DIR) at http://localhost:8000 (Web Serial works on localhost)
 make dist                      # UF2s for all boards into dist/
 ```
 

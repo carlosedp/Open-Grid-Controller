@@ -76,14 +76,14 @@ a launcher that lights one key per script on the grid.
 Every MIDI message a script sends over USB also goes out a pin at MIDI speed,
 so with a 3.5 mm TRS jack and two resistors the grid can play a synth from a
 USB power bank, no computer. The wiring is in the
-[repository's README](https://github.com/carlosedp/parterre#trs-midi-out-diy-og-0313-or-later).
+[repository's README](https://github.com/VoltageFoundryMod/parterre#trs-midi-out-diy-og-0313-or-later).
 
 ## Updating the firmware
 
 When the grid connects, greenhouse checks for a newer firmware release and
 offers it. To install one: hold BOOT while plugging in, so the
 grid shows up as an `RPI-RP2` drive, and drag the `.uf2` file for your board
-from the [releases](https://github.com/carlosedp/parterre/releases)
+from the [releases](https://github.com/VoltageFoundryMod/parterre/releases)
 onto it. Your scripts are kept.
 
 ## Credits

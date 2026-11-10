@@ -75,7 +75,7 @@ Everything is driven from the root `Makefile` (needs `make`, `python` and Platfo
 ```bash
 make upload                    # build and flash the XIAO RP2040 (default BOARD)
 make upload BOARD=rp2040_zero  # build and flash the Open Grid kit (RP2040-Zero)
-make diii                      # serve a greenhouse checkout (DIII_DIR, default ../web-diii) at http://localhost:8000
+make diii                      # serve a greenhouse checkout (DIII_DIR, default ../greenhouse) at http://localhost:8000
 make dist                      # UF2s for all boards into dist/
 ```
 
@@ -97,7 +97,7 @@ For type A gear, swap tip and ring, or use an A/B adapter. In the printed enclos
 
 [greenhouse](https://greenhouse.vfmod.com) (diii until November 2026) is our
 fork of monome's [web-diii](https://github.com/monome/web-diii) (GPL-3.0), in
-its own repository, [carlosedp/greenhouse](https://github.com/carlosedp/greenhouse).
+its own repository, [VoltageFoundryMod/greenhouse](https://github.com/VoltageFoundryMod/greenhouse).
 It works with any iii device, and with parterre it adds a **grid** drawer that
 shows the grid's LEDs live and plays its keys from the browser (so scripts can
 be tried without keypads), **graft**'s grid widgets, a MIDI monitor and a
