@@ -1,4 +1,4 @@
-// Open Grid firmware: monome iii (Lua) on the RP2040, plus a plain monome
+// parterre (was the Open Grid firmware): monome iii (Lua) on the RP2040, plus a plain monome
 // serial mode for norns/serialosc. Device glue for third_party/iii/device.h,
 // modelled on monome's iii-grid-2022.
 //
@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.13"
+#define DEVICE_VERSION_BASE "og-0.3.14"
 
 #include <string.h>
 
@@ -318,8 +318,11 @@ void device_task() {
 
 const char *device_id() { return "grid"; }
 const char *device_version() { return DEVICE_VERSION; }
-const char *device_str1() { return mode == MODE_SERIAL ? "monome" : "Open Grid"; }
-const char *device_str2() { return mode == MODE_SERIAL ? "grid" : "iii open grid"; }
+// USB manufacturer and product. Serial mode keeps monome's "monome" / "grid",
+// which serialosc and norns look for; iii mode is parterre's own (og-0.3.14;
+// it was "Open Grid" / "iii open grid"). Nothing matches on these.
+const char *device_str1() { return mode == MODE_SERIAL ? "monome" : "Voltage Foundry Modular"; }
+const char *device_str2() { return mode == MODE_SERIAL ? "grid" : "parterre"; }
 
 //////////////////////////////////////////////////////////////////
 // lua: grid (same API as monome's iii grids)
@@ -379,7 +382,7 @@ static int l_grid_size_y(lua_State *l) {
 }
 
 //////////////////////////////////////////////////////////////////
-// lua: open grid extras
+// lua: parterre extras (og_ tools)
 
 static int l_og_set_mode(lua_State *l) {
   const int m = (int)lua_tointeger(l, 1);
@@ -498,7 +501,7 @@ static const char *device_help_str =
     "  grid_refresh()\n"
     "  grid_size_x()\n"
     "  grid_size_y()\n"
-    "open grid\n"
+    "parterre (og_ tools)\n"
     "  og_set_mode(m)  0 = iii, 1 = monome serial (reboots)\n"
     "  og_keypads()    bitmask of keypad boards online\n"
     "  og_mem(quiet)   C heap: free, largest block, used, peak, total\n"

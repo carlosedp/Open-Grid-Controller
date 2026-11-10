@@ -4,7 +4,7 @@
 //
 // These are the IDs monome's iii grids use. monome's hosted diii only offers
 // ports matching cafe:1101, and 0xCAFE is TinyUSB's shared test VID. A
-// pid.codes allocation for Open Grid is on the roadmap.
+// pid.codes allocation for parterre is on the roadmap.
 //
 // Based on the TinyUSB examples (MIT, Copyright (c) 2019 Ha Thach) and
 // monome's iii-grid-2022.
@@ -118,8 +118,8 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
       str = serial;
       break;
     }
-    case STRID_CDC: str = "OpenGrid_Serial"; break;
-    case STRID_MIDI: str = "OpenGrid_MIDI"; break;
+    case STRID_CDC: str = "parterre Serial"; break;
+    case STRID_MIDI: str = "parterre MIDI"; break;
     default: return NULL;
   }
 

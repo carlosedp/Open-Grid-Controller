@@ -112,6 +112,10 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
 - **1200-baud touch** reboots into the UF2 bootloader (PlatformIO upload works without BOOT).
 - **TRS MIDI out** (og-0.3.13, untested): every message sent over USB MIDI also goes out GPIO0
   at 31250 baud, for a DIY 3.5 mm jack (M8).
+- **The name parterre** (og-0.3.14): in iii mode the device shows up on USB as `parterre` by
+  `Voltage Foundry Modular` (interfaces `parterre Serial` and `parterre MIDI`; it was `Open Grid` /
+  `iii open grid`), and `help()` says parterre. Serial mode keeps `monome` / `grid` for serialosc.
+  The `og_*` names, versions and UF2 names stay.
 - serial mode mirrors monome's iii-grid-2022 command set (and fixes three small bugs found there).
 
 ### 1.4 Building

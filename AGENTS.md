@@ -5,7 +5,9 @@ Guide for coding agents (and humans) working on this repository. Read this first
 
 ## What this is
 
-Open Grid Controller: a 16×8 grid (two FREEPOET 8×8 I2C keypad boards + an RP2040) that runs
+Open Grid Controller (its iii firmware and tools are named **parterre** since November 2026;
+page vfmod.com/parterre/, manual `docs/manual/Manual.md`, icons in `docs/brand/`; code names
+such as `og_*` and `iii-open-grid/` stay): a 16×8 grid (two FREEPOET 8×8 I2C keypad boards + an RP2040) that runs
 **monome iii** (Lua on the device, USB MIDI + serial REPL), plus a monome-serial mode for
 norns/serialosc. Scripts are managed from **diii**, a browser app (our fork, renamed **greenhouse** in November
 2026, lives in its own repo, `github.com/carlosedp/greenhouse`, locally `../web-diii`, published at
