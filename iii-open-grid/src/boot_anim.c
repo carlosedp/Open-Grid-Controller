@@ -10,8 +10,8 @@
 #define FRAME_MS 16
 
 #define PARTICLES 28
-#define PARTICLE_FRAMES 44
-#define PLASMA_FRAMES 52
+#define PARTICLE_FRAMES 64
+#define PLASMA_FRAMES 76
 
 // Wait for the next frame without blocking USB.
 static void wait_frame(absolute_time_t *next, void (*idle)(void)) {
