@@ -56,10 +56,8 @@ which norns and serialosc look for.
 - **TRS MIDI out** (DIY): play hardware synths with a jack and two resistors.
 - **Boards**: the kit's RP2040-Zero, and a Seeed XIAO RP2040 for a breadboard.
 
-**Status: in development.** Tested on a Seeed XIAO RP2040 without keypads:
-the scripts, greenhouse, USB MIDI and switching modes. Testing with the keypad
-boards and on norns is next; see
-[docs/MULTIMODE-ROADMAP.md](docs/MULTIMODE-ROADMAP.md).
+**Status: released** (parterre-0.4.0), tested on the Open Grid kit. What's
+next: [docs/MULTIMODE-ROADMAP.md](docs/MULTIMODE-ROADMAP.md).
 
 ## Two modes: iii and monome serial
 
@@ -81,7 +79,7 @@ To switch modes, use any of these:
 
 Holding BOOT _while_ plugging in does something else: it enters the RP2040's bootloader (an `RPI-RP2` drive) for flashing a firmware.
 
-Serial mode follows the command set of monome's own grid firmware. It hasn't been tested on norns or serialosc yet. Until it has, the Arduino firmware in `sw/` (see [the original Arduino firmware](#the-original-arduino-firmware)) is the known-good choice for norns.
+Serial mode follows the command set of monome's own grid firmware. FREEPOET's original Arduino firmware is still in `sw/` (see [the original Arduino firmware](#the-original-arduino-firmware)).
 
 If the grid stops responding for 8 seconds (a script stuck in a loop, or a firmware hang), a watchdog resets it and it starts again with `init.lua`, so a performance setup comes back on its own. If it hangs again within 30 seconds of starting, the next start skips `init.lua` (status LED amber) so you can fix the script from greenhouse. Either way greenhouse shows a `watchdog:` line once it connects (og-0.3.10 or later).
 
@@ -132,7 +130,7 @@ In iii mode, every MIDI message a script sends over USB also goes out GPIO0 (XIA
 
 This requires soldering the resistors and the jack to the appropriate pins on the grid and modding the case to fit the jack.
 
-For type A gear, swap tip and ring, or use an A/B adapter. In the printed enclosure, a low jack (about 5 mm tall) fits on the USB end next to the RP2040-Zero, with its hole centered on the seam between the top and bottom parts. It's out only; MIDI in stays on USB. This hasn't been tested with hardware yet.
+For type A gear, swap tip and ring, or use an A/B adapter. In the printed enclosure, a low jack (about 5 mm tall) fits on the USB end next to the RP2040-Zero, with its hole centered on the seam between the top and bottom parts. It's out only; MIDI in stays on USB.
 
 ## greenhouse
 

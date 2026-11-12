@@ -16,13 +16,13 @@ Scripts are managed from **greenhouse**, our fork of monome's browser app diii (
 November 2026; its own repo, `github.com/VoltageFoundryMod/greenhouse`, locally `../greenhouse`, published at
 https://greenhouse.vfmod.com).
 
-| Path                                             | What                                                                                                    | Rules                                     |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `firmware/`                                      | our firmware (Pico SDK + CMake): `src/` common, `boards/<family>/` grid hardware (`open_grid`: keypads) | ours; GPL-3.0 (links iii)                 |
-| `third_party/iii/`                               | monome iii, **git subtree** of codeberg.org/tehn/iii + our commits                                      | see "Changing iii" below                  |
-| `third_party/lua`, `littlefs`, `FREEPOET_Keypad` | vendored exports                                                                                        | don't edit; re-export to update           |
-| `sw/`                                            | original Arduino firmware (monome serial only)                                                          | keep as-is; known-good fallback for norns |
-| `docs/`                                          | roadmap, benchmark history                                                                              | keep current when behavior changes        |
+| Path                                             | What                                                                                                    | Rules                              |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `firmware/`                                      | our firmware (Pico SDK + CMake): `src/` common, `boards/<family>/` grid hardware (`open_grid`: keypads) | ours; GPL-3.0 (links iii)          |
+| `third_party/iii/`                               | monome iii, **git subtree** of codeberg.org/tehn/iii + our commits                                      | see "Changing iii" below           |
+| `third_party/lua`, `littlefs`, `FREEPOET_Keypad` | vendored exports                                                                                        | don't edit; re-export to update    |
+| `sw/`                                            | original Arduino firmware (monome serial only)                                                          | keep as-is; FREEPOET's original    |
+| `docs/`                                          | roadmap, benchmark history                                                                              | keep current when behavior changes |
 
 ## Build
 
@@ -57,8 +57,8 @@ A clean build with **no new warnings in our files** is the minimum bar for every
 
 Agents can build but can't run anything on the device. The maintainer flashes and tests.
 
-- Hardware today: a **Seeed XIAO RP2040 without keypads** (keypad boards and the kit's
-  RP2040-Zero not tested yet). Keys can be simulated with `gh_key(x,y,z)` or greenhouse's virtual
+- Hardware: the **Open Grid kit** (RP2040-Zero + keypad boards) and a **Seeed XIAO RP2040**
+  (with or without keypads). Keys can be simulated with `gh_key(x,y,z)` or greenhouse's virtual
   grid.
 - For every firmware change: bump the version, build, commit, and hand over **concrete test
   steps** (exact REPL lines, what output to expect, what would indicate failure). Say clearly

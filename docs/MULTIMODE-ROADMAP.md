@@ -55,8 +55,8 @@ docs/                   this file, BENCHMARKS.md
 
 ### 1.3 Firmware status (`firmware/`, parterre-0.4.0)
 
-Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
-virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
+Released as parterre-0.4.0 (November 2026), tested on the Open Grid kit (RP2040-Zero and keypad
+boards) and on a Seeed XIAO RP2040.
 Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's defaults), with Lua
 ~1.8× faster; see [BENCHMARKS.md](BENCHMARKS.md).
 
@@ -79,7 +79,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
     reboots (og-0.3.11; before, the reboot came while BOOT was held, and the boot ROM went into the
     USB bootloader);
   - from Lua: `pt_set_mode(0|1)` (`og_set_mode` before 0.4).
-  - ✅ **watchdog** (og-0.3.10, untested): 8 s without core 0 returning to the main loop (a Lua
+  - ✅ **watchdog** (og-0.3.10): 8 s without core 0 returning to the main loop (a Lua
     loop that never ends, a hang in C or USB), or 1 s without core 1 looping, resets the board,
     which boots normally (`init.lua` runs). A second reset within 30 s of booting means a boot
     loop: the next boot skips `init.lua` (amber). The count lives in watchdog scratch register 0
@@ -88,7 +88,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
 - **Lua grid API** identical to monome's iii grids (`event_grid`, `grid_led`, `grid_led_all`,
   `grid_led_get`, `grid_intensity`, `grid_refresh`, `grid_size_x/y`), so existing iii grid
   scripts run unchanged. `device_id()` returns `"grid"` for the same reason.
-- **Names (parterre-0.4.0, untested)**: versions `parterre-X.Y.Z` (were `og-X.Y.Z`), UF2s
+- ✅ **Names (parterre-0.4.0)**: versions `parterre-X.Y.Z` (were `og-X.Y.Z`), UF2s
   `parterre-X.Y.Z-<board>.uf2`, source in `firmware/` with the grid hardware behind
   `src/grid_hw.h` (`boards/open_grid/` today; monome's grids next, M10), build options `PT_*`. The
   Lua extras split into `pt_*` (parterre's own) and `gh_*` (what greenhouse uses); the `og_*`
@@ -117,7 +117,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
 - **iii itself** carries our fixes and memory/speed changes, tracked commit by commit in
   [third_party/README.md](../third_party/README.md) and exportable as upstream patches (M4).
 - **1200-baud touch** reboots into the UF2 bootloader (PlatformIO upload works without BOOT).
-- **TRS MIDI out** (og-0.3.13, untested): every message sent over USB MIDI also goes out GPIO0
+- **TRS MIDI out** (og-0.3.13): every message sent over USB MIDI also goes out GPIO0
   at 31250 baud, for a DIY 3.5 mm jack (M8).
 - **The name parterre** (og-0.3.14): in iii mode the device shows up on USB as `parterre` by
   `Voltage Foundry Modular` (interfaces `parterre Serial` and `parterre MIDI`; it was `Open Grid` /
@@ -228,7 +228,7 @@ and offer sparse per-LED color through a Lua call (M5).
 
 ## 3. Milestones
 
-### M0 — iii port ✅ (code done, step 1 passed 2026-10-09)
+### M0 — iii port ✅ (released in parterre-0.4.0)
 
 Everything in §1.3. **Acceptance**, in order:
 
@@ -237,9 +237,9 @@ Everything in §1.3. **Acceptance**, in order:
    sending `midi_tx(0x90, 60, 100)` plays a note in a DAW; BOOT held 2 s switches to serial mode and
    back. Simulate keys from the REPL with `event_grid(1,1,1)`.
    Result: all passed; a MIDI monitor received the notes and kria_iii's MIDI clock (`F8`).
-2. **XIAO + keypads** (wire D4/D5 + 3V3/GND): keys reach `event_grid`, LEDs follow `grid_led` +
+2. ✅ **XIAO + keypads** (wire D4/D5 + 3V3/GND): keys reach `event_grid`, LEDs follow `grid_led` +
    `grid_refresh`, hot-unplug/replug of a board recovers.
-3. **RP2040-Zero in the enclosure**: same, plus serial mode on **norns** (awake, mlr, kria) and
+3. ✅ **RP2040-Zero in the enclosure**: same, plus serial mode on **norns** (awake, mlr, kria) and
    serialosc on desktop behave exactly like the Arduino firmware.
 
 ### M1 — Latency and bus
@@ -253,7 +253,7 @@ Everything in §1.3. **Acceptance**, in order:
 - **Accept:** measured press-to-USB latency before/after; no ghost or missed presses in a 5-minute
   hammer test on all 128 keys.
 
-### M2 — Status feedback ✅ (verified on the XIAO; RP2040-Zero and keypads pending)
+### M2 — Status feedback ✅
 
 - WS2812 status LED via PIO (RP2040-Zero GPIO16; XIAO GPIO12 with power on GPIO11). The PIO
   program header is pre-generated in `src/generated/`, so builds don't need `pioasm`.
@@ -287,7 +287,7 @@ Lua scripts in a new `scripts/` folder, each usable on its own and selectable fr
   ✅ **Restart fixed in many-roads v1.3.0** (2026-11-01): up to 1.2.1 it restarted by
   deliberately running out of memory, relying on iii rebooting on a failed allocation; our
   firmware lets Lua recover instead (M4), so the triple-click only printed "not enough memory".
-  Our PR to use iii's `device_reset()` was merged and released in v1.3.0. Not yet re-tested here.
+  Our PR to use iii's `device_reset()` was merged and released in v1.3.0.
 - **`midi_controller.lua`**: generic MIDI controller driven by a preset file (notes, CC momentary /
   toggle, faders as columns, page keys, MIDI-in LED feedback). Preset = a small Lua/JSON table in
   flash, written by diii or a web editor (M5).
@@ -401,7 +401,7 @@ Next:
   15×8 + scene column) sending clip state as note velocities → LED levels.
 - **Accept:** the session "red box" follows the grid; clip states show as brightness.
 
-### M8 — Hardware MIDI out (DIY) (code done in og-0.3.13, untested)
+### M8 — Hardware MIDI out (DIY) ✅ (og-0.3.13)
 
 - ✅ TRS MIDI out on GPIO0 (UART0 TX, free on both boards; XIAO pin D6) at 31250 baud.
   `src/midi_uart.c` gets every `midi_tx` through the existing link-time wrap, keeps only the bytes
@@ -448,7 +448,7 @@ ThisType<App>` and with per-method `@this`; typing it would need a hand-kept int
      compile-checked upload path (skips `lib.lua`). Without `og_dump_file` diii falls back to
      `cat()`. Later: move `og_dump_file` into iii as `fs_dump_file` (a fourth upstream PR) and
      have diii look for both names; byte-exact restore would need a matching chunked write.
-  4. ✅ Script editor (untested on hardware): "edit" in a file's menu opens a panel next to the
+  4. ✅ Script editor: "edit" in a file's menu opens a panel next to the
      console (which stays as is): prism-code-editor 5.4 (25 KB, vendored, Lua highlighting,
      search, bracket matching, indent guides), save (Ctrl+S) / save as / run / close, unsaved
      dot. On Open Grid firmware a failed save keeps the device's file. Tooling: `diii/package.json`
@@ -567,13 +567,11 @@ level→RGB palette register, an RGB block write, and a documented way to update
 
 ## 4. Risks and open questions
 
-- **Untested on hardware**: boot timing of the keypad MCUs (we wait up to 500 ms for them), I2C
-  behavior while core1 is paused for flash writes (bus is held mid-transfer for up to ~50 ms).
-- **norns / serialosc**: serial mode now uses VID:PID `cafe:1110`, product `grid` and a per-board
+- **norns / serialosc**: serial mode uses VID:PID `cafe:1110`, product `grid` and a per-board
   serial (`m` + 7 digits) like monome's grid-2022, instead of the Arduino firmware's fixed
-  `m6000000`. Verify detection before relying on it.
+  `m6000000`.
 - **Windows descriptor caching**: different PIDs per mode avoid stale drivers.
-- **GPL-3.0**: firmware built from `iii-open-grid/` is GPL-3.0 (iii). The Arduino firmware in `sw/`
+- **GPL-3.0**: firmware built from `firmware/` is GPL-3.0 (iii). The Arduino firmware in `sw/`
   and the repo's other files keep their own license — the repo has no top-level LICENSE yet; add one.
 - ✅ **Files after a firmware update** (fixed in og-0.3.7, verified on the XIAO 2026-10-16: backup, update, restore, and a second update keeps the files): iii placed the mode and filesystem right
   after the program, so an update growing past a 64 KB boundary (og-0.3.6 had 7 KB left) would
