@@ -1,0 +1,88 @@
+# Builds the firmware for every board when a version tag is pushed and
+# publishes a GitHub release with the UF2s; greenhouse's firmware dialog finds
+# it there (assets named iii-open-grid-og-X.Y.Z-<board>.uf2).
+#
+#   git tag -a v0.3.17 -m "Short title" -m "What changed, for the release page."
+#   git push origin v0.3.17
+#
+# The tag's subject becomes the release title and its body the description,
+# followed by GitHub's generated notes. The tag must match DEVICE_VERSION_BASE
+# in main.c and pico_set_program_version in CMakeLists.txt (v0.3.17 = og-0.3.17).
+# A tag with a suffix (v0.3.17-rc1) makes a pre-release, which greenhouse skips.
+
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # checkout leaves the tag pointing at the commit, without its message
+      - name: Fetch the annotated tag
+        run: git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+
+      - name: Check the tag matches the firmware version
+        run: |
+          want="og-${GITHUB_REF_NAME#v}"
+          main_c=$(sed -n 's/^#define DEVICE_VERSION_BASE "\(.*\)"/\1/p' iii-open-grid/src/main.c)
+          cmake=$(sed -n 's/^pico_set_program_version(iii-open-grid "\(.*\)")/\1/p' iii-open-grid/CMakeLists.txt)
+          echo "tag: $want  main.c: $main_c  CMakeLists.txt: $cmake"
+          if [ "$main_c" != "$want" ] || [ "$cmake" != "$want" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match the firmware version (main.c $main_c, CMakeLists.txt $cmake)"
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # pico-sdk, Arm GCC, CMake and Ninja: a few hundred MB on the first build
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build all boards
+        run: make dist PYTHON=python
+
+      - name: Write release notes
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if [ "$(git cat-file -t "refs/tags/$tag")" = tag ]; then
+            title=$(git tag -l --format='%(contents:subject)' "$tag")
+            git tag -l --format='%(contents:body)' "$tag" > notes.md
+          else
+            title="$tag"
+            : > notes.md
+          fi
+          [ -n "$title" ] || title="$tag"
+          echo "TITLE=$title" >> "$GITHUB_ENV"
+          cat notes.md
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          prerelease=""
+          case "${tag#v}" in *-*) prerelease="--prerelease" ;; esac
+          if gh release view "$tag" > /dev/null 2>&1; then
+            # made by hand already: just (re)attach the UF2s
+            gh release upload "$tag" dist/firmware/*.uf2 --clobber
+          else
+            gh release create "$tag" dist/firmware/*.uf2 \
+              --verify-tag --title "$TITLE" --notes-file notes.md --generate-notes $prerelease
+          fi

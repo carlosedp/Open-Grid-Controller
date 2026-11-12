@@ -71,7 +71,8 @@ diii:
 dist: firmware-all
 	$(PYTHON) tools/dist.py $(BOARDS)
 
-# Publishes the firmware: a GitHub release tagged with the version in main.c,
+# Manual fallback for .github/workflows/release.yml (which runs on a pushed
+# vX.Y.Z tag). Publishes the firmware: a GitHub release tagged with the version in main.c,
 # carrying the UF2s; diii's "firmware" dialog finds it there. Needs gh, logged
 # in, and the commit pushed (the tag is made on the remote's main).
 release: dist

@@ -66,8 +66,11 @@ Agents can build but can't run anything on the device. The maintainer flashes an
 
 ## Conventions
 
-- **Releases**: `make release` (after pushing) creates the GitHub release `og-X.Y.Z` with both UF2s;
-  diii's firmware dialog offers it to devices on older versions. Ask the maintainer first.
+- **Releases**: pushing an annotated tag `vX.Y.Z` (matching `og-X.Y.Z` in main.c and
+  CMakeLists.txt) runs `.github/workflows/release.yml`, which builds both boards and creates the
+  GitHub release with the UF2s; the tag's subject is the title, its body the description.
+  `make release` is the manual fallback. diii's firmware dialog offers the release to devices on
+  older versions. Ask the maintainer first.
 - **Version**: bump `DEVICE_VERSION_BASE` in `iii-open-grid/src/main.c` and
   `pico_set_program_version` in `iii-open-grid/CMakeLists.txt` together for every firmware
   build handed out for testing (`og-X.Y.Z`; optional builds add `-200mhz` / `-vmflash`).
