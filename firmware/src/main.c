@@ -7,7 +7,7 @@
 // BOOT button for 2 s while running, or calling pt_set_mode() from Lua.
 
 // parterre-X.Y.Z since 0.4.0 (og-X.Y.Z before); greenhouse knows both.
-#define DEVICE_VERSION_BASE "parterre-0.4.1"
+#define DEVICE_VERSION_BASE "parterre-0.4.2"
 
 #include <string.h>
 

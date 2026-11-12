@@ -46,5 +46,5 @@ int og_l_i2c_stats(struct lua_State *l);
   "  pt_i2c_stats(reset)  keypad bus: clock, scan/LED times, errors\n"
 
 #ifndef OG_I2C_HZ
-#define OG_I2C_HZ 100000
+#define OG_I2C_HZ 400000
 #endif

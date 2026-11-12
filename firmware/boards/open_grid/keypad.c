@@ -59,6 +59,9 @@ static inline uint32_t now_ms(void) { return to_ms_since_boot(get_absolute_time(
 
 static uint32_t bus_hz;
 static volatile uint32_t bus_transfers, bus_failed_attempts, bus_failed_transfers, bus_drops;
+// While looking for a board that isn't connected (at power-up, or one
+// unplugged), a missing answer is expected: don't count it as a bus error.
+static bool counting = true;
 
 // The boards address keys column-major: local index = local_x * 8 + y.
 static inline uint8_t local_to_xy_index(uint8_t board, uint8_t local) {
@@ -71,21 +74,21 @@ static inline uint8_t local_to_xy_index(uint8_t board, uint8_t local) {
 // I2C helpers
 
 static bool write_command(uint8_t address, const uint8_t *data, size_t len) {
-  bus_transfers++;
+  if (counting) bus_transfers++;
   for (int attempt = 0; attempt < RETRY_COUNT; attempt++) {
     if (i2c_write_timeout_us(OG_I2C_INST, address, data, len, false, I2C_TIMEOUT_US) == (int)len) {
       return true;
     }
-    bus_failed_attempts++;
+    if (counting) bus_failed_attempts++;
   }
-  bus_failed_transfers++;
+  if (counting) bus_failed_transfers++;
   return false;
 }
 
 // Write a request with a repeated start, then read the response.
 static bool read_registers(uint8_t address, const uint8_t *request, size_t request_len,
                            uint8_t *response, size_t response_len) {
-  bus_transfers++;
+  if (counting) bus_transfers++;
   for (int attempt = 0; attempt < RETRY_COUNT; attempt++) {
     if (i2c_write_timeout_us(OG_I2C_INST, address, request, request_len, true, I2C_TIMEOUT_US) ==
             (int)request_len &&
@@ -93,9 +96,9 @@ static bool read_registers(uint8_t address, const uint8_t *request, size_t reque
             (int)response_len) {
       return true;
     }
-    bus_failed_attempts++;
+    if (counting) bus_failed_attempts++;
   }
-  bus_failed_transfers++;
+  if (counting) bus_failed_transfers++;
   return false;
 }
 
@@ -169,8 +172,10 @@ static void refresh_connection(bool force) {
 
   for (uint8_t b = 0; b < BOARD_COUNT; b++) {
     const bool was_present = board_connected[b];
+    counting = was_present;
     const bool present =
         was_present ? probe(boards[b].address) : read_device_info(boards[b].address);
+    counting = true;
 
     if (present && !was_present) {
       board_connected[b] = true;
