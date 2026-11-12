@@ -40,6 +40,15 @@ void og_grid_flush_now(void);
 
 bool og_grid_pop_event(og_key_event_t *event);
 
+// Before a reset (bootloader, reboot): blank the LEDs and stop core 1 between
+// transfers, waiting at most timeout_ms. The keypads keep their power, and
+// their last frame, while the RP2040 resets or sits in the bootloader. Doesn't
+// return core 1 to work; only call it right before resetting.
+void og_grid_park(uint32_t timeout_ms);
+
+// Long enough for a full LED write at 100 kHz (~8 ms) with room to spare.
+#define GRID_PARK_TIMEOUT_MS 100
+
 // Queue a key event as if it came from the keypads (virtual grid in diii).
 void og_grid_inject_key(uint8_t x, uint8_t y, uint8_t z);
 

@@ -179,6 +179,8 @@ target_link_options(parterre PRIVATE "LINKER:--wrap=_sbrk")
 target_link_options(parterre PRIVATE "LINKER:--wrap=midi_tx" "LINKER:--wrap=vm_handle_midi")
 # watchdog.c stops feeding the watchdog once a reboot is armed (iii's ^^r)
 target_link_options(parterre PRIVATE "LINKER:--wrap=watchdog_reboot")
+# main.c blanks the grid and parks core 1 before the USB bootloader (iii's ^^b, the 1200-baud touch)
+target_link_options(parterre PRIVATE "LINKER:--wrap=rom_reset_usb_boot")
 
 pico_enable_stdio_usb(parterre 0)
 pico_enable_stdio_uart(parterre 0)

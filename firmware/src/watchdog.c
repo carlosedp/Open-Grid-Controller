@@ -35,6 +35,7 @@ static volatile bool rebooting = false;
 void __real_watchdog_reboot(uint32_t pc, uint32_t sp, uint32_t delay_ms);
 void __wrap_watchdog_reboot(uint32_t pc, uint32_t sp, uint32_t delay_ms) {
   rebooting = true;
+  og_grid_park(GRID_PARK_TIMEOUT_MS);
   __real_watchdog_reboot(pc, sp, delay_ms);
 }
 

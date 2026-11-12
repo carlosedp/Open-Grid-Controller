@@ -213,6 +213,17 @@ static void bootsel_task(void) {
   }
 }
 
+// Every way into the USB bootloader (iii's ^^b from greenhouse, the 1200-baud
+// touch below) ends here, wrapped at link time: blank the grid and stop core 1
+// between transfers first. Otherwise the keypads show the frame they had,
+// and one interrupted mid-transfer can hold the bus until it loses power.
+void __attribute__((noreturn)) __real_rom_reset_usb_boot(uint32_t gpio_mask, uint32_t disable_mask);
+void __attribute__((noreturn)) __wrap_rom_reset_usb_boot(uint32_t gpio_mask,
+                                                         uint32_t disable_mask) {
+  og_grid_park(GRID_PARK_TIMEOUT_MS);
+  __real_rom_reset_usb_boot(gpio_mask, disable_mask);
+}
+
 // Opening the serial port at 1200 baud reboots into the USB bootloader, so
 // `pio run -t upload` (and the Arduino IDE convention) works without the
 // BOOT button.

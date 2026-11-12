@@ -20,6 +20,9 @@ static volatile uint8_t intensity = 15;
 static volatile bool dirty = true;
 static volatile bool changed = true;  // for og_grid_take_changed(), core 0 only
 static volatile uint32_t core1_beats = 0;
+static volatile bool park_request = false;
+static volatile bool parked = false;
+static bool started = false;
 static queue_t events;
 
 static void push_event(uint8_t x, uint8_t y, uint8_t z) {
@@ -57,6 +60,12 @@ static void __not_in_flash_func(core1_entry)(void) {
       render(frame);
       og_hw_write_leds(frame, intensity);
     }
+    // Parked (og_grid_park): the last frame is out and no transfer is under
+    // way, so a reset now can't leave a keypad holding the bus.
+    if (park_request && !dirty) {
+      parked = true;
+      while (true) tight_loop_contents();
+    }
     const uint32_t wake = time_us_32() + 100;
     while ((int32_t)(time_us_32() - wake) < 0) tight_loop_contents();
   }
@@ -77,6 +86,16 @@ static uint32_t core1_stack[CORE1_STACK_WORDS];
 
 void og_grid_start(void) {
   multicore_launch_core1_with_stack(core1_entry, core1_stack, sizeof(core1_stack));
+  started = true;
+}
+
+void og_grid_park(uint32_t timeout_ms) {
+  if (!started) return;
+  og_grid_led_all(0);
+  dirty = true;
+  park_request = true;
+  const absolute_time_t until = make_timeout_time_ms(timeout_ms);
+  while (!parked && !time_reached(until)) tight_loop_contents();
 }
 
 uint32_t og_grid_core1_beat(void) { return core1_beats; }
