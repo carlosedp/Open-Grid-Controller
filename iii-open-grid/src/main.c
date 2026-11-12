@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.14"
+#define DEVICE_VERSION_BASE "og-0.3.15"
 
 #include <string.h>
 
@@ -31,6 +31,7 @@
 #include "vm.h"
 
 #include "board.h"
+#include "boot_anim.h"
 #include "file_dump.h"
 #include "grid.h"
 #include "heap_stats.h"
@@ -181,20 +182,20 @@ void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *coding) {
   if (coding->bit_rate == 1200) rom_reset_usb_boot(0, 0);
 }
 
-// Quick left-to-right sweep on the grid when iii starts (skipped without keypads).
-static void boot_sweep(void) {
+// Startup pattern: particles = monome serial, plasma = iii, as on monome's grids.
+// Skipped without keypads. USB is serviced meanwhile so enumeration isn't held up.
+static void boot_anim_idle(void) {
+  tud_task();
+  watchdog_update();
+}
+
+static void show_mode(void) {
   if (!og_keypad_connected_mask()) return;
-  for (int x = 0; x <= OG_GRID_W; x++) {
-    for (uint8_t y = 0; y < OG_GRID_H; y++) {
-      if (x < OG_GRID_W) og_grid_led((uint8_t)x, y, 10);
-      if (x > 0) og_grid_led((uint8_t)(x - 1), y, 2);
-      if (x > 1) og_grid_led((uint8_t)(x - 2), y, 0);
-    }
-    og_grid_refresh();
-    sleep_ms(15);
+  if (mode == MODE_SERIAL) {
+    og_boot_anim_particles(boot_anim_idle);
+  } else {
+    og_boot_anim_plasma(boot_anim_idle);
   }
-  og_grid_led_all(0);
-  og_grid_refresh();
 }
 
 int main(void) {
@@ -241,10 +242,10 @@ int main(void) {
   tud_init(BOARD_TUD_RHPORT);
   og_grid_start();
   og_watchdog_start();
+  show_mode();
 
   if (mode == MODE_III) {
     og_midi_uart_init();
-    boot_sweep();
     iii_loop(run_script);  // never returns; calls device_task()
   }
   while (true) {

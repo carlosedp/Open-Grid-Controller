@@ -55,6 +55,8 @@ The iii firmware contains both modes. The grid stays in the last one you chose, 
 | **iii** (default) | green      | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed                                                              |
 | **monome serial** | blue       | a monome grid (`monome` / `grid`)                      | **norns** directly (plug into its USB port), and **Max/MSP, Pure Data, SuperCollider, VCV Rack, TouchDesigner**, etc. on a computer through monome's [serialosc](https://monome.org/docs/serialosc/setup/) |
 
+The grid also shows the mode when it starts (og-0.3.15): **plasma**, waves washing across the keys, for iii; **particles**, a burst from the center, for monome serial.
+
 To switch modes, use any of these:
 
 - **Top-left key**: hold it while plugging in. This toggles iii ↔ serial. When switching to iii, keep holding for about 1 second (the top row fills up) to also skip `init.lua`.

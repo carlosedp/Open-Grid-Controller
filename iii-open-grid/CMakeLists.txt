@@ -87,6 +87,7 @@ set(III_SOURCES
 
 add_executable(iii-open-grid
         src/main.c
+        src/boot_anim.c
         src/file_dump.c
         src/midi_monitor.c
         src/midi_uart.c
@@ -164,5 +165,5 @@ target_link_options(iii-open-grid PRIVATE "LINKER:--wrap=watchdog_reboot")
 pico_enable_stdio_usb(iii-open-grid 0)
 pico_enable_stdio_uart(iii-open-grid 0)
 pico_set_program_name(iii-open-grid "iii-open-grid")
-pico_set_program_version(iii-open-grid "og-0.3.13")
+pico_set_program_version(iii-open-grid "og-0.3.15")
 pico_add_extra_outputs(iii-open-grid)

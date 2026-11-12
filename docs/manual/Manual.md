@@ -36,6 +36,10 @@ parterre has two modes and stays in the last one you chose, even unplugged.
 | **iii** (default) | green      | USB MIDI and a serial console   | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; the scripts then play any DAW or synth over USB MIDI on their own |
 | **monome serial** | blue       | a monome grid                   | **norns** directly, and Max/MSP, Pure Data, SuperCollider, VCV Rack or TouchDesigner on a computer through monome's serialosc                  |
 
+When it starts, the grid lights up in the mode's pattern: **plasma**, waves
+washing across the keys, for iii; **particles**, a burst from the center, for
+monome serial.
+
 To switch:
 
 - **Top-left key**: hold it while plugging in. When switching to iii, keep

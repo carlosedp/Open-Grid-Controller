@@ -116,6 +116,9 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   `Voltage Foundry Modular` (interfaces `parterre Serial` and `parterre MIDI`; it was `Open Grid` /
   `iii open grid`), and `help()` says parterre. Serial mode keeps `monome` / `grid` for serialosc.
   The `og_*` names, versions and UF2 names stay.
+- **Startup pattern shows the mode** (og-0.3.15, untested on keypads), as on monome's grids:
+  *particles* (a burst from the center) for monome serial, *plasma* (waves) for iii. It replaces
+  the iii-only left-to-right sweep, takes under a second, and is skipped without keypads.
 - serial mode mirrors monome's iii-grid-2022 command set (and fixes three small bugs found there).
 
 ### 1.4 Building
