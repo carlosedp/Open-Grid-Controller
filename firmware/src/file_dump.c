@@ -1,4 +1,4 @@
-// og_dump_file(name) prints a file as base64 lines, then "size crc32" (CRC-32,
+// gh_dump_file(name) prints a file as base64 lines, then "size crc32" (CRC-32,
 // 8 hex digits) on a line of its own, and returns size, crc32.
 //
 // cat() needs the whole file in RAM (a 29 KB script can fail to load while a

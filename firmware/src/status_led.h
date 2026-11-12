@@ -3,7 +3,7 @@
 // Onboard WS2812 status LED (RP2040-Zero GPIO16, XIAO RP2040 GPIO12).
 //
 // A base color shows the mode; short flashes show activity and errors.
-// Scripts can take over the LED with og_led(r,g,b) from Lua.
+// Scripts can take over the LED with pt_led(r,g,b) from Lua.
 
 #include <stdint.h>
 

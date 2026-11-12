@@ -1,10 +1,10 @@
 // MIDI activity for diii's MIDI monitor.
 //
-// og_midi_monitor(on): reports every USB MIDI message the device sends or
+// gh_midi_monitor(on): reports every USB MIDI message the device sends or
 // receives as a serial line, "^^midi(<i|o>,<b1>,<b2>,<b3>)" with the bytes in
 // hex (diii's list). Off by default; when off it costs one check per message.
 //
-// og_midi_counts(on): every message is counted anyway (cheap); while on, a
+// gh_midi_counts(on): every message is counted anyway (cheap); while on, a
 // summary "^^midic(<in>,<out>,<bpm x10>)" (totals since boot, decimal; bpm 0
 // without a recent clock) goes out at most twice a second, only when it
 // changed, so diii can show activity with its list closed.

@@ -4,7 +4,7 @@
 //
 // Mode is kept in iii's flash status byte: 0 = iii, 1 = monome serial.
 // Switch modes by holding the top-left key while plugging in, holding the
-// BOOT button for 2 s while running, or calling og_set_mode() from Lua.
+// BOOT button for 2 s while running, or calling pt_set_mode() from Lua.
 
 #define DEVICE_VERSION_BASE "og-0.3.16"
 
@@ -417,7 +417,12 @@ static int l_grid_size_y(lua_State *l) {
 }
 
 //////////////////////////////////////////////////////////////////
-// lua: parterre extras (og_ tools)
+// lua: parterre extras
+//
+// gh_*: what greenhouse uses (the same on every board, and on achene);
+// pt_*: parterre's own (mode, status LED; a board family adds its own).
+// Until 0.4 both were og_*; those names stay as aliases, so scripts and older
+// greenhouse copies keep working.
 
 static int l_og_set_mode(lua_State *l) {
   const int m = (int)lua_tointeger(l, 1);
@@ -427,7 +432,7 @@ static int l_og_set_mode(lua_State *l) {
 }
 
 // Prints C heap stats (KB) and returns them in bytes:
-// free, largest, used, peak, total, high_water. og_mem(true) only returns them.
+// free, largest, used, peak, total, high_water. gh_mem(true) only returns them.
 static int l_og_mem(lua_State *l) {
   og_heap_stats_t h;
   og_heap_stats(&h);
@@ -447,14 +452,14 @@ static int l_og_mem(lua_State *l) {
   return 6;
 }
 
-// og_mirror(true) streams LED frames as ^^grid(...) lines (used by diii's virtual grid).
+// gh_mirror(true) streams LED frames as ^^grid(...) lines (greenhouse's grid view).
 static int l_og_mirror(lua_State *l) {
   mirror_on = lua_toboolean(l, 1);
   if (mirror_on) og_grid_refresh();  // send a first frame right away
   return 0;
 }
 
-// og_key(x, y, z): inject a key event as if it came from the grid (1-based).
+// gh_key(x, y, z): inject a key event as if it came from the grid (1-based).
 static int l_og_key(lua_State *l) {
   const int x = (int)lua_tointeger(l, 1) - 1;
   const int y = (int)lua_tointeger(l, 2) - 1;
@@ -463,7 +468,7 @@ static int l_og_key(lua_State *l) {
   return 0;
 }
 
-// og_led(r, g, b) sets the status LED (0-255 each); og_led() returns it to the mode color.
+// pt_led(r, g, b) sets the status LED (0-255 each); pt_led() returns it to the mode color.
 static int l_og_led(lua_State *l) {
   if (lua_gettop(l) == 0) {
     og_status_clear_user();
@@ -475,9 +480,9 @@ static int l_og_led(lua_State *l) {
   return 0;
 }
 
-// og_rename_file(old, new): true, or nil and a message. Replaces `new` if it
+// gh_rename_file(old, new): true, or nil and a message. Replaces `new` if it
 // exists. One littlefs operation, so a power cut leaves either name, never
-// both or neither (diii's copy + delete fallback can't promise that).
+// both or neither (greenhouse's copy + delete fallback can't promise that).
 static int l_og_rename_file(lua_State *l) {
   const char *from = luaL_checkstring(l, 1);
   const char *to = luaL_checkstring(l, 2);
@@ -491,7 +496,7 @@ static int l_og_rename_file(lua_State *l) {
   return 2;
 }
 
-// og_board(): which board this build is for, e.g. "xiao_rp2040"
+// gh_board(): which board this build is for, e.g. "xiao_rp2040"
 static int l_og_board(lua_State *l) {
   lua_pushstring(l, OG_BOARD_NAME);
   return 1;
@@ -505,10 +510,21 @@ static const struct luaL_Reg device_lib[] = {
     {"grid_refresh", l_grid_refresh},
     {"grid_size_x", l_grid_size_x},
     {"grid_size_y", l_grid_size_y},
-    {"og_set_mode", l_og_set_mode},
+    {"gh_mem", l_og_mem},
+    {"gh_mirror", l_og_mirror},
+    {"gh_key", l_og_key},
+    {"gh_dump_file", og_l_dump_file},
+    {"gh_rename_file", l_og_rename_file},
+    {"gh_board", l_og_board},
+    {"gh_midi_monitor", og_l_midi_monitor},
+    {"gh_midi_counts", og_l_midi_counts},
+    {"pt_set_mode", l_og_set_mode},
+    {"pt_led", l_og_led},
 #ifdef OG_BOARD_LUA_FUNCS
     OG_BOARD_LUA_FUNCS
 #endif
+    // the names before 0.4
+    {"og_set_mode", l_og_set_mode},
     {"og_mem", l_og_mem},
     {"og_mirror", l_og_mirror},
     {"og_key", l_og_key},
@@ -533,20 +549,21 @@ static const char *device_help_str =
     "  grid_refresh()\n"
     "  grid_size_x()\n"
     "  grid_size_y()\n"
-    "parterre (og_ tools)\n"
-    "  og_set_mode(m)  0 = iii, 1 = monome serial (reboots)\n"
-    "  og_mem(quiet)  C heap: free, largest block, used, peak, total\n"
-    "  og_key(x,y,z)   inject a key event, as if pressed on the grid\n"
-    "  og_led(r,g,b)   status LED color (0-255); og_led() = mode color\n"
-    "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n"
-    "  og_dump_file(f) print a file as base64, then size and CRC-32\n"
-    "  og_rename_file(old, new)  rename a file (replaces new)\n"
-    "  og_board()      board this firmware is built for\n"
-    "  og_midi_monitor(on) report MIDI in/out as ^^midi(...) for diii\n"
-    "  og_midi_counts(on)  MIDI counts and clock tempo as ^^midic(...)\n"
+    "parterre\n"
+    "  pt_set_mode(m)  0 = iii, 1 = monome serial (reboots)\n"
+    "  pt_led(r,g,b)   status LED color (0-255); pt_led() = mode color\n"
 #ifdef OG_BOARD_HELP
     OG_BOARD_HELP
 #endif
-    ;
+    "greenhouse tools\n"
+    "  gh_mem(quiet)   C heap: free, largest block, used, peak, total\n"
+    "  gh_key(x,y,z)   inject a key event, as if pressed on the grid\n"
+    "  gh_mirror(on)   stream LED frames as ^^grid(...)\n"
+    "  gh_dump_file(f) print a file as base64, then size and CRC-32\n"
+    "  gh_rename_file(old, new)  rename a file (replaces new)\n"
+    "  gh_board()      board this firmware is built for\n"
+    "  gh_midi_monitor(on) report MIDI in/out as ^^midi(...)\n"
+    "  gh_midi_counts(on)  MIDI counts and clock tempo as ^^midic(...)\n"
+    "(the og_ names from before 0.4 still work)\n";
 
 const char *device_help_txt() { return device_help_str; }

@@ -1,5 +1,5 @@
 // grid_hw.h for FREEPOET's Open Grid kit: two 8x8 keypad boards on I2C
-// (keypad.c), plus the family's own Lua call, og_keypads().
+// (keypad.c), plus the family's own Lua call, pt_keypads().
 
 #include "grid_hw.h"
 
@@ -27,7 +27,7 @@ void og_hw_write_leds(const uint8_t *levels, uint8_t intensity) {
 
 bool og_hw_needs_led_sync(void) { return og_keypad_needs_led_sync(); }
 
-// og_keypads(): bitmask of the keypad boards online (bit 0 = left, bit 1 = right).
+// pt_keypads(): bitmask of the keypad boards online (bit 0 = left, bit 1 = right).
 int og_l_keypads(lua_State *l) {
   lua_pushinteger(l, og_keypad_connected_mask());
   return 1;
