@@ -19,10 +19,12 @@ Each milestone has a scope and acceptance criteria; do them in order, commit per
 ### 1.1 Repository layout
 
 ```text
-iii-open-grid/          iii firmware (Pico SDK + CMake)           ← new, GPL-3.0
-  src/main.c            boot, mode switch, iii device glue, grid Lua API
+firmware/               parterre: iii firmware (Pico SDK + CMake), GPL-3.0 (iii-open-grid/ until 0.4)
+  src/main.c            boot, mode switch, iii device glue, grid Lua API, pt_/gh_ calls
   src/grid.{h,c}        LED framebuffer, key event queue, core1 I/O loop
-  src/keypad.{h,c}      FREEPOET keypad I2C driver (C port of sw/src/keypad.cpp)
+  src/grid_hw.h         what a board family provides: keys, LEDs, size, pins
+  boards/open_grid/     FREEPOET's kit: board.h (pins), grid_hw.c, keypad.{h,c} (C port of
+                        sw/src/keypad.cpp)
   src/monome_serial.c   monome serial protocol (norns / serialosc mode)
   src/usb_descriptors.c per-mode USB descriptors
   src/status_led.{h,c}  WS2812 status LED (M2)
@@ -32,7 +34,7 @@ iii-open-grid/          iii firmware (Pico SDK + CMake)           ← new, GPL-3
   tools/pio_cmake.py    PlatformIO → CMake bridge
 Makefile                firmware, upload, diii server (../greenhouse), dist/ packaging, iii subtree (make help)
 tools/dist.py           collects the UF2s into dist/
-platformio.ini          PlatformIO project for iii-open-grid (installs the whole toolchain)
+platformio.ini          PlatformIO project for firmware/ (installs the whole toolchain)
 third_party/            vendored lua, littlefs, FREEPOET_Keypad; iii as a git subtree with our
                         changes on top (see third_party/README.md)
 sw/                     original Arduino firmware (monome serial only), unchanged
@@ -51,7 +53,7 @@ docs/                   this file, BENCHMARKS.md
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
 | Extra inputs | BOOT button (readable at runtime, used for mode switching); RGB LED (WS2812 on GPIO16 / GPIO12 XIAO) |
 
-### 1.3 Firmware status (`iii-open-grid`, og-0.3.11)
+### 1.3 Firmware status (`firmware/`, parterre-0.4.0)
 
 Tested on a Seeed XIAO RP2040 without keypads (diii, uploads/downloads, USB MIDI, mode switching,
 virtual grid, kria_iii). Not yet run with the keypad boards, on an RP2040-Zero, or on norns.
@@ -86,21 +88,26 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
 - **Lua grid API** identical to monome's iii grids (`event_grid`, `grid_led`, `grid_led_all`,
   `grid_led_get`, `grid_intensity`, `grid_refresh`, `grid_size_x/y`), so existing iii grid
   scripts run unchanged. `device_id()` returns `"grid"` for the same reason.
-- **Open Grid Lua extras** (listed by `help()`):
+- **Names (parterre-0.4.0, untested)**: versions `parterre-X.Y.Z` (were `og-X.Y.Z`), UF2s
+  `parterre-X.Y.Z-<board>.uf2`, source in `firmware/` with the grid hardware behind
+  `src/grid_hw.h` (`boards/open_grid/` today; monome's grids next, M10), build options `PT_*`. The
+  Lua extras split into `pt_*` (parterre's own) and `gh_*` (what greenhouse uses); every `og_*`
+  name stays as an alias. See [COMPATIBILITY.md](COMPATIBILITY.md).
+- **Lua extras** (listed by `help()`; `og_*` before 0.4, still accepted):
 
   | Call                   | What it does                                                                         |
   | ---------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------- |
-  | `og_set_mode(m)`       | 0 = iii, 1 = monome serial; saves and reboots                                        |
-  | `og_keypads()`         | bitmask of keypad boards online                                                      |
-  | `og_mem(quiet)`        | C heap: prints KB, returns bytes `free, largest, used, peak, total, high_water`      |
-  | `og_key(x,y,z)`        | inject a key event through the same queue as real keys                               |
-  | `og_led(r,g,b)`        | status LED color 0–255; `og_led()` returns it to the mode color                      |
-  | `og_mirror(on)`        | stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii                  |
-  | `og_dump_file(f)`      | print file `f` as base64 lines, then `size crc32`; for diii's backup                 |
-  | `og_rename_file(a, b)` | rename file `a` to `b` in one atomic step (replaces `b`); for diii's rename          |
-  | `og_board()`           | board the build is for (`xiao_rp2040`, `rp2040_zero`); for diii's update dialog      |
-  | `og_midi_monitor(on)`  | report MIDI in/out as `^^midi(i                                                      | o,b1,b2,b3)` lines; for diii's MIDI monitor |
-  | `og_midi_counts(on)`   | MIDI in/out totals and clock tempo as `^^midic(in,out,bpm x10)`, ≤ 2/s, when changed |
+  | `pt_set_mode(m)`       | 0 = iii, 1 = monome serial; saves and reboots                                        |
+  | `pt_keypads()`         | bitmask of keypad boards online                                                      |
+  | `gh_mem(quiet)`        | C heap: prints KB, returns bytes `free, largest, used, peak, total, high_water`      |
+  | `gh_key(x,y,z)`        | inject a key event through the same queue as real keys                               |
+  | `pt_led(r,g,b)`        | status LED color 0–255; `pt_led()` returns it to the mode color                      |
+  | `gh_mirror(on)`        | stream LED frames as `^^grid(<128 hex levels>)`, ≤ 30 fps, for diii                  |
+  | `gh_dump_file(f)`      | print file `f` as base64 lines, then `size crc32`; for diii's backup                 |
+  | `gh_rename_file(a, b)` | rename file `a` to `b` in one atomic step (replaces `b`); for diii's rename          |
+  | `gh_board()`           | board the build is for (`xiao_rp2040`, `rp2040_zero`); for diii's update dialog      |
+  | `gh_midi_monitor(on)`  | report MIDI in/out as `^^midi(i                                                      | o,b1,b2,b3)` lines; for diii's MIDI monitor |
+  | `gh_midi_counts(on)`   | MIDI in/out totals and clock tempo as `^^midic(in,out,bpm x10)`, ≤ 2/s, when changed |
 
 - **Cores**: core 1 owns I2C (key scan every 2 ms, LED flush at most every 4 ms when dirty) and
   runs from RAM; core 0 runs USB + Lua with 8 KB of stack (both scratch banks). Key events cross
@@ -117,7 +124,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   `iii open grid`), and `help()` says parterre. Serial mode keeps `monome` / `grid` for serialosc.
   The `og_*` names, versions and UF2 names stay.
 - **Startup pattern shows the mode** (og-0.3.15, tested on keypads), as on monome's grids:
-  *particles* (a burst from the center) for monome serial, *plasma* (waves) for iii. It replaces
+  _particles_ (a burst from the center) for monome serial, _plasma_ (waves) for iii. It replaces
   the iii-only left-to-right sweep, takes about 1.2 s, and is skipped without keypads.
 - **Clean boot by key hold debounced** (og-0.3.16, tested on keypads): the top-left key at power-up is sampled 5 times,
   and the 1 s hold only ends after 60 ms of reads that all see it released (failed reads count as
@@ -277,10 +284,10 @@ Lua scripts in a new `scripts/` folder, each usable on its own and selectable fr
   `691af85`, listed in the README's recommended scripts). It lights one key per stored script, and
   triple-clicking the top-left key returns to it. It has no license, so it is linked rather than
   vendored; ask the authors to add one (MIT, like most iii scripts), then vendor it.
-  **Restart broken since og-0.2.6:** many-roads restarts by deliberately running out of memory,
-  relying on iii rebooting on a failed allocation. Our firmware now lets Lua recover instead (M4),
-  so the triple-click only prints "not enough memory". iii's `device_reset()` (re-runs `init.lua`)
-  does what it wants without the trick; propose that change to the many-roads authors.
+  ✅ **Restart fixed in many-roads v1.3.0** (2026-11-01): up to 1.2.1 it restarted by
+  deliberately running out of memory, relying on iii rebooting on a failed allocation; our
+  firmware lets Lua recover instead (M4), so the triple-click only printed "not enough memory".
+  Our PR to use iii's `device_reset()` was merged and released in v1.3.0. Not yet re-tested here.
 - **`midi_controller.lua`**: generic MIDI controller driven by a preset file (notes, CC momentary /
   toggle, faders as columns, page keys, MIDI-in LED feedback). Preset = a small Lua/JSON table in
   flash, written by diii or a web editor (M5).
@@ -476,9 +483,48 @@ ThisType<App>` and with per-method `@this`; typing it would need a hand-kept int
 - **Visual refresh**, done separately from the items above so it can be evaluated on its own
   (kept, changed or dropped): a more modern, user-friendly interface.
 
-### M10 - Build firmware for stock versions of Grid
+### M10 — parterre for monome's grids (grid 2022, one, zero)
 
-- Have this improved firmware available for stock versions of Grids so users can also leverage the changes
+Goal: parterre builds for monome's iii grids, so their owners get the memory/speed fixes, the
+watchdog and greenhouse's extras without waiting for upstream (M11 may take long, or not
+happen). Unofficial; monome's own UF2s stay the way back (README, COMPATIBILITY.md).
+
+**Done (0.4.0):** the hardware sits behind `firmware/src/grid_hw.h`; `boards/open_grid/` is the
+first family; `midi_uart.c` is off on boards without `OG_MIDI_TX_PIN`; versions and UF2 names no
+longer name the Open Grid.
+
+**What a port needs** (read from tehn's iii-grid-2022/-one/-zero, 2026-11-12, GPL-3.0 like
+ours; each is one `main.c` of ~850 lines plus USB descriptors):
+
+| Part             | monome's firmware                                                                                                                                                   | Work for us                                                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| keys             | a 6-bit mux on GPIO16–21 selects a key, the ADC (GPIO26/27; four inputs round-robin on the zero) reads it in a FIFO interrupt, thresholds 0xd00/0xf00               | `og_hw_scan` drains events an ADC interrupt (set up on core 1) collects; `og_hw_read_key_raw` reads (1,1) like `check_device_key`                  |
+| LEDs             | I2C at 400 kHz on GPIO0/1: 2022 one driver at 0x74 with a 16×16 gamma table for intensity; one a driver at 0x34 (intensity = global current); zero two at 0x34/0x37 | `og_hw_write_leds(levels, intensity)` per variant, ~100 lines each, ported                                                                         |
+| size             | 16×8; the zero 16×16                                                                                                                                                | 2022/one: nothing. zero: `monome_serial.c` assumes 8 rows (LED_MAP/ROW/COL offsets), and the boot hold, mirror and loops need a check for 256 keys |
+| USB              | `cafe:1101` iii, `cafe:1110` serial, "monome" / "iii grid"                                                                                                          | the same IDs as ours already                                                                                                                       |
+| flash            | `PICO_BOARD` pico (2 MB, clk/2); files right after the program                                                                                                      | our pinned layout fits; **moving either way erases the files** (back up / restore)                                                                 |
+| status LED, BOOT | no WS2812; BOOT is inside the case                                                                                                                                  | `status_led.c` already does nothing without `PICO_DEFAULT_WS2812_PIN`; skip the 1 s cyan BOOT window per board (it only delays)                    |
+| boot patterns    | particles / plasma                                                                                                                                                  | ours already (`boot_anim.c`)                                                                                                                       |
+
+**Effort:** code for the 2022 and one ~1–2 days (one family, `monome_grid`, two LED variants; the
+16×8 size and our serial mode, modelled on the 2022's, carry over), the zero ~1 more (16×16
+through the common code and greenhouse's grid view, which already sizes itself from
+`grid_size_x/y`). Building needs nothing new. **Testing is the real cost:** none of it can be
+checked without the grids (key thresholds, LED gamma and ghosting, timing on core 1), so each
+board needs an owner to flash a pre-release (a `vX.Y.Z-rc` tag; greenhouse skips those) and
+report back.
+
+**Plan:** grid 2022 first (closest to ours), as pre-releases to testers on lines; then one, then
+zero. Boards `grid_2022`, `grid_one`, `grid_zero`; UF2s `parterre-X.Y.Z-grid_2022.uf2` etc.
+
+**Accept:** on each grid: keys and LEDs match stock (all 128/256 keys, 16 levels,
+`grid_intensity`), mode switch with key (1,1), norns and serialosc in serial mode, kria_iii and
+many-roads in iii mode, greenhouse's grid view, backup → flash → restore keeps every file, and
+flashing monome's UF2 brings stock back.
+
+**Later, upstream:** offer `gh_dump_file` and `gh_rename_file` to tehn/iii as `fs_*` calls (M11),
+so greenhouse's exact backups and renames work on stock firmware too; greenhouse would then look
+for the `fs_` names first.
 
 ### M11 - Upstream iii changes and improvements ✅ (submitted 2026-10-15; waiting for review)
 

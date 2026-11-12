@@ -1,10 +1,12 @@
 # parterre
 
-A grid controller of 128 lit keys that runs Lua scripts on the device, and
-also plays norns and serialosc as a monome-compatible grid. parterre is the
-firmware and its tools: it runs on an RP2040 and today drives
-[FREEPOET's Open Grid kit](https://github.com/FREEPOET-OFFICIAL/FREEPOET_Keypad).
-Other keypad boards can become its backends later like Monome's own grids.
+parterre is a firmware for grid controllers. It runs monome's
+[iii](https://monome.org/docs/iii/), so Lua scripts play on the grid itself,
+and it also plays norns and serialosc as a monome-compatible grid. It runs on
+an RP2040 and today drives
+[FREEPOET's Open Grid kit](https://github.com/FREEPOET-OFFICIAL/FREEPOET_Keypad);
+builds for monome's own grids are planned. parterre is not made or supported
+by monome.
 
 ![parterre](images/Front.png)
 
@@ -54,8 +56,8 @@ lights fully) the startup will skip `init.lua` and start with no script. This is
 troubleshooting a problematic startup script.
 Letting go earlier starts iii as usual.
 
-Greenhouse can also be used to switch modes programmatically, using the `og_set_mode` function or
-the buttons in the toolbar.
+Greenhouse can also be used to switch modes programmatically, using the `pt_set_mode` function
+(`og_set_mode` before 0.4) or the buttons in the toolbar.
 
 ## Scripts in iii mode
 

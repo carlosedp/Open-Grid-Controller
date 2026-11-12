@@ -5,21 +5,24 @@ Guide for coding agents (and humans) working on this repository. Read this first
 
 ## What this is
 
-Open Grid Controller (its iii firmware and tools are named **parterre** since November 2026;
-page vfmod.com/parterre/, manual `docs/manual/Manual.md`, icons in `docs/brand/`; code names
-such as `og_*` and `iii-open-grid/` stay): a 16×8 grid (two FREEPOET 8×8 I2C keypad boards + an RP2040) that runs
-**monome iii** (Lua on the device, USB MIDI + serial REPL), plus a monome-serial mode for
-norns/serialosc. Scripts are managed from **diii**, a browser app (our fork, renamed **greenhouse** in November
-2026, lives in its own repo, `github.com/VoltageFoundryMod/greenhouse`, locally `../greenhouse`, published at
+**parterre** (called Open Grid Controller until November 2026; page vfmod.com/parterre/,
+manual `docs/manual/Manual.md`, icons in `docs/brand/`) is a **firmware** for grid controllers:
+**monome iii** (Lua on the device, USB MIDI + serial REPL) with our patches, a board's hardware
+layer and extras, plus a monome-serial mode for norns/serialosc. It runs on FREEPOET's **Open
+Grid** kit (two 8×8 I2C keypad boards + an RP2040); builds for monome's grids are planned (M10).
+Names (layers, `pt_*` / `gh_*` / old `og_*`) and what works with what:
+[docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). C identifiers inside the firmware keep `og_`.
+Scripts are managed from **greenhouse**, our fork of monome's browser app diii (renamed in
+November 2026; its own repo, `github.com/VoltageFoundryMod/greenhouse`, locally `../greenhouse`, published at
 https://greenhouse.vfmod.com).
 
-| Path                                             | What                                                                     | Rules                                     |
-| ------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------- |
-| `iii-open-grid/`                                 | our firmware (Pico SDK + CMake): device glue, keypad driver, serial mode | ours; GPL-3.0 (links iii)                 |
-| `third_party/iii/`                               | monome iii, **git subtree** of codeberg.org/tehn/iii + our commits       | see "Changing iii" below                  |
-| `third_party/lua`, `littlefs`, `FREEPOET_Keypad` | vendored exports                                                         | don't edit; re-export to update           |
-| `sw/`                                            | original Arduino firmware (monome serial only)                           | keep as-is; known-good fallback for norns |
-| `docs/`                                          | roadmap, benchmark history                                               | keep current when behavior changes        |
+| Path                                             | What                                                                                                    | Rules                                     |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `firmware/`                                      | our firmware (Pico SDK + CMake): `src/` common, `boards/<family>/` grid hardware (`open_grid`: keypads) | ours; GPL-3.0 (links iii)                 |
+| `third_party/iii/`                               | monome iii, **git subtree** of codeberg.org/tehn/iii + our commits                                      | see "Changing iii" below                  |
+| `third_party/lua`, `littlefs`, `FREEPOET_Keypad` | vendored exports                                                                                        | don't edit; re-export to update           |
+| `sw/`                                            | original Arduino firmware (monome serial only)                                                          | keep as-is; known-good fallback for norns |
+| `docs/`                                          | roadmap, benchmark history                                                                              | keep current when behavior changes        |
 
 ## Build
 
@@ -34,15 +37,19 @@ make dist                      # UF2s for all boards into dist/
 - PlatformIO envs: `xiao_rp2040` and `rp2040_zero`. The first build downloads pico-sdk 2.2.0,
   Arm GCC 14.2, CMake and Ninja. Outputs in `.pio/build/<env>/firmware.uf2`.
 - Measurement variants come from environment variables, not extra envs:
-  `OG_FAST_CLOCK=1 pio run -e xiao_rp2040` (200 MHz), `OG_LUA_VM_IN_RAM=0` (interpreter in flash).
+  `PT_FAST_CLOCK=1 pio run -e xiao_rp2040` (200 MHz), `PT_LUA_VM_IN_RAM=0` (interpreter in flash).
   They reuse the env's build directory, so build the default again afterwards.
-- diii is a separate repo with its own AGENTS.md. Changes to the virtual grid, the firmware
-  dialog or other Open Grid features in diii are made there; this repo's firmware and diii only
-  meet through the serial protocol (`og_*` calls in, `^^...` lines out) and this repo's GitHub
-  releases, which diii's firmware dialog reads (UF2 names `iii-open-grid-og-X.Y.Z-<board>.uf2`).
-- Plain CMake also works: `cmake -S iii-open-grid -B build -DOG_BOARD=xiao_rp2040 -DPICO_SDK_PATH=...`.
-- Build options (CMake / PlatformIO `custom_og_*` / environment `OG_*`): `OG_BOARD`, `OG_I2C_HZ`, `OG_FAST_CLOCK`
-  (200 MHz), `OG_LUA_VM_IN_RAM` (default ON).
+- greenhouse is a separate repo with its own AGENTS.md. Changes to the grid view, the firmware
+  dialog or other parterre features in greenhouse are made there; this repo's firmware and
+  greenhouse only meet through the serial protocol (`gh_*` calls in, `^^...` lines out) and this
+  repo's GitHub releases, which greenhouse's firmware dialog reads (UF2 names
+  `parterre-X.Y.Z-<board>.uf2`; `iii-open-grid-og-X.Y.Z-<board>.uf2` before 0.4). greenhouse calls
+  `(gh_x or og_x)`, so renaming or removing a `gh_` call needs a greenhouse change first.
+- Plain CMake also works: `cmake -S firmware -B build -DPT_BOARD=xiao_rp2040 -DPICO_SDK_PATH=...`.
+- Build options (CMake / PlatformIO `custom_pt_*` / environment `PT_*`): `PT_BOARD`, `PT_I2C_HZ`,
+  `PT_FAST_CLOCK` (200 MHz), `PT_LUA_VM_IN_RAM` (default ON), `PT_FLASH_STATUS_OFFSET`.
+- A new board family: `firmware/boards/<family>/` with a `board.h` and an implementation of
+  `firmware/src/grid_hw.h`, and a `PT_BOARD` case in `firmware/CMakeLists.txt`.
 
 A clean build with **no new warnings in our files** is the minimum bar for every change.
 
@@ -51,7 +58,7 @@ A clean build with **no new warnings in our files** is the minimum bar for every
 Agents can build but can't run anything on the device. The maintainer flashes and tests.
 
 - Hardware today: a **Seeed XIAO RP2040 without keypads** (keypad boards and the kit's
-  RP2040-Zero not tested yet). Keys can be simulated with `og_key(x,y,z)` or diii's virtual
+  RP2040-Zero not tested yet). Keys can be simulated with `gh_key(x,y,z)` or greenhouse's virtual
   grid.
 - For every firmware change: bump the version, build, commit, and hand over **concrete test
   steps** (exact REPL lines, what output to expect, what would indicate failure). Say clearly
@@ -66,21 +73,21 @@ Agents can build but can't run anything on the device. The maintainer flashes an
 
 ## Conventions
 
-- **Releases**: pushing an annotated tag `vX.Y.Z` (matching `og-X.Y.Z` in main.c and
+- **Releases**: pushing an annotated tag `vX.Y.Z` (matching `parterre-X.Y.Z` in main.c and
   CMakeLists.txt) runs `.github/workflows/release.yml`, which builds both boards and creates the
   GitHub release with the UF2s; the tag's subject is the title, its body the description.
-  `make release` is the manual fallback. diii's firmware dialog offers the release to devices on
+  `make release` is the manual fallback. greenhouse's firmware dialog offers the release to devices on
   older versions. Ask the maintainer first.
-- **Version**: bump `DEVICE_VERSION_BASE` in `iii-open-grid/src/main.c` and
-  `pico_set_program_version` in `iii-open-grid/CMakeLists.txt` together for every firmware
-  build handed out for testing (`og-X.Y.Z`; optional builds add `-200mhz` / `-vmflash`).
+- **Version**: bump `DEVICE_VERSION_BASE` in `firmware/src/main.c` and
+  `pico_set_program_version` in `firmware/CMakeLists.txt` together for every firmware
+  build handed out for testing (`parterre-X.Y.Z`, `og-X.Y.Z` until 0.3.16; optional builds add `-200mhz` / `-vmflash`).
 - **Commits**: small, one topic, imperative subject with a scope prefix (`iii:`,
-  `iii-open-grid:`, `docs:`, `build:`, `tools:`, `scripts:`, `third_party:`). The body
+  `firmware:`, `docs:`, `build:`, `tools:`, `scripts:`, `third_party:`). The body
   says what was wrong and why the change fixes it; include measurements when relevant. Never
   mix `third_party/iii` changes with other paths in one commit.
 - **Formatting**: run `make format` before committing; `make format-check` must pass. It runs
   clang-format (`.clang-format`: Google-based, 2 spaces, 100 columns, `char *p`) on
-  `iii-open-grid/src` and ruff (`ruff.toml`) on the Python tools, at pinned versions (uvx).
+  `firmware/src`, `firmware/boards` and ruff (`ruff.toml`) on the Python tools, at pinned versions (uvx).
   `third_party/` and `sw/` keep upstream's style; `.editorconfig` covers the basics in editors.
   Reformatting goes in its own commit, never mixed with changes.
 - **Comments** explain why, not what; match the surrounding code's density.
@@ -97,9 +104,9 @@ iii is a git subtree so our changes can go upstream as patches.
 2. Keep iii's **Lua API unchanged**; existing scripts (e.g. kria_iii, many-roads) must keep
    working.
 3. Nothing Open Grid-specific inside iii; it must make sense on every iii device (grids, arc,
-   Pico). Board-specific code goes in `iii-open-grid/`.
+   Pico). Board-specific code goes in `firmware/`.
 4. iii's sources build with the warnings monome's device firmwares use (`-Wall -Wextra
-   -Wconversion ... -Werror`, set in `iii-open-grid/CMakeLists.txt`); a change that warns there
+-Wconversion ... -Werror`, set in `firmware/CMakeLists.txt`); a change that warns there
    would break their builds.
 5. Record each change and its measured effect in the table in
    [third_party/README.md](third_party/README.md).
@@ -107,7 +114,7 @@ iii is a git subtree so our changes can go upstream as patches.
    `dist/patches/iii/` with paths relative to tehn/iii (check with `git apply --check`).
    `make iii-pull-upstream` merges new upstream releases.
 7. Changing `lua/lib.lua`: regenerate `resource/lib_lua.c` with
-   `python iii-open-grid/tools/embed_lua.py third_party/iii/lua/lib.lua third_party/iii/resource/lib_lua.c`
+   `python firmware/tools/embed_lua.py third_party/iii/lua/lib.lua third_party/iii/resource/lib_lua.c`
    and bump the fork version in `iii.h` **and** line 1 of `lib.lua` (`v1.1.2-ogN`, must stay
    within 24 characters). Devices only rewrite their `lib.lua` when the version string changes.
    Version-bump commits are fork-only: never send them upstream.
@@ -125,12 +132,12 @@ iii is a git subtree so our changes can go upstream as patches.
 - **Core 1 must not run from flash in its idle loop**, and it must keep
   `multicore_lockout_victim_init()`: iii's flash writes pause it.
 - **Memory:** ~223 KB of heap. Compiling a big script is the tightest moment (kria_iii peaks at
-  ~155 KB, og-0.3.3). `og_mem()` shows the C heap; Lua's `mem()` only counts Lua's share.
+  ~155 KB, og-0.3.3). `gh_mem()` shows the C heap; Lua's `mem()` only counts Lua's share.
 - **Files uploaded through the REPL end with a `\0`**; anything reading scripts must stop there.
 - **The filesystem is pinned in flash** (og-0.3.7: status sector 0x80000, filesystem 0x90000 via
   `III_FLASH_STATUS_OFFSET`); iii's default puts it right after the program, where it moves when an
   update grows past 64 KB. The build fails if the program reaches it. Changing
-  `OG_FLASH_STATUS_OFFSET` moves the files once: say so in the release notes.
+  `PT_FLASH_STATUS_OFFSET` moves the files once: say so in the release notes.
 - **iii's `print()` puts each argument on its own line** (standard Lua separates them with tabs),
   and an empty string prints an empty line that diii drops. Code reading `print(a, b)` gets two
   lines; better one value per `print`.
@@ -147,7 +154,7 @@ iii is a git subtree so our changes can go upstream as patches.
 
 ## Licensing
 
-Firmware built from `iii-open-grid/` is GPL-3.0 (iii); diii (its own repo) is GPL-3.0. Vendored
+Firmware built from `firmware/` is GPL-3.0 (iii); greenhouse (its own repo) is GPL-3.0. Vendored
 libraries keep their own licenses (see `third_party/README.md`). Scripts without a license (e.g.
 many-roads) are linked from the README, not copied into the repo. The repo has no top-level
 LICENSE yet.

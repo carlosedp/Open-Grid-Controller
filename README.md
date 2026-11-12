@@ -2,29 +2,44 @@
 
 <img src="docs/brand/parterre-logo.svg" alt="" width="96" align="right">
 
-**parterre** is a grid controller of 128 lit keys that runs Lua scripts on the
-device and plays norns as a monome-compatible grid. It is the firmware and
-tools in this repository: monome's [iii](https://monome.org/docs/iii/) on an
-RP2040, with USB MIDI, a monome serial mode, a watchdog, firmware updates from
-the browser and a DIY MIDI out, written and patched from
-[greenhouse](https://greenhouse.vfmod.com).
+**parterre** is a firmware for grid controllers. It runs monome's
+[iii](https://monome.org/docs/iii/) on an RP2040, so Lua scripts play on the
+grid itself, and it plays norns as a monome-compatible grid. On top of iii it
+adds USB MIDI and TRS MIDI out, a monome serial mode, a watchdog, more memory
+and speed for scripts, and the calls [greenhouse](https://greenhouse.vfmod.com)
+uses to show the grid, back up files and update the firmware from the browser.
 
 It runs on **FREEPOET's [Open Grid](https://github.com/FreepoetOfficial/Open-Grid-Controller)
 kit** today: two 8×8 FREEPOET keypad boards, an RP2040-Zero and a printed case.
 This repository started as a fork of theirs, and their hardware build is kept
-below. The firmware reads the keypads through a small layer of its own, so
-other keypad boards (other sizes, or ones such as denki-oto's mechatrellis)
-could become further backends.
+below. The firmware reaches the keys and LEDs through a small hardware layer
+(`firmware/boards/`), so other grids can become further boards; builds for
+monome's grid 2022, one and zero are planned (see the
+[roadmap](docs/MULTIMODE-ROADMAP.md), M10).
 
 - Page: [vfmod.com/parterre](https://vfmod.com/parterre/), by Voltage Foundry Modular
 - Manual: [docs/manual/Manual.md](docs/manual/Manual.md)
 - Firmware: the [releases](../../releases) (a UF2 file for each board)
+- What works with what (stock iii, diii, greenhouse, scripts):
+  [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
 
-It was called Open Grid Controller until November 2026. Code names stay as
-they were, so scripts keep working: the `og_*` Lua tools, the
-`iii-open-grid/` folder and the `og-x.y.z` versions. From og-0.3.14 the device
-shows up on USB as **parterre** (Voltage Foundry Modular) in iii mode; serial
-mode keeps monome's names, which norns and serialosc look for.
+> **Unofficial firmware.** parterre is not made, tested or supported by
+> monome. On a monome grid, use it at your own risk: changing firmware
+> **erases the scripts stored on the grid** in either direction, so back them
+> up first (greenhouse: device ▾ → backup). monome's own firmware, with both
+> iii and the monome serial mode, is at
+> [monome/iii releases](https://github.com/monome/iii/releases/latest)
+> (`iii-grid-2022.uf2`, `iii-grid-one.uf2`, `iii-grid-zero.uf2`), installed as
+> described on [monome.org/docs/iii](https://monome.org/docs/iii/); to tell
+> the editions apart, see [grid editions](https://monome.org/docs/grid/editions).
+
+It was called Open Grid Controller until November 2026. From 0.4.0 the names
+follow: versions are `parterre-X.Y.Z` (they were `og-X.Y.Z`), the UF2s
+`parterre-X.Y.Z-<board>.uf2`, the source `firmware/` (was `iii-open-grid/`),
+and the Lua extras `pt_*` and `gh_*` (they were `og_*`; those names still work,
+see [Lua extras](#lua-extras)). In iii mode the device shows up on USB as
+**parterre** (Voltage Foundry Modular); serial mode keeps monome's names,
+which norns and serialosc look for.
 
 ## What parterre adds to the kit
 
@@ -50,10 +65,10 @@ boards and on norns is next; see
 
 The iii firmware contains both modes. The grid stays in the last one you chose, even after unplugging.
 
-| Mode              | Status LED | Shows up as                                            | Use it with                                                                                                                                                                                                |
-| ----------------- | ---------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **iii** (default) | green      | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed                                                  |
-| **monome serial** | blue       | a monome grid (`monome` / `grid`)                      | **norns** directly (plug into its USB port), and **Max/MSP, Pure Data, SuperCollider, VCV Rack, TouchDesigner**, etc. on a computer through monome's [serialosc](https://monome.org/docs/serialosc/setup/) |
+| Mode              | Status LED | Shows up as                         | Use it with                                                                                                                                                                                                |
+| ----------------- | ---------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **iii** (default) | green      | USB MIDI + serial REPL (`parterre`) | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed                                                  |
+| **monome serial** | blue       | a monome grid (`monome` / `grid`)   | **norns** directly (plug into its USB port), and **Max/MSP, Pure Data, SuperCollider, VCV Rack, TouchDesigner**, etc. on a computer through monome's [serialosc](https://monome.org/docs/serialosc/setup/) |
 
 The grid also shows the mode when it starts (og-0.3.15): **plasma**, waves washing across the keys, for iii; **particles**, a burst from the center, for monome serial.
 
@@ -61,7 +76,7 @@ To switch modes, use any of these:
 
 - **Top-left key**: hold it while plugging in. This toggles iii ↔ serial. When switching to iii, keep holding for about 1 second (the top row fills up, then lights fully: you can let go) to also skip `init.lua` and start with no script. Letting go earlier starts iii as usual.
 - **BOOT button**: hold it for 2 seconds while the grid is running (the LED turns magenta). This toggles the mode and restarts. It works without keypads.
-- **From greenhouse**: type `og_set_mode(1)` for monome serial, or `og_set_mode(0)` for iii. Use this only while in iii mode, because serial mode has no REPL.
+- **From greenhouse**: type `pt_set_mode(1)` for monome serial, or `pt_set_mode(0)` for iii. Use this only while in iii mode, because serial mode has no REPL.
 - **Back to iii, skipping `init.lua`**: press BOOT while the LED is cyan, during the first second after plugging in. The LED turns amber. Use this to recover from a script that hangs at startup.
 
 Holding BOOT _while_ plugging in does something else: it enters the RP2040's bootloader (an `RPI-RP2` drive) for flashing a firmware.
@@ -69,6 +84,29 @@ Holding BOOT _while_ plugging in does something else: it enters the RP2040's boo
 Serial mode follows the command set of monome's own grid firmware. It hasn't been tested on norns or serialosc yet. Until it has, the Arduino firmware in `sw/` (see [the original Arduino firmware](#the-original-arduino-firmware)) is the known-good choice for norns.
 
 If the grid stops responding for 8 seconds (a script stuck in a loop, or a firmware hang), a watchdog resets it and it starts again with `init.lua`, so a performance setup comes back on its own. If it hangs again within 30 seconds of starting, the next start skips `init.lua` (status LED amber) so you can fix the script from greenhouse. Either way greenhouse shows a `watchdog:` line once it connects (og-0.3.10 or later).
+
+## Lua extras
+
+Besides iii's own API, parterre has two sets of calls (`help()` lists them):
+
+| Call                                        | What it does                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------- |
+| `pt_set_mode(m)`                            | 0 = iii, 1 = monome serial; saves and reboots                                   |
+| `pt_led(r,g,b)`                             | status LED color (0-255); `pt_led()` returns it to the mode color               |
+| `pt_keypads()`                              | bitmask of the keypad boards that answer (Open Grid kit)                        |
+| `gh_mem(quiet)`                             | C heap: prints KB, returns `free, largest, used, peak, total, high_water` bytes |
+| `gh_key(x,y,z)`                             | a key event, as if pressed on the grid                                          |
+| `gh_mirror(on)`                             | streams the LEDs as `^^grid(...)` lines (greenhouse's grid view)                |
+| `gh_dump_file(f)`                           | prints a file as base64, then size and CRC-32 (greenhouse's backup)             |
+| `gh_rename_file(a, b)`                      | renames in one step, replacing `b`                                              |
+| `gh_board()`                                | the board this build is for (greenhouse's update dialog)                        |
+| `gh_midi_monitor(on)`, `gh_midi_counts(on)` | MIDI in/out and clock tempo as `^^midi(...)` / `^^midic(...)` lines             |
+
+`pt_*` are parterre's own; `gh_*` are the tools greenhouse uses, which any
+firmware can offer. Until 0.4.0 all of them were `og_*` (`og_set_mode`,
+`og_mirror`, ...); those names still work, so older scripts don't need
+changes. A script that should also run on monome's stock firmware checks first:
+`if pt_led then pt_led(0, 0, 40) end`.
 
 ## Building and flashing
 
@@ -112,11 +150,11 @@ lived here as a git subtree at `diii/`.
 
 Scripts written for monome's iii grids run unchanged on parterre. Upload them with [greenhouse](https://greenhouse.vfmod.com).
 
-| Script                                                         | What it does                                                                                                                                                                                                                                                                                                                                            |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [many-roads](https://github.com/boreal-ground/many-roads-grid) | Script launcher. On startup it lights one key per script stored on the grid; press a key to run that script. Triple-click the top-left key to restart and return to the launcher (but see the note below). To install, upload `many-roads.lua` and `many-roads-data.lua` and set `many-roads.lua` as `first` in greenhouse. Tested at commit `691af85`. |
+| Script                                                         | What it does                                                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [many-roads](https://github.com/boreal-ground/many-roads-grid) | Script launcher. On startup it lights one key per script stored on the grid; press a key to run that script. Triple-click the top-left key to restart and return to the launcher. To install, upload `many-roads.lua` and `many-roads-data.lua` and set `many-roads.lua` as `first` in greenhouse. Use v1.3.0 or later (see the note below). |
 
-**many-roads restart on this firmware:** many-roads 1.2.1 restarts by deliberately running out of memory, relying on iii rebooting when that happens. This firmware instead lets Lua recover from out-of-memory (see [monome/iii#7](https://github.com/monome/iii/issues/7)), so the triple-click only prints `not enough memory`. A fix that uses iii's `device_reset()` is being proposed to the many-roads authors. Until it's released, type `^^i` in greenhouse (or replug the grid) to get back to the launcher.
+**many-roads restart on this firmware:** up to 1.2.1, many-roads restarted by deliberately running out of memory, relying on iii rebooting when that happens. This firmware lets Lua recover from out-of-memory instead (see [monome/iii#7](https://github.com/monome/iii/issues/7)), so on those versions the triple-click only prints `not enough memory`. [v1.3.0](https://github.com/boreal-ground/many-roads-grid/releases/tag/v1.3.0) restarts with iii's `device_reset()`, which works on both.
 
 Scripts are listed by link only. Their authors hold the copyright, and we only copy a script into this repository when its license allows redistribution.
 
@@ -227,12 +265,14 @@ The current firmware focuses on providing a stable 8x16 grid interaction layer. 
 
 ```text
 .
-├── iii-open-grid/          # parterre: the iii (Lua) firmware, built from the root platformio.ini
+├── firmware/               # parterre: the iii (Lua) firmware, built from the root platformio.ini
+│   ├── src/                #   everything that isn't tied to one grid (grid_hw.h: what a board provides)
+│   └── boards/open_grid/   #   FREEPOET's Open Grid kit: keypad driver, pin maps
 ├── docs/                   # the manual, roadmap, design notes and icons (docs/brand/)
 ├── third_party/            # vendored iii, Lua, littlefs and FREEPOET_Keypad sources
 ├── tools/                  # build helpers (dist.py)
 ├── Makefile                # build, flash and package everything (make help)
-├── platformio.ini          # PlatformIO project for iii-open-grid
+├── platformio.ini          # PlatformIO project for firmware/
 ├── enclosure/              # FREEPOET: 3D enclosure STEP files
 ├── pics/                   # FREEPOET: photos and assembly reference images
 └── sw/                     # FREEPOET: the original Arduino firmware (PlatformIO project)
