@@ -422,8 +422,7 @@ static int l_grid_size_y(lua_State *l) {
 //
 // gh_*: what greenhouse uses (the same on every board, and on achene);
 // pt_*: parterre's own (mode, status LED; a board family adds its own).
-// Until 0.4 both were og_*; those names stay as aliases, so scripts and older
-// greenhouse copies keep working.
+// Until 0.4 both were og_*.
 
 static int l_og_set_mode(lua_State *l) {
   const int m = (int)lua_tointeger(l, 1);
@@ -524,17 +523,6 @@ static const struct luaL_Reg device_lib[] = {
 #ifdef OG_BOARD_LUA_FUNCS
     OG_BOARD_LUA_FUNCS
 #endif
-    // the names before 0.4
-    {"og_set_mode", l_og_set_mode},
-    {"og_mem", l_og_mem},
-    {"og_mirror", l_og_mirror},
-    {"og_key", l_og_key},
-    {"og_led", l_og_led},
-    {"og_dump_file", og_l_dump_file},
-    {"og_rename_file", l_og_rename_file},
-    {"og_board", l_og_board},
-    {"og_midi_monitor", og_l_midi_monitor},
-    {"og_midi_counts", og_l_midi_counts},
     {NULL, NULL},
 };
 
@@ -564,7 +552,6 @@ static const char *device_help_str =
     "  gh_rename_file(old, new)  rename a file (replaces new)\n"
     "  gh_board()      board this firmware is built for\n"
     "  gh_midi_monitor(on) report MIDI in/out as ^^midi(...)\n"
-    "  gh_midi_counts(on)  MIDI counts and clock tempo as ^^midic(...)\n"
-    "(the og_ names from before 0.4 still work)\n";
+    "  gh_midi_counts(on)  MIDI counts and clock tempo as ^^midic(...)\n";
 
 const char *device_help_txt() { return device_help_str; }
