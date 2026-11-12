@@ -253,7 +253,9 @@ Everything in §1.3. **Acceptance**, in order:
 - ✅ Bus clear (parterre-0.4.2): after entering the bootloader from greenhouse and flashing, the
   LEDs stayed frozen until the grid was unplugged. The keypads keep their power across a reset of
   the RP2040, and one interrupted mid-transfer holds SDA low. `keypad.c` now clocks SCL until SDA
-  is released and sends a STOP, at boot and whenever no board answers.
+  is released and sends a STOP, at boot and whenever no board answers. Before entering the bootloader or
+  rebooting, the grid now goes dark and core 1 stops between transfers (`og_grid_park`), so the
+  keypads don't keep showing the last frame and a reset can't interrupt a transfer.
 - ✅ Tested 400 kHz and 1 MHz on the kit (2026-11-12, [BENCHMARKS.md](BENCHMARKS.md)): 400 kHz
   scans 2.8× and writes LEDs 3.5× faster than 100 kHz with no errors, and is the default since
   parterre-0.4.2; at 1 MHz the keypads stop answering. Open: 1 MHz with external 2.2 kΩ pull-ups,

@@ -149,7 +149,9 @@ iii is a git subtree so our changes can go upstream as patches.
 - **The keypad boards keep their power when the RP2040 resets** (bootloader, watchdog, reboot).
   A reset in mid-transfer can leave one holding SDA low: LEDs frozen, every transfer failing,
   until a power cycle. `keypad.c` does an I2C bus clear (9 clocks + STOP) at boot and whenever
-  no board answers (parterre-0.4.2); `pt_i2c_stats()` counts the stuck buses it cleared.
+  no board answers (parterre-0.4.2); `pt_i2c_stats()` counts the stuck buses it cleared. Before
+  the bootloader (`rom_reset_usb_boot`, wrapped at link time) and `watchdog_reboot`, `og_grid_park()`
+  blanks the LEDs and stops core 1 between transfers.
 - **Out of memory is a Lua error, not a reboot**, in our firmware. Scripts that relied on the
   reboot (many-roads' restart) need `device_reset()`.
 - **Windows tooling:** the VS Code PlatformIO extension can hold PlatformIO's package lock for a
