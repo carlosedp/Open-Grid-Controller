@@ -244,8 +244,12 @@ Everything in §1.3. **Acceptance**, in order:
 
 ### M1 — Latency and bus
 
-- Make I2C clock tests easy (already `custom_og_i2c_hz` / `-DOG_I2C_HZ`). Test 400 kHz, then 1 MHz,
-  with a logic analyzer (24 MHz Saleae clone + PulseView). Watch NACKs, clock stretching, retries;
+- ✅ Make I2C clock tests easy (parterre-0.4.1): `PT_I2C_HZ=400000 pio run -e rp2040_zero` (or
+  `custom_pt_i2c_hz`); a clock other than 100 kHz shows in the version (`-i2c400k`).
+  `pt_i2c_stats(reset)` prints and returns the clock, scans per second, scan and LED write
+  avg/max µs, transfers, failed attempts (retried), failed transfers and boards dropped.
+- Test 400 kHz, then 1 MHz, with `pt_i2c_stats()` and, for the details, a logic analyzer
+  (24 MHz Saleae clone + PulseView). Watch NACKs, clock stretching, retries;
   fall back to 100 kHz automatically above an error threshold.
 - LED writes: `0x18` (one transaction per board) instead of `0x17` ×2 + show.
 - Debounce: 2 samples, or eager press with debounced release (`OG_DEBOUNCE_SAMPLES`).

@@ -37,7 +37,8 @@ make dist                      # UF2s for all boards into dist/
 - PlatformIO envs: `xiao_rp2040` and `rp2040_zero`. The first build downloads pico-sdk 2.2.0,
   Arm GCC 14.2, CMake and Ninja. Outputs in `.pio/build/<env>/firmware.uf2`.
 - Measurement variants come from environment variables, not extra envs:
-  `PT_FAST_CLOCK=1 pio run -e xiao_rp2040` (200 MHz), `PT_LUA_VM_IN_RAM=0` (interpreter in flash).
+  `PT_FAST_CLOCK=1 pio run -e xiao_rp2040` (200 MHz), `PT_LUA_VM_IN_RAM=0` (interpreter in flash),
+  `PT_I2C_HZ=400000` (keypad bus; read the effect with `pt_i2c_stats()`).
   They reuse the env's build directory, so build the default again afterwards.
 - greenhouse is a separate repo with its own AGENTS.md. Changes to the grid view, the firmware
   dialog or other parterre features in greenhouse are made there; this repo's firmware and

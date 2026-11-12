@@ -92,6 +92,7 @@ Besides iii's own API, parterre has two sets of calls (`help()` lists them):
 | `pt_set_mode(m)`                            | 0 = iii, 1 = monome serial; saves and reboots                                   |
 | `pt_led(r,g,b)`                             | status LED color (0-255); `pt_led()` returns it to the mode color               |
 | `pt_keypads()`                              | bitmask of the keypad boards that answer (Open Grid kit)                        |
+| `pt_i2c_stats(reset)`                       | keypad bus: clock, scans/s, scan and LED write times, failed transfers          |
 | `gh_mem(quiet)`                             | C heap: prints KB, returns `free, largest, used, peak, total, high_water` bytes |
 | `gh_key(x,y,z)`                             | a key event, as if pressed on the grid                                          |
 | `gh_mirror(on)`                             | streams the LEDs as `^^grid(...)` lines (greenhouse's grid view)                |
