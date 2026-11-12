@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "keypad.h"
+#include "grid_hw.h"
 
 typedef struct {
   uint8_t x;

@@ -27,12 +27,8 @@ static void push_event(uint8_t x, uint8_t y, uint8_t z) {
   queue_try_add(&events, &e);  // drop on overflow, like upstream iii
 }
 
-// Snapshot the framebuffer with global intensity applied.
 static void render(uint8_t *out) {
-  const uint8_t k = intensity;
-  for (int i = 0; i < OG_KEY_COUNT; i++) {
-    out[i] = (uint8_t)((leds[i] * k + 7) / 15);
-  }
+  for (int i = 0; i < OG_KEY_COUNT; i++) out[i] = leds[i];
 }
 
 // Runs from RAM. Both cores fetch code from flash through one shared 16 KB
@@ -52,14 +48,14 @@ static void __not_in_flash_func(core1_entry)(void) {
     core1_beats++;
     if (time_reached(next_scan)) {
       next_scan = make_timeout_time_us(OG_SCAN_INTERVAL_US);
-      og_keypad_scan(push_event);
+      og_hw_scan(push_event);
     }
-    if (time_reached(next_led) && (dirty || og_keypad_needs_led_sync())) {
+    if (time_reached(next_led) && (dirty || og_hw_needs_led_sync())) {
       next_led = make_timeout_time_us(OG_LED_INTERVAL_US);
       // Clear first so writes that land during render() trigger another flush.
       dirty = false;
       render(frame);
-      og_keypad_write_leds(frame);
+      og_hw_write_leds(frame, intensity);
     }
     const uint32_t wake = time_us_32() + 100;
     while ((int32_t)(time_us_32() - wake) < 0) tight_loop_contents();
@@ -69,7 +65,7 @@ static void __not_in_flash_func(core1_entry)(void) {
 void og_grid_init(void) {
   queue_init(&events, sizeof(og_key_event_t), EVENT_QUEUE_LEN);
   memset((void *)leds, 0, sizeof(leds));
-  og_keypad_init();
+  og_hw_init();
 }
 
 // Core 0's stack (Lua, USB) sits at the top of SCRATCH_Y and grows down into
@@ -129,7 +125,7 @@ void og_grid_inject_key(uint8_t x, uint8_t y, uint8_t z) {
 void og_grid_flush_now(void) {
   uint8_t frame[OG_KEY_COUNT];
   render(frame);
-  og_keypad_write_leds(frame);
+  og_hw_write_leds(frame, intensity);
   dirty = false;
 }
 

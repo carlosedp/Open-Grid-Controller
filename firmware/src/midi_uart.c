@@ -21,6 +21,10 @@
 #include "hardware/sync.h"
 #include "hardware/uart.h"
 
+// A board without the jack leaves OG_MIDI_TX_PIN out (on monome's grid 2022,
+// GPIO0 is the LED driver's I2C); then this does nothing.
+#ifdef OG_MIDI_TX_PIN
+
 #define MIDI_BAUD 31250
 // ~160 ms of line time
 #define RING_SIZE 512
@@ -109,3 +113,15 @@ void og_midi_uart_tx(uint8_t data1, uint8_t data2, uint8_t data3) {
   parse(data2);
   parse(data3);
 }
+
+#else
+
+void og_midi_uart_init(void) {}
+
+void og_midi_uart_tx(uint8_t data1, uint8_t data2, uint8_t data3) {
+  (void)data1;
+  (void)data2;
+  (void)data3;
+}
+
+#endif

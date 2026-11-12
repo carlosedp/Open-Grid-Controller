@@ -30,7 +30,6 @@
 #include "util.h"
 #include "vm.h"
 
-#include "board.h"
 #include "boot_anim.h"
 #include "file_dump.h"
 #include "grid.h"
@@ -86,7 +85,7 @@ static uint8_t mode;
 
 bool check_device_key() {
   bool pressed = false;
-  return og_keypad_read_key_raw(MODE_KEY_X, MODE_KEY_Y, &pressed) && pressed;
+  return og_hw_read_key_raw(MODE_KEY_X, MODE_KEY_Y, &pressed) && pressed;
 }
 
 // Light the first row as a progress bar while the clean-boot hold counts up.
@@ -115,7 +114,7 @@ static bool clean_boot_hold(void) {
     show_hold_progress(held);
     sleep_ms(KEY_SAMPLE_MS);
     bool pressed = true;
-    if (og_keypad_read_key_raw(MODE_KEY_X, MODE_KEY_Y, &pressed) && !pressed) {
+    if (og_hw_read_key_raw(MODE_KEY_X, MODE_KEY_Y, &pressed) && !pressed) {
       if (is_nil_time(up_since)) up_since = get_absolute_time();
       if (absolute_time_diff_us(up_since, get_absolute_time()) >= KEY_RELEASE_MS * 1000) {
         return false;
@@ -226,7 +225,7 @@ static void boot_anim_idle(void) {
 }
 
 static void show_mode(void) {
-  if (!og_keypad_connected_mask()) return;
+  if (!og_hw_present()) return;
   if (mode == MODE_SERIAL) {
     og_boot_anim_particles(boot_anim_idle);
   } else {
@@ -239,7 +238,7 @@ int main(void) {
   flash_init();
   og_status_init();
   og_grid_init();
-  og_keypad_wait_ready(KEYPAD_BOOT_WAIT_MS);
+  og_hw_wait_ready(KEYPAD_BOOT_WAIT_MS);
 
   // Same rules as monome's grids: holding the key at power-up toggles the
   // mode; when switching to iii, keep holding to also skip init.lua.
@@ -427,11 +426,6 @@ static int l_og_set_mode(lua_State *l) {
   return 0;
 }
 
-static int l_og_keypads(lua_State *l) {
-  lua_pushinteger(l, og_keypad_connected_mask());
-  return 1;
-}
-
 // Prints C heap stats (KB) and returns them in bytes:
 // free, largest, used, peak, total, high_water. og_mem(true) only returns them.
 static int l_og_mem(lua_State *l) {
@@ -512,7 +506,9 @@ static const struct luaL_Reg device_lib[] = {
     {"grid_size_x", l_grid_size_x},
     {"grid_size_y", l_grid_size_y},
     {"og_set_mode", l_og_set_mode},
-    {"og_keypads", l_og_keypads},
+#ifdef OG_BOARD_LUA_FUNCS
+    OG_BOARD_LUA_FUNCS
+#endif
     {"og_mem", l_og_mem},
     {"og_mirror", l_og_mirror},
     {"og_key", l_og_key},
@@ -539,8 +535,7 @@ static const char *device_help_str =
     "  grid_size_y()\n"
     "parterre (og_ tools)\n"
     "  og_set_mode(m)  0 = iii, 1 = monome serial (reboots)\n"
-    "  og_keypads()    bitmask of keypad boards online\n"
-    "  og_mem(quiet)   C heap: free, largest block, used, peak, total\n"
+    "  og_mem(quiet)  C heap: free, largest block, used, peak, total\n"
     "  og_key(x,y,z)   inject a key event, as if pressed on the grid\n"
     "  og_led(r,g,b)   status LED color (0-255); og_led() = mode color\n"
     "  og_mirror(on)   stream LED frames as ^^grid(...) for diii\n"
@@ -548,6 +543,10 @@ static const char *device_help_str =
     "  og_rename_file(old, new)  rename a file (replaces new)\n"
     "  og_board()      board this firmware is built for\n"
     "  og_midi_monitor(on) report MIDI in/out as ^^midi(...) for diii\n"
-    "  og_midi_counts(on)  MIDI counts and clock tempo as ^^midic(...)\n";
+    "  og_midi_counts(on)  MIDI counts and clock tempo as ^^midic(...)\n"
+#ifdef OG_BOARD_HELP
+    OG_BOARD_HELP
+#endif
+    ;
 
 const char *device_help_txt() { return device_help_str; }

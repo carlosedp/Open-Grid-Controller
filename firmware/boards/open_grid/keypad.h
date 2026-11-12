@@ -10,11 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define OG_GRID_W 16
-#define OG_GRID_H 8
-#define OG_KEY_COUNT (OG_GRID_W * OG_GRID_H)
-
-typedef void (*og_key_cb_t)(uint8_t x, uint8_t y, uint8_t z);
+#include "grid_hw.h"
 
 // Set up the I2C bus and probe the boards once.
 void og_keypad_init(void);

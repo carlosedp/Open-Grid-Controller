@@ -82,7 +82,7 @@ target_include_directories(lfs PUBLIC ${THIRD_PARTY}/littlefs)
 
 # the board family's grid hardware
 if (PT_BOARD_FAMILY STREQUAL "open_grid")
-    set(PT_BOARD_SOURCES ${PT_BOARD_DIR}/keypad.c)
+    set(PT_BOARD_SOURCES ${PT_BOARD_DIR}/grid_hw.c ${PT_BOARD_DIR}/keypad.c)
 endif ()
 
 set(III_SOURCES
