@@ -1,4 +1,6 @@
-# og_bench history
+# Benchmark history
+
+Lua speed and memory (`og_bench`) first; the keypad bus (I2C clock) at the end.
 
 Results of `og_bench.lua` (in the `iii-scripts` repo since November 2026; earlier in `scripts/`) on a Seeed XIAO RP2040 without keypads,
 newest first. Each run: fresh boot, `og_bench()` then `og_bench("kria_iii.lua")` (kria_iii v1.6.3,
@@ -10,30 +12,30 @@ full collection. Before that, `midi_to_msg` meant what is now `alloc+gc`.
 
 ## Results
 
-| Build           | Clock   | Script | Lua   | Heap free / largest | High water   | loop    | midi_to_msg | alloc+gc | gc      | redraw  |
-| --------------- | ------- | ------ | ----- | ------------------- | ------------ | ------- | ----------- | -------- | ------- | ------- |
-| og-0.3.3 +Lua midi | 125 MHz | -   | 43.5  | 171.7 / 89.4        | 67.2 of 223  | 4.60 µs | 42.0 µs     | 54.6 µs  | 2.46 ms | 0.98 ms |
-| og-0.3.3 C midi | 125 MHz | -      | 41.7  | 173.5 / 88.9        | 71.2 of 223  | 4.60 µs | 46.8 µs     | 52.9 µs  | 2.88 ms | 0.99 ms |
-| og-0.3.3 fresh  | 125 MHz | kria   | 110.6 | 99.4 / 61.3         | 155.2 of 223 | 4.60 µs | 47.0 µs     | 54.2 µs  | 2.18 ms | 1.00 ms |
-| og-0.3.3        | 125 MHz | -      | 41.9  | 173.3 / 91.8        | 59.2 of 223  | 4.60 µs | 48.5 µs     | 54.4 µs  | 2.89 ms | 1.00 ms |
-| og-0.3.3        | 125 MHz | kria   | 110.7 | 99.2 / 53.7         | 147.2 of 223 | 4.60 µs | 48.4 µs     | 55.6 µs  | 2.20 ms | 0.98 ms |
-| og-0.3.0        | 125 MHz | -      | 41.7  | 173.8 / 89.3        | 151.4 of 223 | 4.59 µs | 47.0 µs     | 53.4 µs  | 2.95 ms | 0.98 ms |
-| og-0.3.0        | 125 MHz | kria   | 110.7 | 99.4 / 57.9         | 203.4 of 223 | 4.59 µs | 46.3 µs     | 54.4 µs  | 2.22 ms | 1.00 ms |
-| og-0.2.10-vmram | 125 MHz | -      | 41.7  | 158.3 / 83.8        | 151.9 of 208 | 4.60 µs | 47.1 µs     | 53.6 µs  | 3.00 ms | 0.98 ms |
-| og-0.2.10-vmram | 125 MHz | kria   | 110.7 | 83.9 / 50.7         | 195.9 of 208 | 4.60 µs | 46.9 µs     | 53.6 µs  | 5.49 ms | 1.00 ms |
-| og-0.2.10       | 125 MHz | -      | 41.7  | 170.4 / 90.0        | 152.0 of 220 | 8.44 µs | 51.8 µs     | 58.0 µs  | 2.97 ms | 0.95 ms |
-| og-0.2.10       | 125 MHz | kria   | 110.7 | 96.0 / 58.4         | 204.0 of 220 | 8.45 µs | 51.1 µs     | 59.2 µs  | 2.45 ms | 0.97 ms |
-| og-0.2.9-200mhz | 200 MHz | -      | 41.7  | 170.8 / 90.6        | 152.3 of 220 | 3.83 µs | 49.3 µs     | 53.4 µs  | 2.00 ms | 0.66 ms |
-| og-0.2.9-200mhz | 200 MHz | kria   | 110.7 | 96.3 / 58.8         | 204.3 of 220 | 3.83 µs | 49.8 µs     | 54.1 µs  | 1.60 ms | 0.67 ms |
-| og-0.2.9        | 125 MHz | -      | 41.7  | 170.8 / 90.6        | 152.3 of 220 | 8.93 µs | 95.0 µs     | 100.6 µs | 3.24 ms | 1.03 ms |
-| og-0.2.9        | 125 MHz | kria   | 110.7 | 96.3 / 58.8         | 204.3 of 220 | 8.92 µs | 94.2 µs     | 102.3 µs | 2.63 ms | 1.05 ms |
-| og-0.2.8        | 125 MHz | -      | 41.0  | 171.4 / 89.7        | 156.3 of 220 | 8.94 µs | —           | 100.7 µs | —       | 1.03 ms |
-| og-0.2.8        | 125 MHz | kria   | 110.2 | 96.9 / 57.9         | 208.3 of 220 | 8.92 µs | —           | 102.0 µs | —       | 1.05 ms |
-| og-0.2.6        | 125 MHz | -      | 43.3  | 168.9 / 90.0        | 160.3 of 220 | 6.08 µs | —           | 83.5 µs  | —       | 1.03 ms |
-| og-0.2.6        | 125 MHz | kria   | 112.8 | 94.1 / 61.4         | 208.3 of 220 | 6.07 µs | —           | 80.9 µs  | —       | 1.04 ms |
-| og-0.2.4        | 125 MHz | -      | 43.3  | 169.5 / 92.1        | 160.9 of 221 | 6.07 µs | —           | 80.8 µs  | —       | 1.03 ms |
-| og-0.2.1        | 125 MHz | -      | 59.0  | 156.1 / 82.6        | (sampled)    | 6.25 µs | —           | 98.3 µs  | —       | 1.35 ms |
-| og-0.2.1        | 125 MHz | kria   | —     | —                   | —            | —       | —           | —        | —       | —       |
+| Build              | Clock   | Script | Lua   | Heap free / largest | High water   | loop    | midi_to_msg | alloc+gc | gc      | redraw  |
+| ------------------ | ------- | ------ | ----- | ------------------- | ------------ | ------- | ----------- | -------- | ------- | ------- |
+| og-0.3.3 +Lua midi | 125 MHz | -      | 43.5  | 171.7 / 89.4        | 67.2 of 223  | 4.60 µs | 42.0 µs     | 54.6 µs  | 2.46 ms | 0.98 ms |
+| og-0.3.3 C midi    | 125 MHz | -      | 41.7  | 173.5 / 88.9        | 71.2 of 223  | 4.60 µs | 46.8 µs     | 52.9 µs  | 2.88 ms | 0.99 ms |
+| og-0.3.3 fresh     | 125 MHz | kria   | 110.6 | 99.4 / 61.3         | 155.2 of 223 | 4.60 µs | 47.0 µs     | 54.2 µs  | 2.18 ms | 1.00 ms |
+| og-0.3.3           | 125 MHz | -      | 41.9  | 173.3 / 91.8        | 59.2 of 223  | 4.60 µs | 48.5 µs     | 54.4 µs  | 2.89 ms | 1.00 ms |
+| og-0.3.3           | 125 MHz | kria   | 110.7 | 99.2 / 53.7         | 147.2 of 223 | 4.60 µs | 48.4 µs     | 55.6 µs  | 2.20 ms | 0.98 ms |
+| og-0.3.0           | 125 MHz | -      | 41.7  | 173.8 / 89.3        | 151.4 of 223 | 4.59 µs | 47.0 µs     | 53.4 µs  | 2.95 ms | 0.98 ms |
+| og-0.3.0           | 125 MHz | kria   | 110.7 | 99.4 / 57.9         | 203.4 of 223 | 4.59 µs | 46.3 µs     | 54.4 µs  | 2.22 ms | 1.00 ms |
+| og-0.2.10-vmram    | 125 MHz | -      | 41.7  | 158.3 / 83.8        | 151.9 of 208 | 4.60 µs | 47.1 µs     | 53.6 µs  | 3.00 ms | 0.98 ms |
+| og-0.2.10-vmram    | 125 MHz | kria   | 110.7 | 83.9 / 50.7         | 195.9 of 208 | 4.60 µs | 46.9 µs     | 53.6 µs  | 5.49 ms | 1.00 ms |
+| og-0.2.10          | 125 MHz | -      | 41.7  | 170.4 / 90.0        | 152.0 of 220 | 8.44 µs | 51.8 µs     | 58.0 µs  | 2.97 ms | 0.95 ms |
+| og-0.2.10          | 125 MHz | kria   | 110.7 | 96.0 / 58.4         | 204.0 of 220 | 8.45 µs | 51.1 µs     | 59.2 µs  | 2.45 ms | 0.97 ms |
+| og-0.2.9-200mhz    | 200 MHz | -      | 41.7  | 170.8 / 90.6        | 152.3 of 220 | 3.83 µs | 49.3 µs     | 53.4 µs  | 2.00 ms | 0.66 ms |
+| og-0.2.9-200mhz    | 200 MHz | kria   | 110.7 | 96.3 / 58.8         | 204.3 of 220 | 3.83 µs | 49.8 µs     | 54.1 µs  | 1.60 ms | 0.67 ms |
+| og-0.2.9           | 125 MHz | -      | 41.7  | 170.8 / 90.6        | 152.3 of 220 | 8.93 µs | 95.0 µs     | 100.6 µs | 3.24 ms | 1.03 ms |
+| og-0.2.9           | 125 MHz | kria   | 110.7 | 96.3 / 58.8         | 204.3 of 220 | 8.92 µs | 94.2 µs     | 102.3 µs | 2.63 ms | 1.05 ms |
+| og-0.2.8           | 125 MHz | -      | 41.0  | 171.4 / 89.7        | 156.3 of 220 | 8.94 µs | —           | 100.7 µs | —       | 1.03 ms |
+| og-0.2.8           | 125 MHz | kria   | 110.2 | 96.9 / 57.9         | 208.3 of 220 | 8.92 µs | —           | 102.0 µs | —       | 1.05 ms |
+| og-0.2.6           | 125 MHz | -      | 43.3  | 168.9 / 90.0        | 160.3 of 220 | 6.08 µs | —           | 83.5 µs  | —       | 1.03 ms |
+| og-0.2.6           | 125 MHz | kria   | 112.8 | 94.1 / 61.4         | 208.3 of 220 | 6.07 µs | —           | 80.9 µs  | —       | 1.04 ms |
+| og-0.2.4           | 125 MHz | -      | 43.3  | 169.5 / 92.1        | 160.9 of 221 | 6.07 µs | —           | 80.8 µs  | —       | 1.03 ms |
+| og-0.2.1           | 125 MHz | -      | 59.0  | 156.1 / 82.6        | (sampled)    | 6.25 µs | —           | 98.3 µs  | —       | 1.35 ms |
+| og-0.2.1           | 125 MHz | kria   | —     | —                   | —            | —       | —           | —        | —       | —       |
 
 og-0.2.1 + kria: out of memory while loading (fixed by the streaming loader in og-0.2.2).
 
@@ -76,3 +78,28 @@ og-0.2.1 + kria: out of memory while loading (fixed by the streaming loader in o
 - **Memory:** loading kria peaks at 155 of 223 KB (og-0.3.3, "fresh": kria benchmark right after
   boot, nothing before it). The ~204–208 KB peaks recorded up to og-0.3.0 were inflated by
   og_mem's own probe (fixed in og-0.3.1).
+
+## Keypad bus (I2C clock)
+
+Open Grid kit (RP2040-Zero, both keypad boards), parterre-0.4.1 built with `PT_I2C_HZ`, 2026-11-12.
+While running: an LED stress test redrawing all 128 LEDs every 20 ms
+(`metro.init(function() ... grid_led(x, y, math.random(0, 15)) ... grid_refresh() end, 0.02)`)
+and keys pressed all over the grid. `pt_i2c_stats(true)` windows of 2–46 s; typical window shown.
+
+| Clock   | Scans/s (LED test) | Scan avg / max | LED write avg / max | Failed attempts / transfers | Boards dropped |
+| ------- | ------------------ | -------------- | ------------------- | --------------------------- | -------------- |
+| 100 kHz | 40                 | 15.9 / 20.5 ms | 8.33 / 8.47 ms      | 0 / 0                       | 0              |
+| 400 kHz | 149                | 5.7 / 9.4 ms   | 2.36 / 2.62 ms      | 0 / 0 (~79,000 transfers)   | 0              |
+| 1 MHz   | —                  | —              | —                   | keypads don't answer        | —              |
+
+- **400 kHz: 2.8× faster scans, 3.5× faster LED writes, 3.7× the scan rate under LED load,
+  no errors.** The default since parterre-0.4.2. Without LED load it scans ~196 times a second.
+- **1 MHz:** the grid boots and greenhouse connects, but no LED lights: the keypad boards stop
+  answering (their closed firmware, or the weak pull-ups: the RP2040's internal ~50 kΩ plus
+  whatever the boards carry). Not tried with external 2.2 kΩ pull-ups.
+- **The keypads add a fixed cost.** A scan is 4 block reads of 32 keys: ~3.2 ms of wire time at
+  400 kHz, but 5.7 ms measured, so ~2.5 ms per scan is the boards' response time (clock
+  stretching, the gap between request and reply). It doesn't shrink with the clock, so a clock
+  between 400 kHz and 1 MHz would gain little (~25% at 700 kHz, by that estimate).
+- The 100 kHz run's first window (from boot) counted 26 failed transfers: probes of the boards
+  before they had started. From parterre-0.4.2 those probes aren't counted.

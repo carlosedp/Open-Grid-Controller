@@ -47,7 +47,7 @@ docs/                   this file, BENCHMARKS.md
 | ------------ | ---------------------------------------------------------------------------------------------------- |
 | MCU          | RP2040-Zero (Waveshare), 2 MB flash. Dev/test board: Seeed XIAO RP2040 (also 2 MB)                   |
 | Grid         | 16 cols × 8 rows = 128 keys, 16 LED levels (0–15)                                                    |
-| Keypads      | 2× FREEPOET_Keypad, I2C @ 100 kHz, addresses `0x2E` (x 0–7) and `0x2D` (x 8–15)                      |
+| Keypads      | 2× FREEPOET_Keypad, I2C @ 400 kHz, addresses `0x2E` (x 0–7) and `0x2D` (x 8–15)                      |
 | I2C pins     | RP2040-Zero: I2C0 SDA GPIO4 / SCL GPIO5. XIAO: I2C1 SDA GPIO6 (D4) / SCL GPIO7 (D5)                  |
 | Key read     | Register `0x21` block read, 1 byte per key, 32 keys per transaction → 2 transactions per board       |
 | LED write    | Register `0x17` packed 4-bit levels (≤ 58 keys per write) + `0x13` show                              |
@@ -159,7 +159,8 @@ Source: [third_party/FREEPOET_Keypad](../third_party/FREEPOET_Keypad) (MIT). Hos
 keypad boards' own firmware is not published.
 
 - Each board has its own RP2040 (`RP2-B2` = B2 stepping) acting as I2C slave. RP2040 I2C supports
-  100 kHz / 400 kHz / 1 MHz; whether the closed keypad firmware keeps up above 100 kHz is untested.
+  100 kHz / 400 kHz / 1 MHz. The keypad firmware keeps up at 400 kHz (no errors) but not at 1 MHz
+  (measured, [BENCHMARKS.md](BENCHMARKS.md)).
 - The protocol is shared with FREEPOET's 16×8 devices: a board reports up to **128** keys and
   addresses keys column-major (`index = x * 8 + y`). Our 8×8 boards use indices 0–63.
 - Register map:
@@ -184,16 +185,17 @@ keypad boards' own firmware is not published.
 ### 1.6 Latency budget
 
 At 100 kHz a 32-key block read is ≈ `(3 + 32) × 9 bits / 100 kHz ≈ 3.2 ms`, so one board scan is
-≈ 6.5 ms and both ≈ 13 ms. With 3-sample debounce, press-to-event can reach ~40 ms — fine for a
-sequencer, noticeable for finger drumming.
+≈ 6.5 ms and both ≈ 13 ms of wire time; measured, 15.9 ms. With 3-sample debounce, press-to-event
+reached ~50 ms there. At 400 kHz (the default since parterre-0.4.2) a scan measures 5.7 ms, so
+~17 ms plus the LED writes in between.
 
 | I2C clock       | Key scan (both boards) | Full LED refresh (`0x18`, 2 × 35 B) |
 | --------------- | ---------------------- | ----------------------------------- |
-| 100 kHz (today) | ~13 ms                 | ~6.3 ms                             |
-| 400 kHz         | ~3.3 ms                | ~1.6 ms                             |
-| 1 MHz           | ~1.3 ms                | ~0.6 ms                             |
+| 100 kHz         | ~13 ms (15.9 measured) | ~6.3 ms                             |
+| 400 kHz (today) | ~3.3 ms (5.7 measured) | ~1.6 ms                             |
+| 1 MHz           | keypads don't answer   |                                     |
 
-Wire time only; slave clock stretching must be measured with a logic analyzer. Pull-ups: 4.7 kΩ is
+Estimates are wire time only; the keypads add ~2.5 ms per scan (BENCHMARKS.md). Pull-ups: 4.7 kΩ is
 fine to 400 kHz on a short bus, ~2.2 kΩ for 1 MHz, to 3.3 V only.
 
 ### 1.7 Color
@@ -248,9 +250,10 @@ Everything in §1.3. **Acceptance**, in order:
   `custom_pt_i2c_hz`); a clock other than 100 kHz shows in the version (`-i2c400k`).
   `pt_i2c_stats(reset)` prints and returns the clock, scans per second, scan and LED write
   avg/max µs, transfers, failed attempts (retried), failed transfers and boards dropped.
-- Test 400 kHz, then 1 MHz, with `pt_i2c_stats()` and, for the details, a logic analyzer
-  (24 MHz Saleae clone + PulseView). Watch NACKs, clock stretching, retries;
-  fall back to 100 kHz automatically above an error threshold.
+- ✅ Tested 400 kHz and 1 MHz on the kit (2026-11-12, [BENCHMARKS.md](BENCHMARKS.md)): 400 kHz
+  scans 2.8× and writes LEDs 3.5× faster than 100 kHz with no errors, and is the default since
+  parterre-0.4.2; at 1 MHz the keypads stop answering. Open: 1 MHz with external 2.2 kΩ pull-ups,
+  and a logic analyzer look at the ~2.5 ms the keypads add per scan.
 - LED writes: `0x18` (one transaction per board) instead of `0x17` ×2 + show.
 - Debounce: 2 samples, or eager press with debounced release (`OG_DEBOUNCE_SAMPLES`).
 - Add `[perf]` counters (scan time, LED time, I2C errors) readable from Lua, e.g. `og_stats()`.
