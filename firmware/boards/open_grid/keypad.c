@@ -59,6 +59,7 @@ static inline uint32_t now_ms(void) { return to_ms_since_boot(get_absolute_time(
 
 static uint32_t bus_hz;
 static volatile uint32_t bus_transfers, bus_failed_attempts, bus_failed_transfers, bus_drops;
+static volatile uint32_t bus_stuck;  // times SDA was found held low before a bus clear
 // While looking for a board that isn't connected (at power-up, or one
 // unplugged), a missing answer is expected: don't count it as a bus error.
 static bool counting = true;
@@ -161,6 +162,63 @@ static void reset_board_state(uint8_t board) {
   full_led_sync[board] = true;
 }
 
+//------------------------------------------------------------------------
+// Bus clear
+//
+// The keypad boards keep their power when the RP2040 resets (bootloader,
+// watchdog, a reboot from greenhouse). A reset in the middle of a transfer
+// can leave a board half-way through a byte, holding SDA low while it waits
+// for clocks that never come: every transfer then fails, the LEDs keep their
+// last frame, and only unplugging the grid frees the bus. The I2C spec's
+// "bus clear": up to 9 clocks on SCL let the board finish the byte, then a
+// STOP resets its state machine. Done at boot and whenever no board answers.
+
+#define BUS_CLEAR_HALF_PERIOD_US 5  // 100 kHz, slow enough for any board
+
+// Open-drain by hand: output low pulls the line down, input lets the pull-up raise it.
+static void line_low(uint pin) { gpio_set_dir(pin, GPIO_OUT); }
+static void line_release(uint pin) { gpio_set_dir(pin, GPIO_IN); }
+
+static void bus_setup(void) {
+  bus_hz = i2c_init(OG_I2C_INST, OG_I2C_HZ);
+  gpio_set_function(OG_I2C_SDA_PIN, GPIO_FUNC_I2C);
+  gpio_set_function(OG_I2C_SCL_PIN, GPIO_FUNC_I2C);
+  gpio_pull_up(OG_I2C_SDA_PIN);
+  gpio_pull_up(OG_I2C_SCL_PIN);
+}
+
+static void bus_clear(void) {
+  const uint sda = OG_I2C_SDA_PIN, scl = OG_I2C_SCL_PIN;
+  gpio_init(sda);
+  gpio_init(scl);
+  gpio_pull_up(sda);
+  gpio_pull_up(scl);
+  gpio_put(sda, 0);  // the level used whenever the pin is an output
+  gpio_put(scl, 0);
+  line_release(sda);
+  line_release(scl);
+  busy_wait_us_32(BUS_CLEAR_HALF_PERIOD_US);
+
+  if (!gpio_get(sda)) bus_stuck++;
+  for (int i = 0; i < 9 && !gpio_get(sda); i++) {
+    line_low(scl);
+    busy_wait_us_32(BUS_CLEAR_HALF_PERIOD_US);
+    line_release(scl);
+    busy_wait_us_32(BUS_CLEAR_HALF_PERIOD_US);
+  }
+  // STOP: SDA rises while SCL is high
+  line_low(scl);
+  busy_wait_us_32(BUS_CLEAR_HALF_PERIOD_US);
+  line_low(sda);
+  busy_wait_us_32(BUS_CLEAR_HALF_PERIOD_US);
+  line_release(scl);
+  busy_wait_us_32(BUS_CLEAR_HALF_PERIOD_US);
+  line_release(sda);
+  busy_wait_us_32(BUS_CLEAR_HALF_PERIOD_US);
+
+  bus_setup();
+}
+
 static void refresh_connection(bool force) {
   const uint32_t now = now_ms();
   if (!force) {
@@ -188,17 +246,16 @@ static void refresh_connection(bool force) {
       reset_board_state(b);
     }
   }
+  // Nobody answers: no boards plugged in, or one holding the bus. Clear it
+  // for the next probe (~0.1 ms).
+  if (!board_connected[0] && !board_connected[1]) bus_clear();
 }
 
 //------------------------------------------------------------------------
 // Public API
 
 void og_keypad_init(void) {
-  bus_hz = i2c_init(OG_I2C_INST, OG_I2C_HZ);
-  gpio_set_function(OG_I2C_SDA_PIN, GPIO_FUNC_I2C);
-  gpio_set_function(OG_I2C_SCL_PIN, GPIO_FUNC_I2C);
-  gpio_pull_up(OG_I2C_SDA_PIN);
-  gpio_pull_up(OG_I2C_SCL_PIN);
+  bus_clear();  // also sets the bus up
 
   memset(last_sent_levels, 0xFF, sizeof(last_sent_levels));
   for (uint8_t b = 0; b < BOARD_COUNT; b++) full_led_sync[b] = true;
@@ -325,6 +382,7 @@ void og_keypad_bus_stats(og_keypad_bus_stats_t *out) {
   out->failed_attempts = bus_failed_attempts;
   out->failed_transfers = bus_failed_transfers;
   out->drops = bus_drops;
+  out->stuck = bus_stuck;
 }
 
 void og_keypad_bus_stats_reset(void) {
@@ -332,4 +390,5 @@ void og_keypad_bus_stats_reset(void) {
   bus_failed_attempts = 0;
   bus_failed_transfers = 0;
   bus_drops = 0;
+  bus_stuck = 0;
 }

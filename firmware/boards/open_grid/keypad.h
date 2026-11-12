@@ -32,13 +32,15 @@ uint8_t og_keypad_write_leds(const uint8_t *levels);
 
 // Bus counters since boot or the last reset, for pt_i2c_stats(): transfers
 // tried, attempts that failed (each is retried), transfers that failed every
-// attempt, and boards that stopped answering. Core 1 writes them.
+// attempt, boards that stopped answering, and stuck buses cleared. Core 1
+// writes them.
 typedef struct {
   uint32_t hz;  // the clock the RP2040 actually set
   uint32_t transfers;
   uint32_t failed_attempts;
   uint32_t failed_transfers;
   uint32_t drops;
+  uint32_t stuck;  // bus clears that found SDA held low (a board stuck mid-transfer)
 } og_keypad_bus_stats_t;
 
 void og_keypad_bus_stats(og_keypad_bus_stats_t *out);

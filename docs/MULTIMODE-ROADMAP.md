@@ -250,6 +250,10 @@ Everything in §1.3. **Acceptance**, in order:
   `custom_pt_i2c_hz`); a clock other than 100 kHz shows in the version (`-i2c400k`).
   `pt_i2c_stats(reset)` prints and returns the clock, scans per second, scan and LED write
   avg/max µs, transfers, failed attempts (retried), failed transfers and boards dropped.
+- ✅ Bus clear (parterre-0.4.3): after entering the bootloader from greenhouse and flashing, the
+  LEDs stayed frozen until the grid was unplugged. The keypads keep their power across a reset of
+  the RP2040, and one interrupted mid-transfer holds SDA low. `keypad.c` now clocks SCL until SDA
+  is released and sends a STOP, at boot and whenever no board answers.
 - ✅ Tested 400 kHz and 1 MHz on the kit (2026-11-12, [BENCHMARKS.md](BENCHMARKS.md)): 400 kHz
   scans 2.8× and writes LEDs 3.5× faster than 100 kHz with no errors, and is the default since
   parterre-0.4.2; at 1 MHz the keypads stop answering. Open: 1 MHz with external 2.2 kΩ pull-ups,

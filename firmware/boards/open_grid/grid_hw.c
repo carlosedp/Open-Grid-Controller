@@ -63,7 +63,7 @@ int og_l_keypads(lua_State *l) {
 // pt_i2c_stats(reset): prints the keypad bus figures since boot (or the last
 // reset) and returns them: clock Hz, scans per second, scan avg/max us, LED
 // write avg/max us, transfers, failed attempts, failed transfers, boards
-// dropped. pt_i2c_stats(true) prints, then starts counting again.
+// dropped, stuck buses cleared. pt_i2c_stats(true) prints, then starts counting again.
 int og_l_i2c_stats(lua_State *l) {
   og_keypad_bus_stats_t bus;
   og_keypad_bus_stats(&bus);
@@ -76,13 +76,13 @@ int og_l_i2c_stats(lua_State *l) {
       "i2c %lu Hz, keypads %u: %lu scans/s, scan avg %lu max %lu us, "
       "led write avg %lu max %lu us (%lu writes)\r\n"
       "transfers %lu, failed attempts %lu, failed transfers %lu, boards dropped %lu, "
-      "over %lu s\r\n",
+      "stuck bus cleared %lu, over %lu s\r\n",
       (unsigned long)bus.hz, (unsigned)og_keypad_connected_mask(), (unsigned long)scans_per_s,
       (unsigned long)scan_timing.avg_us, (unsigned long)scan_timing.max_us,
       (unsigned long)led_timing.avg_us, (unsigned long)led_timing.max_us,
       (unsigned long)led_timing.count, (unsigned long)bus.transfers,
       (unsigned long)bus.failed_attempts, (unsigned long)bus.failed_transfers,
-      (unsigned long)bus.drops, (unsigned long)(elapsed_ms / 1000));
+      (unsigned long)bus.drops, (unsigned long)bus.stuck, (unsigned long)(elapsed_ms / 1000));
 
   const lua_Integer values[] = {
       bus.hz,
@@ -95,6 +95,7 @@ int og_l_i2c_stats(lua_State *l) {
       bus.failed_attempts,
       bus.failed_transfers,
       bus.drops,
+      bus.stuck,
   };
   const int n = (int)(sizeof(values) / sizeof(values[0]));
   for (int i = 0; i < n; i++) lua_pushinteger(l, values[i]);
