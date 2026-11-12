@@ -6,7 +6,8 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling pt_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.16"
+// parterre-X.Y.Z since 0.4.0 (og-X.Y.Z before); greenhouse knows both.
+#define DEVICE_VERSION_BASE "parterre-0.4.0"
 
 #include <string.h>
 

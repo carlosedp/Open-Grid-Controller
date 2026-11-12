@@ -1,14 +1,14 @@
 # Builds the firmware for every board when a version tag is pushed and
 # publishes a GitHub release with the UF2s; greenhouse's firmware dialog finds
-# it there (assets named iii-open-grid-og-X.Y.Z-<board>.uf2).
+# it there (assets named parterre-X.Y.Z-<board>.uf2).
 #
-#   git tag -a v0.3.17 -m "Short title" -m "What changed, for the release page."
-#   git push origin v0.3.17
+#   git tag -a v0.4.1 -m "Short title" -m "What changed, for the release page."
+#   git push origin v0.4.1
 #
 # The tag's subject becomes the release title and its body the description,
 # followed by GitHub's generated notes. The tag must match DEVICE_VERSION_BASE
-# in main.c and pico_set_program_version in CMakeLists.txt (v0.3.17 = og-0.3.17).
-# A tag with a suffix (v0.3.17-rc1) makes a pre-release, which greenhouse skips.
+# in main.c and pico_set_program_version in CMakeLists.txt (v0.4.1 = parterre-0.4.1).
+# A tag with a suffix (v0.4.1-rc1) makes a pre-release, which greenhouse skips.
 
 name: release
 
@@ -33,7 +33,7 @@ jobs:
 
       - name: Check the tag matches the firmware version
         run: |
-          want="og-${GITHUB_REF_NAME#v}"
+          want="parterre-${GITHUB_REF_NAME#v}"
           main_c=$(sed -n 's/^#define DEVICE_VERSION_BASE "\(.*\)"/\1/p' firmware/src/main.c)
           cmake=$(sed -n 's/^pico_set_program_version(parterre "\(.*\)")/\1/p' firmware/CMakeLists.txt)
           echo "tag: $want  main.c: $main_c  CMakeLists.txt: $cmake"

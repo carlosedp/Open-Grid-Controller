@@ -2,10 +2,12 @@
 """Collect release artifacts into dist/ (called by the root Makefile).
 
 dist/
-  firmware/iii-open-grid-<version>-<board>.uf2   from the PlatformIO builds
+  firmware/<version>-<board>.uf2   from the PlatformIO builds, e.g.
+                                   parterre-0.4.0-rp2040_zero.uf2
+                                   (iii-open-grid-og-X.Y.Z-<board>.uf2 before 0.4)
 
-diii, the web app, lives in its own repo (github.com/carlosedp/web-diii),
-which publishes itself.
+greenhouse, the web app, lives in its own repo
+(github.com/VoltageFoundryMod/greenhouse), which publishes itself.
 
 usage: dist.py BOARD...
        dist.py --clean
@@ -35,7 +37,7 @@ def copy_firmware(boards) -> None:
         uf2 = ROOT / ".pio" / "build" / board / "firmware.uf2"
         if not uf2.is_file():
             sys.exit(f"missing {uf2.relative_to(ROOT)}; build it first (make firmware-all)")
-        target = out / f"iii-open-grid-{version}-{board}.uf2"
+        target = out / f"{version}-{board}.uf2"
         shutil.copyfile(uf2, target)
         print(f"  {target.relative_to(ROOT)}")
 

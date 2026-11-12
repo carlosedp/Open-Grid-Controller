@@ -77,7 +77,7 @@ dist: firmware-all
 # in, and the commit pushed (the tag is made on the remote's main).
 release: dist
 	gh release create $(shell $(PYTHON) tools/dist.py --version) \
-		$(wildcard dist/firmware/iii-open-grid-$(shell $(PYTHON) tools/dist.py --version)-*.uf2) \
+		$(wildcard dist/firmware/$(shell $(PYTHON) tools/dist.py --version)-*.uf2) \
 		--target main --title $(shell $(PYTHON) tools/dist.py --version) --generate-notes
 
 clean:
