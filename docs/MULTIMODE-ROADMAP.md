@@ -78,7 +78,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
   - hold BOOT for 2 s while running → the LED shows the new mode's color; releasing BOOT saves and
     reboots (og-0.3.11; before, the reboot came while BOOT was held, and the boot ROM went into the
     USB bootloader);
-  - from Lua: `og_set_mode(0|1)`.
+  - from Lua: `pt_set_mode(0|1)` (`og_set_mode` before 0.4).
   - ✅ **watchdog** (og-0.3.10, untested): 8 s without core 0 returning to the main loop (a Lua
     loop that never ends, a hang in C or USB), or 1 s without core 1 looping, resets the board,
     which boots normally (`init.lua` runs). A second reset within 30 s of booting means a boot
@@ -91,9 +91,9 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
 - **Names (parterre-0.4.0, untested)**: versions `parterre-X.Y.Z` (were `og-X.Y.Z`), UF2s
   `parterre-X.Y.Z-<board>.uf2`, source in `firmware/` with the grid hardware behind
   `src/grid_hw.h` (`boards/open_grid/` today; monome's grids next, M10), build options `PT_*`. The
-  Lua extras split into `pt_*` (parterre's own) and `gh_*` (what greenhouse uses); every `og_*`
-  name stays as an alias. See [COMPATIBILITY.md](COMPATIBILITY.md).
-- **Lua extras** (listed by `help()`; `og_*` before 0.4, still accepted):
+  Lua extras split into `pt_*` (parterre's own) and `gh_*` (what greenhouse uses); the `og_*`
+  names are gone (no other users yet). See [COMPATIBILITY.md](COMPATIBILITY.md).
+- **Lua extras** (listed by `help()`; `og_*` before 0.4):
 
   | Call                   | What it does                                                                         |
   | ---------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------- |
@@ -122,7 +122,7 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
 - **The name parterre** (og-0.3.14): in iii mode the device shows up on USB as `parterre` by
   `Voltage Foundry Modular` (interfaces `parterre Serial` and `parterre MIDI`; it was `Open Grid` /
   `iii open grid`), and `help()` says parterre. Serial mode keeps `monome` / `grid` for serialosc.
-  The `og_*` names, versions and UF2 names stay.
+  The `og_*` names, versions and UF2 names stayed until 0.4.0.
 - **Startup pattern shows the mode** (og-0.3.15, tested on keypads), as on monome's grids:
   _particles_ (a burst from the center) for monome serial, _plasma_ (waves) for iii. It replaces
   the iii-only left-to-right sweep, takes about 1.2 s, and is skipped without keypads.

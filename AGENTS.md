@@ -10,7 +10,7 @@ manual `docs/manual/Manual.md`, icons in `docs/brand/`) is a **firmware** for gr
 **monome iii** (Lua on the device, USB MIDI + serial REPL) with our patches, a board's hardware
 layer and extras, plus a monome-serial mode for norns/serialosc. It runs on FREEPOET's **Open
 Grid** kit (two 8×8 I2C keypad boards + an RP2040); builds for monome's grids are planned (M10).
-Names (layers, `pt_*` / `gh_*` / old `og_*`) and what works with what:
+Names (layers, `pt_*` / `gh_*`, `og_*` before 0.4) and what works with what:
 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). C identifiers inside the firmware keep `og_`.
 Scripts are managed from **greenhouse**, our fork of monome's browser app diii (renamed in
 November 2026; its own repo, `github.com/VoltageFoundryMod/greenhouse`, locally `../greenhouse`, published at
@@ -43,8 +43,8 @@ make dist                      # UF2s for all boards into dist/
   dialog or other parterre features in greenhouse are made there; this repo's firmware and
   greenhouse only meet through the serial protocol (`gh_*` calls in, `^^...` lines out) and this
   repo's GitHub releases, which greenhouse's firmware dialog reads (UF2 names
-  `parterre-X.Y.Z-<board>.uf2`; `iii-open-grid-og-X.Y.Z-<board>.uf2` before 0.4). greenhouse calls
-  `(gh_x or og_x)`, so renaming or removing a `gh_` call needs a greenhouse change first.
+  `parterre-X.Y.Z-<board>.uf2`; `iii-open-grid-og-X.Y.Z-<board>.uf2` before 0.4). Renaming or removing a
+  `gh_` call needs a greenhouse change first (achene has the same `gh_` calls).
 - Plain CMake also works: `cmake -S firmware -B build -DPT_BOARD=xiao_rp2040 -DPICO_SDK_PATH=...`.
 - Build options (CMake / PlatformIO `custom_pt_*` / environment `PT_*`): `PT_BOARD`, `PT_I2C_HZ`,
   `PT_FAST_CLOCK` (200 MHz), `PT_LUA_VM_IN_RAM` (default ON), `PT_FLASH_STATUS_OFFSET`.

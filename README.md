@@ -36,8 +36,8 @@ monome's grid 2022, one and zero are planned (see the
 It was called Open Grid Controller until November 2026. From 0.4.0 the names
 follow: versions are `parterre-X.Y.Z` (they were `og-X.Y.Z`), the UF2s
 `parterre-X.Y.Z-<board>.uf2`, the source `firmware/` (was `iii-open-grid/`),
-and the Lua extras `pt_*` and `gh_*` (they were `og_*`; those names still work,
-see [Lua extras](#lua-extras)). In iii mode the device shows up on USB as
+and the Lua extras `pt_*` and `gh_*` (they were `og_*`; see
+[Lua extras](#lua-extras)). In iii mode the device shows up on USB as
 **parterre** (Voltage Foundry Modular); serial mode keeps monome's names,
 which norns and serialosc look for.
 
@@ -104,8 +104,7 @@ Besides iii's own API, parterre has two sets of calls (`help()` lists them):
 
 `pt_*` are parterre's own; `gh_*` are the tools greenhouse uses, which any
 firmware can offer. Until 0.4.0 all of them were `og_*` (`og_set_mode`,
-`og_mirror`, ...); those names still work, so older scripts don't need
-changes. A script that should also run on monome's stock firmware checks first:
+`og_mirror`, ...); scripts that used those need the new names. A script that should also run on monome's stock firmware checks first:
 `if pt_led then pt_led(0, 0, 40) end`.
 
 ## Building and flashing
