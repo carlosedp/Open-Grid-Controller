@@ -43,8 +43,8 @@ monome serial.
 To switch:
 
 - **Top-left key**: hold it while plugging in. When switching to iii, keep
-  holding for about a second (the top row fills up) to also skip the
-  start-up script.
+  holding for about a second (the top row fills up, then lights fully) to
+  also skip the start-up script; you can let go once it lights fully.
 - **BOOT button**: hold it for 2 seconds while running (the LED turns
   magenta); it switches and restarts.
 - **From greenhouse**: type `og_set_mode(1)` for monome serial, `og_set_mode(0)`

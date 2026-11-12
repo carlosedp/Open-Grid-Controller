@@ -119,6 +119,9 @@ Builds: ~323 KB flash, ~32 KB static RAM, **223 KB heap** (~220 KB with iii's de
 - **Startup pattern shows the mode** (og-0.3.15, untested on keypads), as on monome's grids:
   *particles* (a burst from the center) for monome serial, *plasma* (waves) for iii. It replaces
   the iii-only left-to-right sweep, takes about 1.2 s, and is skipped without keypads.
+- **Clean boot by key hold debounced** (og-0.3.16): the top-left key at power-up is sampled 5 times,
+  and the 1 s hold only ends after 60 ms of reads that all see it released (failed reads count as
+  held). Single raw reads let one bounce cut the hold short, so the script ran anyway.
 - serial mode mirrors monome's iii-grid-2022 command set (and fixes three small bugs found there).
 
 ### 1.4 Building

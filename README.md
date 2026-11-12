@@ -59,7 +59,7 @@ The grid also shows the mode when it starts (og-0.3.15): **plasma**, waves washi
 
 To switch modes, use any of these:
 
-- **Top-left key**: hold it while plugging in. This toggles iii ↔ serial. When switching to iii, keep holding for about 1 second (the top row fills up) to also skip `init.lua`.
+- **Top-left key**: hold it while plugging in. This toggles iii ↔ serial. When switching to iii, keep holding for about 1 second (the top row fills up, then lights fully: you can let go) to also skip `init.lua` and start with no script. Letting go earlier starts iii as usual.
 - **BOOT button**: hold it for 2 seconds while the grid is running (the LED turns magenta). This toggles the mode and restarts. It works without keypads.
 - **From greenhouse**: type `og_set_mode(1)` for monome serial, or `og_set_mode(0)` for iii. Use this only while in iii mode, because serial mode has no REPL.
 - **Back to iii, skipping `init.lua`**: press BOOT while the LED is cyan, during the first second after plugging in. The LED turns amber. Use this to recover from a script that hangs at startup.

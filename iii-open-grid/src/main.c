@@ -6,7 +6,7 @@
 // Switch modes by holding the top-left key while plugging in, holding the
 // BOOT button for 2 s while running, or calling og_set_mode() from Lua.
 
-#define DEVICE_VERSION_BASE "og-0.3.15"
+#define DEVICE_VERSION_BASE "og-0.3.16"
 
 #include <string.h>
 
@@ -64,6 +64,12 @@
 #define KEYPAD_BOOT_WAIT_MS 500
 // Keep holding this long after switching to iii to skip init.lua (clean boot).
 #define CLEAN_BOOT_HOLD_MS 1000
+// Boot-time key reads are raw (no debounce): the key counts as held at power-up
+// if any of these samples sees it, and as released only after this long of
+// reads that all see it up, so a bounce or a failed read can't cut the hold short.
+#define KEY_BOOT_SAMPLES 5
+#define KEY_SAMPLE_MS 10
+#define KEY_RELEASE_MS 60
 
 #define BOOTSEL_POLL_MS 100
 #define BOOTSEL_HOLD_MS 2000
@@ -88,6 +94,36 @@ static void show_hold_progress(uint32_t elapsed_ms) {
   const uint32_t lit = elapsed_ms * OG_GRID_W / CLEAN_BOOT_HOLD_MS;
   for (uint8_t x = 0; x < OG_GRID_W; x++) og_grid_led(x, 0, x < lit ? 8 : 0);
   og_grid_flush_now();
+}
+
+static bool key_held_at_boot(void) {
+  for (int i = 0; i < KEY_BOOT_SAMPLES; i++) {
+    if (check_device_key()) return true;
+    sleep_ms(KEY_SAMPLE_MS);
+  }
+  return false;
+}
+
+// Wait while the key stays held, up to CLEAN_BOOT_HOLD_MS, showing the progress.
+// True if it was held all the way.
+static bool clean_boot_hold(void) {
+  const absolute_time_t start = get_absolute_time();
+  absolute_time_t up_since = nil_time;
+  while (true) {
+    const uint32_t held = (uint32_t)(absolute_time_diff_us(start, get_absolute_time()) / 1000);
+    if (held >= CLEAN_BOOT_HOLD_MS) return true;
+    show_hold_progress(held);
+    sleep_ms(KEY_SAMPLE_MS);
+    bool pressed = true;
+    if (og_keypad_read_key_raw(MODE_KEY_X, MODE_KEY_Y, &pressed) && !pressed) {
+      if (is_nil_time(up_since)) up_since = get_absolute_time();
+      if (absolute_time_diff_us(up_since, get_absolute_time()) >= KEY_RELEASE_MS * 1000) {
+        return false;
+      }
+    } else {
+      up_since = nil_time;  // still held, or the read failed: no evidence of a release
+    }
+  }
 }
 
 // Persist a new mode and reboot. Safe to call once core 1 is running.
@@ -214,18 +250,17 @@ int main(void) {
     if (mode != MODE_III) flash_write_mode(MODE_III);
     mode = MODE_III;
     run_script = false;
-  } else if (check_device_key()) {
+  } else if (key_held_at_boot()) {
     if (mode == MODE_SERIAL) {
       flash_write_mode(MODE_III);
       mode = MODE_III;
-      const absolute_time_t start = get_absolute_time();
-      uint32_t held = 0;
-      while (check_device_key() && held < CLEAN_BOOT_HOLD_MS) {
-        show_hold_progress(held);
-        sleep_ms(10);
-        held = (uint32_t)(absolute_time_diff_us(start, get_absolute_time()) / 1000);
+      if (clean_boot_hold()) {
+        run_script = false;
+        // The whole row at full brightness: done, the key can be let go.
+        for (uint8_t x = 0; x < OG_GRID_W; x++) og_grid_led(x, 0, 15);
+        og_grid_flush_now();
+        sleep_ms(400);
       }
-      if (held >= CLEAN_BOOT_HOLD_MS) run_script = false;
       og_grid_led_all(0);
       og_grid_flush_now();
     } else {
