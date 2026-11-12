@@ -4,15 +4,9 @@ A grid controller of 128 lit keys that runs Lua scripts on the device, and
 also plays norns and serialosc as a monome-compatible grid. parterre is the
 firmware and its tools: it runs on an RP2040 and today drives
 [FREEPOET's Open Grid kit](https://github.com/FREEPOET-OFFICIAL/FREEPOET_Keypad).
-Other keypad boards can become its backends later.
+Other keypad boards can become its backends later like Monome's own grids.
 
 ![parterre](images/Front.png)
-
-> **Status: in development.** The firmware runs and is tested on a Seeed XIAO
-> RP2040 without keypads (the scripts, USB MIDI, switching modes); testing
-> with the keypad boards and on norns is next. It was called Open Grid
-> Controller until November 2026; from firmware og-0.3.14 it shows up on USB
-> as parterre.
 
 ## The hardware
 
@@ -23,6 +17,10 @@ kit, its boards and its case are FREEPOET's design; see their
 [repository](https://github.com/FreepoetOfficial/Open-Grid-Controller) for
 the parts and the assembly.
 
+The grid has a small hole on in the bottom of the case for accessing the BOOT
+button on the RP2040-Zero. Use a small tool, such as a paperclip, to press it
+through the hole if neededw.
+
 The firmware reads the keypads through a small layer of its own, so other
 keypad hardware (other sizes, or boards such as denki-oto's mechatrellis)
 could become further backends.
@@ -31,24 +29,33 @@ could become further backends.
 
 parterre has two modes and stays in the last one you chose, even unplugged.
 
-| mode              | status LED | shows up as                     | use it with                                                                                                                               |
-| ----------------- | ---------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| **iii** (default) | green      | USB MIDI and a serial console   | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; the scripts then play any DAW or synth over USB MIDI on their own |
-| **monome serial** | blue       | a monome grid                   | **norns** directly, and Max/MSP, Pure Data, SuperCollider, VCV Rack or TouchDesigner on a computer through monome's serialosc                  |
+| mode              | status LED | shows up as                   | use it with                                                                                                                                   |
+| ----------------- | ---------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **iii** (default) | green      | USB MIDI and a serial console | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; the scripts then play any DAW or synth over USB MIDI on their own |
+| **monome serial** | blue       | a monome grid                 | **norns** directly, and Max/MSP, Pure Data, SuperCollider, VCV Rack or TouchDesigner on a computer through monome's serialosc                 |
 
-When it starts, the grid lights up in the mode's pattern: **plasma**, waves
-washing across the keys, for iii; **particles**, a burst from the center, for
-monome serial.
+### Starting up
 
-To switch:
+Parterre indicates its mode at startup with a light pattern on the grid.
 
-- **Top-left key**: hold it while plugging in. When switching to iii, keep
-  holding for about a second (the top row fills up, then lights fully) to
-  also skip the start-up script; you can let go once it lights fully.
-- **BOOT button**: hold it for 2 seconds while running (the LED turns
-  magenta); it switches and restarts.
-- **From greenhouse**: type `og_set_mode(1)` for monome serial, `og_set_mode(0)`
-  for iii.
+The “mode” is indicated by the startup light pattern.
+
+> **particles**: this is standard monome/serial mode, compatible with norns, serialosc, ansible, etc.
+>
+> **waves**: iii mode
+>
+> (Particles looks like an explosion, waves more like ripples).
+
+**To switch between modes, hold the top-left (1,1) button while plugging in the device. Let go
+as soon as the animation starts.**
+
+When switching to iii, if you keep holding for about 1 second (until the top row fills up, then
+lights fully) the startup will skip `init.lua` and start with no script. This is useful if
+troubleshooting a problematic startup script.
+Letting go earlier starts iii as usual.
+
+Greenhouse can also be used to switch modes programmatically, using the `og_set_mode` function or
+the buttons in the toolbar.
 
 ## Scripts in iii mode
 
@@ -68,12 +75,40 @@ a launcher that lights one key per script on the grid.
 
 ## When something goes wrong
 
-- **A script that hangs:** if the grid stops responding for 8 seconds, a
-  watchdog restarts it. If it hangs again within 30 seconds, the next start
-  skips the start-up script (status LED amber) so you can fix it from
-  greenhouse, which shows a `watchdog:` line when it connects.
-- **Skip the start-up script yourself:** press BOOT while the LED is cyan,
-  during the first second after plugging in (the LED turns amber).
+### Starting without the script
+
+In iii mode the grid calls `init.lua` and runs its start-up script (the one chosen as `first` in
+greenhouse) every time it starts. If that script locks the grid up, start
+it without the script, fix or replace the script from greenhouse, and plug
+in again. Nothing is deleted: the script is only skipped this once. Either
+way below, the status LED turns **amber** and greenhouse's console shows
+`-- init: skip script`.
+
+- **With the keys**, as on monome's grids: switch into iii while holding the
+  top-left key, and keep holding.
+  1. Start from monome serial (particles at startup). If the grid is in iii,
+     first plug in once with the top-left key held to get there.
+  2. Unplug, hold the top-left key, and plug in.
+  3. Keep holding while the top row fills up, about a second.
+  4. When the whole row lights up brightly, let go. Plasma plays and iii
+     starts with no script.
+
+  Letting go before the row is full starts iii normally, with the script.
+
+- **With the BOOT button**: plug in, then press BOOT while the status LED is
+  cyan (the first second). This works from either mode and with no keypads,
+  and always starts in iii.
+
+Holding BOOT _while_ plugging in does something else: it opens the firmware
+update drive (see [Updating the firmware](#updating-the-firmware)).
+
+### A script that hangs while running
+
+If the grid stops responding for 8 seconds, a watchdog restarts it, script
+and all, so a performance setup comes back on its own. If it hangs again
+within 30 seconds of starting, the next start skips the script (status LED
+amber) so you can fix it from greenhouse, which shows a `watchdog:` line
+when it connects.
 
 ## MIDI to hardware (DIY)
 

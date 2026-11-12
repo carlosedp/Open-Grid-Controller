@@ -52,7 +52,7 @@ The iii firmware contains both modes. The grid stays in the last one you chose, 
 
 | Mode              | Status LED | Shows up as                                            | Use it with                                                                                                                                                                                                |
 | ----------------- | ---------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **iii** (default) | green      | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed                                                              |
+| **iii** (default) | green      | USB MIDI + serial REPL (`Open Grid` / `iii open grid`) | [greenhouse](https://greenhouse.vfmod.com) to write and upload Lua scripts; scripts then play any DAW or synth over USB MIDI, no computer software needed                                                  |
 | **monome serial** | blue       | a monome grid (`monome` / `grid`)                      | **norns** directly (plug into its USB port), and **Max/MSP, Pure Data, SuperCollider, VCV Rack, TouchDesigner**, etc. on a computer through monome's [serialosc](https://monome.org/docs/serialosc/setup/) |
 
 The grid also shows the mode when it starts (og-0.3.15): **plasma**, waves washing across the keys, for iii; **particles**, a burst from the center, for monome serial.
@@ -85,13 +85,15 @@ You can also open the repository root in VS Code with the PlatformIO extension a
 
 The first build downloads pico-sdk 2.2.0, the Arm toolchain, CMake and Ninja through PlatformIO (about 300 MB).
 
-## TRS MIDI out (DIY, og-0.3.13 or later)
+## TRS MIDI out mod (DIY, og-0.3.13 or later)
 
-In iii mode, every MIDI message a script sends over USB also goes out GPIO0 (XIAO pin D6) at MIDI speed, so the grid can play hardware with only a USB power bank. Add a 3.5 mm stereo jack and two resistors, wired as TRS type B (Polyend's gear, such as the Tracker Mini, uses type B, so a plain stereo cable connects them):
+In iii mode, every MIDI message a script sends over USB also goes out GPIO0 (XIAO pin D6) at MIDI speed, so the grid can play hardware with only a USB power bank. Mod your grid by adding a 3.5 mm stereo jack and two resistors, wired as TRS type B (Polyend's gear, such as the Tracker Mini, uses type B, so a plain stereo cable connects them):
 
 - tip ← 33 Ω ← 3V3
 - ring ← 10 Ω ← GPIO0
 - sleeve → GND
+
+This requires soldering the resistors and the jack to the appropriate pins on the grid and modding the case to fit the jack.
 
 For type A gear, swap tip and ring, or use an A/B adapter. In the printed enclosure, a low jack (about 5 mm tall) fits on the USB end next to the RP2040-Zero, with its hole centered on the seam between the top and bottom parts. It's out only; MIDI in stays on USB. This hasn't been tested with hardware yet.
 
@@ -110,8 +112,8 @@ lived here as a git subtree at `diii/`.
 
 Scripts written for monome's iii grids run unchanged on parterre. Upload them with [greenhouse](https://greenhouse.vfmod.com).
 
-| Script                                                         | What it does                                                                                                                                                                                                                                                                                                                                      |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Script                                                         | What it does                                                                                                                                                                                                                                                                                                                                            |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [many-roads](https://github.com/boreal-ground/many-roads-grid) | Script launcher. On startup it lights one key per script stored on the grid; press a key to run that script. Triple-click the top-left key to restart and return to the launcher (but see the note below). To install, upload `many-roads.lua` and `many-roads-data.lua` and set `many-roads.lua` as `first` in greenhouse. Tested at commit `691af85`. |
 
 **many-roads restart on this firmware:** many-roads 1.2.1 restarts by deliberately running out of memory, relying on iii rebooting when that happens. This firmware instead lets Lua recover from out-of-memory (see [monome/iii#7](https://github.com/monome/iii/issues/7)), so the triple-click only prints `not enough memory`. A fix that uses iii's `device_reset()` is being proposed to the many-roads authors. Until it's released, type `^^i` in greenhouse (or replug the grid) to get back to the launcher.
