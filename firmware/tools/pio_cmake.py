@@ -1,12 +1,12 @@
 """PlatformIO glue for the iii firmware.
 
 PlatformIO installs the tools (pico-sdk, Arm GCC, CMake, Ninja, picotool);
-the firmware itself is built by iii-open-grid/CMakeLists.txt, the same way
+the firmware itself is built by firmware/CMakeLists.txt, the same way
 as a plain pico-sdk checkout. This script replaces PlatformIO's own compile
 step with a CMake + Ninja build and hands the resulting ELF back, so the
 regular PlatformIO targets (UF2 generation, size, upload) keep working.
 
-Used as `extra_scripts = pre:iii-open-grid/tools/pio_cmake.py`.
+Used as `extra_scripts = pre:firmware/tools/pio_cmake.py`.
 """
 
 import os
@@ -20,24 +20,24 @@ platform = env.PioPlatform()
 project_dir = env.subst("$PROJECT_DIR")
 build_dir = env.subst("$BUILD_DIR")
 
-firmware_dir = join(project_dir, "iii-open-grid")
+firmware_dir = join(project_dir, "firmware")
 cmake_dir = join(build_dir, "cmake")
 
-og_board = env.GetProjectOption("custom_og_board")
-og_i2c_hz = env.GetProjectOption("custom_og_i2c_hz", "100000")
+pt_board = env.GetProjectOption("custom_pt_board")
+pt_i2c_hz = env.GetProjectOption("custom_pt_i2c_hz", "100000")
 
 
 def option(name, default):
-    """custom_og_<name> from platformio.ini; OG_<NAME> in the environment wins,
+    """custom_pt_<name> from platformio.ini; PT_<NAME> in the environment wins,
     so measurement builds don't need an env of their own each."""
-    value = os.environ.get("OG_" + name.upper()) or env.GetProjectOption(
-        "custom_og_" + name, default
+    value = os.environ.get("PT_" + name.upper()) or env.GetProjectOption(
+        "custom_pt_" + name, default
     )
     return value.lower() in ("1", "yes", "true", "on")
 
 
-og_vm_in_ram = option("lua_vm_in_ram", "yes")
-og_fast_clock = option("fast_clock", "no")
+pt_vm_in_ram = option("lua_vm_in_ram", "yes")
+pt_fast_clock = option("fast_clock", "no")
 
 
 def package_dir(name):
@@ -99,21 +99,21 @@ def cmake_build(target, source, env):
             "-DPython3_EXECUTABLE=" + env.subst("$PYTHONEXE"),
             # PlatformIO makes the UF2 itself; don't let the SDK fetch and build picotool.
             "-Dpicotool_FOUND=0",
-            "-DOG_BOARD=" + og_board,
-            "-DOG_I2C_HZ=" + og_i2c_hz,
-            "-DOG_FAST_CLOCK=" + ("ON" if og_fast_clock else "OFF"),
-            "-DOG_LUA_VM_IN_RAM=" + ("ON" if og_vm_in_ram else "OFF"),
+            "-DPT_BOARD=" + pt_board,
+            "-DPT_I2C_HZ=" + pt_i2c_hz,
+            "-DPT_FAST_CLOCK=" + ("ON" if pt_fast_clock else "OFF"),
+            "-DPT_LUA_VM_IN_RAM=" + ("ON" if pt_vm_in_ram else "OFF"),
         ]
     )
     run([cmake, "--build", binary_dir])
-    shutil.copyfile(join(binary_dir, "iii-open-grid.elf"), str(target[0]))
+    shutil.copyfile(join(binary_dir, "parterre.elf"), str(target[0]))
 
 
 def build_program(env):
     elf = env.Command(
         join("$BUILD_DIR", "${PROGNAME}.elf"),
         [],
-        env.VerboseAction(cmake_build, "Building iii-open-grid (%s) with CMake" % og_board),
+        env.VerboseAction(cmake_build, "Building parterre (%s) with CMake" % pt_board),
     )
     env.AlwaysBuild(elf)  # Ninja decides what is out of date
     # What PlatformIO's own BuildProgram also sets up; other targets depend on it.

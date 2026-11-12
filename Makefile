@@ -16,8 +16,8 @@ PORT    ?= 8000
 # with nothing to install beyond uv.
 CLANG_FORMAT ?= uvx clang-format@22.1.8
 RUFF         ?= uvx ruff@0.14.0
-FORMAT_C     := $(wildcard iii-open-grid/src/*.c iii-open-grid/src/*.h)
-FORMAT_PY    := tools iii-open-grid/tools
+FORMAT_C     := $(wildcard firmware/src/*.c firmware/src/*.h firmware/boards/*/*.c firmware/boards/*/*.h)
+FORMAT_PY    := tools firmware/tools
 
 # A checkout of github.com/carlosedp/web-diii, for `make diii`
 NODE     ?= node
@@ -33,7 +33,7 @@ III_BASE     := $(shell git log -1 --format=%H --grep="git-subtree-dir: third_pa
 all: firmware
 
 help:
-	@echo Firmware, iii-open-grid:
+	@echo Firmware, parterre in firmware/:
 	@echo   make firmware        build for BOARD=$(BOARD)
 	@echo   make firmware-all    build for all boards: $(BOARDS)
 	@echo   make upload          build and flash BOARD over USB

@@ -1,4 +1,4 @@
-# Style of our own C code (iii-open-grid/). Without this file, editors fall
+# Style of our own C code (firmware/). Without this file, editors fall
 # back to their own defaults and reformat whole files on save.
 BasedOnStyle: Google
 IndentWidth: 2

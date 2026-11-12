@@ -34,8 +34,8 @@ jobs:
       - name: Check the tag matches the firmware version
         run: |
           want="og-${GITHUB_REF_NAME#v}"
-          main_c=$(sed -n 's/^#define DEVICE_VERSION_BASE "\(.*\)"/\1/p' iii-open-grid/src/main.c)
-          cmake=$(sed -n 's/^pico_set_program_version(iii-open-grid "\(.*\)")/\1/p' iii-open-grid/CMakeLists.txt)
+          main_c=$(sed -n 's/^#define DEVICE_VERSION_BASE "\(.*\)"/\1/p' firmware/src/main.c)
+          cmake=$(sed -n 's/^pico_set_program_version(parterre "\(.*\)")/\1/p' firmware/CMakeLists.txt)
           echo "tag: $want  main.c: $main_c  CMakeLists.txt: $cmake"
           if [ "$main_c" != "$want" ] || [ "$cmake" != "$want" ]; then
             echo "::error::tag ${GITHUB_REF_NAME} does not match the firmware version (main.c $main_c, CMakeLists.txt $cmake)"
