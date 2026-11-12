@@ -26,8 +26,23 @@ bool og_keypad_read_key_raw(uint8_t x, uint8_t y, bool *pressed);
 void og_keypad_scan(og_key_cb_t cb);
 
 // Push LED levels (0-15, row-major) to the boards. Only boards whose
-// content changed since the last write (or that need a resync) are sent.
-void og_keypad_write_leds(const uint8_t *levels);
+// content changed since the last write (or that need a resync) are sent;
+// returns how many were.
+uint8_t og_keypad_write_leds(const uint8_t *levels);
+
+// Bus counters since boot or the last reset, for pt_i2c_stats(): transfers
+// tried, attempts that failed (each is retried), transfers that failed every
+// attempt, and boards that stopped answering. Core 1 writes them.
+typedef struct {
+  uint32_t hz;  // the clock the RP2040 actually set
+  uint32_t transfers;
+  uint32_t failed_attempts;
+  uint32_t failed_transfers;
+  uint32_t drops;
+} og_keypad_bus_stats_t;
+
+void og_keypad_bus_stats(og_keypad_bus_stats_t *out);
+void og_keypad_bus_stats_reset(void);
 
 // True when a board (re)connected and needs a full LED write.
 bool og_keypad_needs_led_sync(void);

@@ -39,8 +39,11 @@
 // The family's own Lua calls (grid_hw.c), added to the device library.
 struct lua_State;
 int og_l_keypads(struct lua_State *l);
-#define OG_BOARD_LUA_FUNCS {"pt_keypads", og_l_keypads},
-#define OG_BOARD_HELP "  pt_keypads()    bitmask of keypad boards online\n"
+int og_l_i2c_stats(struct lua_State *l);
+#define OG_BOARD_LUA_FUNCS {"pt_keypads", og_l_keypads}, {"pt_i2c_stats", og_l_i2c_stats},
+#define OG_BOARD_HELP                                   \
+  "  pt_keypads()    bitmask of keypad boards online\n" \
+  "  pt_i2c_stats(reset)  keypad bus: clock, scan/LED times, errors\n"
 
 #ifndef OG_I2C_HZ
 #define OG_I2C_HZ 100000

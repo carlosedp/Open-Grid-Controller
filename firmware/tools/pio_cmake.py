@@ -24,7 +24,8 @@ firmware_dir = join(project_dir, "firmware")
 cmake_dir = join(build_dir, "cmake")
 
 pt_board = env.GetProjectOption("custom_pt_board")
-pt_i2c_hz = env.GetProjectOption("custom_pt_i2c_hz", "100000")
+# PT_I2C_HZ in the environment wins, like the options below (I2C clock tests)
+pt_i2c_hz = os.environ.get("PT_I2C_HZ") or env.GetProjectOption("custom_pt_i2c_hz", "100000")
 
 
 def option(name, default):

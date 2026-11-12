@@ -27,6 +27,7 @@ endif ()
 set(PT_BOARD_DIR ${CMAKE_CURRENT_LIST_DIR}/boards/${PT_BOARD_FAMILY})
 
 set(PT_I2C_HZ 100000 CACHE STRING "Keypad I2C clock in Hz (open_grid)")
+math(EXPR PT_I2C_KHZ "${PT_I2C_HZ} / 1000")
 option(PT_LUA_VM_IN_RAM "Run the Lua interpreter loop (luaV_execute, ~11 KB) from RAM; costs that much heap" ON)
 option(PT_FAST_CLOCK "Run at 200 MHz (officially supported on RP2040 since pico-sdk 2.1) instead of 125 MHz" OFF)
 # Flash offset of iii's status sector (mode); the filesystem follows 64 KB later.
@@ -131,6 +132,8 @@ target_include_directories(parterre PRIVATE
 target_compile_definitions(parterre PRIVATE
         ${PT_BOARD_DEFINE}
         OG_I2C_HZ=${PT_I2C_HZ}
+        # a clock other than the default shows in the version (e.g. -i2c400k)
+        $<$<NOT:$<STREQUAL:${PT_I2C_HZ},100000>>:OG_VERSION_I2C="-i2c${PT_I2C_KHZ}k">
         # 200 MHz with the core voltage raised to 1.15 V by the SDK. The flash
         # divider comes from the board header: XIAO clk/2 (100 MHz at 200 MHz),
         # RP2040-Zero clk/4 (50 MHz)
@@ -178,5 +181,5 @@ target_link_options(parterre PRIVATE "LINKER:--wrap=watchdog_reboot")
 pico_enable_stdio_usb(parterre 0)
 pico_enable_stdio_uart(parterre 0)
 pico_set_program_name(parterre "parterre")
-pico_set_program_version(parterre "parterre-0.4.0")
+pico_set_program_version(parterre "parterre-0.4.1")
 pico_add_extra_outputs(parterre)

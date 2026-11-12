@@ -57,6 +57,9 @@ static uint32_t last_probe_ms;
 
 static inline uint32_t now_ms(void) { return to_ms_since_boot(get_absolute_time()); }
 
+static uint32_t bus_hz;
+static volatile uint32_t bus_transfers, bus_failed_attempts, bus_failed_transfers, bus_drops;
+
 // The boards address keys column-major: local index = local_x * 8 + y.
 static inline uint8_t local_to_xy_index(uint8_t board, uint8_t local) {
   const uint8_t x = (uint8_t)(boards[board].x_offset + local / OG_GRID_H);
@@ -68,27 +71,31 @@ static inline uint8_t local_to_xy_index(uint8_t board, uint8_t local) {
 // I2C helpers
 
 static bool write_command(uint8_t address, const uint8_t *data, size_t len) {
+  bus_transfers++;
   for (int attempt = 0; attempt < RETRY_COUNT; attempt++) {
     if (i2c_write_timeout_us(OG_I2C_INST, address, data, len, false, I2C_TIMEOUT_US) == (int)len) {
       return true;
     }
+    bus_failed_attempts++;
   }
+  bus_failed_transfers++;
   return false;
 }
 
 // Write a request with a repeated start, then read the response.
 static bool read_registers(uint8_t address, const uint8_t *request, size_t request_len,
                            uint8_t *response, size_t response_len) {
+  bus_transfers++;
   for (int attempt = 0; attempt < RETRY_COUNT; attempt++) {
-    if (i2c_write_timeout_us(OG_I2C_INST, address, request, request_len, true, I2C_TIMEOUT_US) !=
-        (int)request_len) {
-      continue;
-    }
-    if (i2c_read_timeout_us(OG_I2C_INST, address, response, response_len, false, I2C_TIMEOUT_US) ==
-        (int)response_len) {
+    if (i2c_write_timeout_us(OG_I2C_INST, address, request, request_len, true, I2C_TIMEOUT_US) ==
+            (int)request_len &&
+        i2c_read_timeout_us(OG_I2C_INST, address, response, response_len, false, I2C_TIMEOUT_US) ==
+            (int)response_len) {
       return true;
     }
+    bus_failed_attempts++;
   }
+  bus_failed_transfers++;
   return false;
 }
 
@@ -172,6 +179,7 @@ static void refresh_connection(bool force) {
       reset_board_state(b);
     } else if (!present && was_present) {
       board_connected[b] = false;
+      bus_drops++;
       reset_board_state(b);
     }
   }
@@ -181,7 +189,7 @@ static void refresh_connection(bool force) {
 // Public API
 
 void og_keypad_init(void) {
-  i2c_init(OG_I2C_INST, OG_I2C_HZ);
+  bus_hz = i2c_init(OG_I2C_INST, OG_I2C_HZ);
   gpio_set_function(OG_I2C_SDA_PIN, GPIO_FUNC_I2C);
   gpio_set_function(OG_I2C_SCL_PIN, GPIO_FUNC_I2C);
   gpio_pull_up(OG_I2C_SDA_PIN);
@@ -259,8 +267,9 @@ void og_keypad_scan(og_key_cb_t cb) {
   }
 }
 
-void og_keypad_write_leds(const uint8_t *levels) {
+uint8_t og_keypad_write_leds(const uint8_t *levels) {
   uint8_t block[KEYS_PER_BOARD];
+  uint8_t written = 0;
 
   for (uint8_t b = 0; b < BOARD_COUNT; b++) {
     if (!board_connected[b]) continue;
@@ -272,6 +281,7 @@ void og_keypad_write_leds(const uint8_t *levels) {
       if (block[local] != last_sent_levels[i]) changed = true;
     }
     if (!changed) continue;
+    written++;
 
     bool ok = true;
     for (uint8_t start = 0; ok && start < KEYS_PER_BOARD; start += PACKED_LEVEL_BLOCK_MAX) {
@@ -290,6 +300,7 @@ void og_keypad_write_leds(const uint8_t *levels) {
     }
     full_led_sync[b] = false;
   }
+  return written;
 }
 
 bool og_keypad_needs_led_sync(void) {
@@ -301,4 +312,19 @@ bool og_keypad_needs_led_sync(void) {
 
 uint8_t og_keypad_connected_mask(void) {
   return (uint8_t)((board_connected[0] ? 1 : 0) | (board_connected[1] ? 2 : 0));
+}
+
+void og_keypad_bus_stats(og_keypad_bus_stats_t *out) {
+  out->hz = bus_hz;
+  out->transfers = bus_transfers;
+  out->failed_attempts = bus_failed_attempts;
+  out->failed_transfers = bus_failed_transfers;
+  out->drops = bus_drops;
+}
+
+void og_keypad_bus_stats_reset(void) {
+  bus_transfers = 0;
+  bus_failed_attempts = 0;
+  bus_failed_transfers = 0;
+  bus_drops = 0;
 }

@@ -7,7 +7,7 @@
 // BOOT button for 2 s while running, or calling pt_set_mode() from Lua.
 
 // parterre-X.Y.Z since 0.4.0 (og-X.Y.Z before); greenhouse knows both.
-#define DEVICE_VERSION_BASE "parterre-0.4.0"
+#define DEVICE_VERSION_BASE "parterre-0.4.1"
 
 #include <string.h>
 
@@ -52,7 +52,10 @@
 #else
 #define DEVICE_VERSION_VM "-vmflash"
 #endif
-#define DEVICE_VERSION DEVICE_VERSION_BASE DEVICE_VERSION_CLK DEVICE_VERSION_VM
+#ifndef OG_VERSION_I2C
+#define OG_VERSION_I2C ""
+#endif
+#define DEVICE_VERSION DEVICE_VERSION_BASE DEVICE_VERSION_CLK DEVICE_VERSION_VM OG_VERSION_I2C
 
 #define MODE_III 0
 #define MODE_SERIAL 1
